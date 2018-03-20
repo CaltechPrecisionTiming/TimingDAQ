@@ -6,3 +6,5 @@ VMEDat2Root
 DRSDat2Root
 Rereco
 SkimTree
+*.o
+*.dSYM
