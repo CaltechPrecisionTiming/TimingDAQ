@@ -1,17 +1,10 @@
 #include "DatAnalyzer.hh"
 
-DatAnalyzer::DatAnalyzer(std::string configName, int numChannels) : 
-        NUM_CHANNELS(numChannels), config(configName),
+DatAnalyzer::DatAnalyzer(std::string configName, int numChannels, int numSamples) :
+        NUM_CHANNELS(numChannels), NUM_SAMPLES(numSamples), config(configName),
         file(0), tree(0) {
-    std::cout << "In DatAnalyzer constructor. Set NUM_CHANNELS to " << NUM_CHANNELS << std::endl;
-    for (int j = 0; j < 1024; j++) {
-        for (int i = 0; i < 4; i++) {
-            time[i][j] = 0.;
-        }
-        for (int i = 0; i < NUM_CHANNELS; i++) {
-            raw[i][j] = 0.;
-        }
-    }
+    std::cout << "In DatAnalyzer constructor. Set NUM_CHANNELS to " << NUM_CHANNELS << std::flush;
+    std::cout << ". Set NUM_SAMPLES to " << NUM_SAMPLES << std::endl;
     // TODO: init all variables
 }
 
@@ -27,8 +20,8 @@ void DatAnalyzer::initTree(std::string fname) {
     file = new TFile(fname.c_str(), "RECREATE");
     tree = new TTree("pulse", "Digitized waveforms");
 
-    tree->Branch("time", time, "time[4][1024]/F");
-    tree->Branch("raw", raw, Form("raw[%d][1024]/S", NUM_CHANNELS));
+    tree->Branch("time", time, Form("time[4][%d]/F", NUM_SAMPLES));
+    tree->Branch("raw", raw, Form("raw[%d][%d]/S", NUM_CHANNELS, NUM_SAMPLES));
     // TODO: add all branches
 }
 

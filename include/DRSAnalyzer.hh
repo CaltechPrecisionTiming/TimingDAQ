@@ -1,5 +1,7 @@
 #ifndef DRSAnalyzer_HH
 #define DRSAnalyzer_HH
+#define DRS_CHANNELS 4
+#define DRS_SAMPLES 1024
 
 #include "DatAnalyzer.hh"
 
@@ -8,10 +10,13 @@
 
 class DRSAnalyzer : public DatAnalyzer {
     public:
-        DRSAnalyzer(std::string configName);
+        DRSAnalyzer(std::string configName) :
+            DatAnalyzer(configName, DRS_CHANNELS) {
+              // TODO: Complain if the config is giving a larget or smallr number of channel (Maybe in the base class)
+            } // specify only DRS_CHANNELS channels
         void parse(std::string inName);
     private:
-        short raw[4][1024]; // redeclare it with only four channels
+        short raw[DRS_CHANNELS][DRS_SAMPLES] = {0};
 };
 
 #endif

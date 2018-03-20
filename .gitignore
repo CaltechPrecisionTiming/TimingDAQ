@@ -1,10 +1,7 @@
 *.root
 *.dat
-ConvertDat2Root
-ConvertDat2RootWithPixels
 VMEDat2Root
 DRSDat2Root
-Rereco
-SkimTree
+ScopeDat2Root
 *.o
 *.dSYM
