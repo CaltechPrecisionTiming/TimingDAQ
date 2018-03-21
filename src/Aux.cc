@@ -7,19 +7,19 @@
 // Get amplification factor used for the silicon sensor
 //*********************************************************
 double GetAmplificationFactor ( double measuredAmplitude ) {
-  
+
   int index_firstBinAboveInput = -1;
   for (int i=0; i < nPoints; ++i) {
     index_firstBinAboveInput = i;
     if (measuredAmplitude < outputAmplitude[i]) break;
   }
-  
-  double answer = 0; 
+
+  double answer = 0;
 
   if (measuredAmplitude > outputAmplitude[21]) answer =amplificationFactor[21];
   else if (index_firstBinAboveInput == 0) answer = amplificationFactor[0];
   else {
-    
+
     //cout << "index_firstBinAboveInput = " << index_firstBinAboveInput << " : "
     //	 << amplificationFactor[index_firstBinAboveInput-1] << " " << outputAmplitude[index_firstBinAboveInput]
     //	 << "\n";
@@ -32,7 +32,7 @@ double GetAmplificationFactor ( double measuredAmplitude ) {
   //cout << measuredAmplitude << " " << answer << "\n";
 
   return answer;
-  
+
 }
 
 //--------------------------
@@ -47,17 +47,17 @@ void HighPassFilter( short* channel, double* filteredCurrent,  float* time, doub
       std::cout << "Not valid R and/or C values" << std::endl;
       return;
     }
-  
+
   const float ns2s = 1.e-9;//convert nseconds to seconds
   // define the filtered current using input voltage (channel[i]), output current (filteredCurrent[i]), time difference (time[i], convert from ns to s), and the RC values
   for ( int i = 0; i < 1024; i++ )
     {
       filteredCurrent[i+1] = (double)(channel[i+1] - channel[i])/R - (filteredCurrent[i]) * ns2s *((double)(time[i+1]-time[i]))/(R*C) + filteredCurrent[i];
     }
-  
+
   for ( int i = 0; i < 1024; i++ )
     {
-      // return voltage in the filtered current array **NOTE THE CHANGE IN VARIABLE**  
+      // return voltage in the filtered current array **NOTE THE CHANGE IN VARIABLE**
       filteredCurrent[i] = filteredCurrent[i]*R;
     }
 
@@ -86,10 +86,10 @@ void NotchFilter( short* channel, double* filteredCurrent, float* time, double R
 	- (R/L) * (filteredCurrent[i+1]-filteredCurrent[i]) * ns2s * ((double)(time[i+1]-time[i]))
 	- (1./(L*C)) * filteredCurrent[i] * pow( ns2s, 2.) * pow( ((double)(time[i+1]-time[i])), 2. );
     }
-  
+
   for ( int i = 0; i < 1024; i++ )
     {
-      // return voltage in the filtered current array **NOTE THE CHANGE IN VARIABLE**  
+      // return voltage in the filtered current array **NOTE THE CHANGE IN VARIABLE**
       filteredCurrent[i] = channel[i] - filteredCurrent[i]*R;
     }
 
@@ -97,7 +97,7 @@ void NotchFilter( short* channel, double* filteredCurrent, float* time, double R
 };
 
 TGraphErrors* GetTGraph( double* channel, float* time )
-{		
+{
   //Setting Errors
   float errorX[1024], errorY[1024], channelFloat[1024];
   float _errorY = 0.00; //5%error on Y
@@ -113,7 +113,7 @@ TGraphErrors* GetTGraph( double* channel, float* time )
 
 
 TGraphErrors GetTGraph(  short* channel, float* time )
-{		
+{
   //Setting Errors
   float errorX[1024], errorY[1024], channelFloat[1024];
   float _errorY = 0.00; //5%error on Y
@@ -136,13 +136,13 @@ int FindMin( int n, short *a) {
 }
 
 int FindMinAbsolute( int n, short *a) {
-  
+
   if (n <= 0 || !a) return -1;
   float xmin = a[5];
   int loc = 0;
   for  (int i = 5; i < n-10; i++) {
-    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )  
-      { 
+    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )
+      {
 	xmin = a[i];
 	loc = i;
       }
@@ -150,31 +150,31 @@ int FindMinAbsolute( int n, short *a) {
   return loc;
 }
 
-  
+
 int FindMinAbsolute( int n, double *a) {
-    
+
   if (n <= 0 || !a) return -1;
   float xmin = a[5];
   int loc = 0;
   for  (int i = 5; i < n-10; i++) {
-    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )  
-      { 
+    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )
+      {
 	xmin = a[i];
 	loc = i;
       }
   }
-  
+
   return loc;
 }
 
 int FindMinAbsolute( int n, short *a, int leftBoundary, int rightBoundary) {
-  
+
   if (n <= 0 || !a) return -1;
   float xmin = a[5];
   int loc = 0;
   for  (int i = leftBoundary; i < rightBoundary+1; i++) {
-    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )  
-      { 
+    if ( a[i] < xmin  && a[i+1] < 0.5*a[i] && a[i] < -8. )
+      {
 	xmin = a[i];
 	loc = i;
       }
@@ -182,23 +182,23 @@ int FindMinAbsolute( int n, short *a, int leftBoundary, int rightBoundary) {
   return loc;
 }
 
-int FindRealMin( int n, short *a) {  
+int FindRealMin( int n, short *a) {
   if (n <= 0 || !a) return -1;
   float xmin = a[5];
   int loc = 0;
-  
+
   float noise = 0;
-  
+
   for ( int i = 5; i < 100; i++)
     {
-      if( abs(a[i]) > noise ) 
+      if( abs(a[i]) > noise )
 	{
 	  noise = abs(a[i]);
 	}
     }
 
   for  (int i = 5; i < n-10; i++) {
-    if (xmin > a[i] && a[i+1] < 0.5*a[i] && a[i] < -3*noise && a[i] < -50.)  
+    if (xmin > a[i] && a[i+1] < 0.5*a[i] && a[i] < -3*noise && a[i] < -50.)
       {
 	//std::cout << a[i] << std::endl;
 	xmin = a[i];
@@ -207,7 +207,7 @@ int FindRealMin( int n, short *a) {
 	//break;
       }
   }
- 
+
   float xmin_init = xmin;
   float xmin_new = a[5];
   int loc_new = loc;
@@ -233,8 +233,8 @@ int FindRealMin( int n, short *a) {
       loc = loc_new;
     }
 
-  //std::cout << "LOC2: " << loc << std::endl;                                                                                                                               
-  /*                                                                
+  //std::cout << "LOC2: " << loc << std::endl;
+  /*
   while ( xmin_init != xmin_new ) {
     for (int i = 5; i < loc - 50; i++) {
       if (xmin_new > a[i] && a[i+1] < 0.5*a[i] && a[i] < xmin_init*2/3 )  {
@@ -250,14 +250,14 @@ int FindRealMin( int n, short *a) {
 }
 
 int FindMinFirstPeakAboveNoise( int n, short *a) {
-  
+
   const float noise = 50;
   if (n <= 0 || !a) return -1;
   int loc = 0;
-  
-  for  (int i = 10; i < n-10; i++) {   
-    if ( abs(a[i]) > noise 
-	&& 
+
+  for  (int i = 10; i < n-10; i++) {
+    if ( abs(a[i]) > noise
+	&&
 	(a[i] < a[i-1] && a[i] < a[i-2] && a[i] < a[i-3] && a[i] < a[i-4] && a[i] < a[i-5] )
 	&&
 	(a[i] < a[i+1] && a[i] < a[i+2] && a[i] < a[i+3] && a[i] < a[i+4] && a[i] < a[i+5] )
@@ -265,7 +265,7 @@ int FindMinFirstPeakAboveNoise( int n, short *a) {
       loc = i;
       break;
     }
-  }  
+  }
   return loc;
 }
 
@@ -275,10 +275,10 @@ float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float
 {
   TF1* fpeak = new TF1("fpeak","gaus", index_first, index_last);
   pulse->Fit("fpeak","Q","", index_first, index_last);
-  
+
   float timepeak = fpeak->GetParameter(1);
   delete fpeak;
-  
+
   return timepeak;
 };
 
@@ -295,7 +295,7 @@ float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float
   //std::cout << "max: " << max << std::endl;
   //if( max < 42 || index_first < 10 || index_last > 1010 ) return -99999;
   pulse->Fit("fpeak","Q","", index_first, index_last);
-  
+
   TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
   float timepeak = fpeak->GetParameter(1);
   pulse->GetXaxis()->SetLimits( timepeak-10, timepeak+10);
@@ -304,7 +304,7 @@ float GausFit_MeanTime(TGraphErrors* pulse, const float index_first, const float
   pulse->Draw("AP");
   c->SaveAs(fname+"GausPeakPlots.pdf");
   delete fpeak;
-  
+
   return timepeak;
 };
 
@@ -315,13 +315,13 @@ float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float
   //pulse->GetPoint(index_min-2, x_high, y);
   pulse->GetPoint(index_min-12, x_low, y);
   pulse->GetPoint(index_min-7, x_high, y);
-  pulse->GetPoint(index_min, dummy, y);  
+  pulse->GetPoint(index_min, dummy, y);
   TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
-  
+
   pulse->Fit("flinear","Q","", x_low, x_high );
   double slope = flinear->GetParameter(0);
   double b     = flinear->GetParameter(1);
-  
+
   if ( makePlot )
     {
       std::cout << "make plot" << std::endl;
@@ -335,7 +335,7 @@ float RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float
       //delete c;
     }
   delete flinear;
-  
+
   return (constantFraction*y-b)/slope;
 };
 
@@ -356,10 +356,10 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstam
       if ( ydummy < 0.7*ymax ) break;
     }
 
-  
+
   TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
   //TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low,  x_low+1.4 );
-  
+
 
   pulse->Fit("flinear","Q","", x_low, x_high );
   //pulse->Fit("flinear","Q","", x_low, x_low+1.4 );
@@ -372,9 +372,9 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstam
   tstamp[3] = (0.30*ymax-b)/slope;
   tstamp[4] = (0.45*ymax-b)/slope;
   tstamp[5] = (0.60*ymax-b)/slope;
-  
+
   TLine* line  = new TLine( tstamp[2], 0, tstamp[2], 1000);
-  
+
   if ( makePlot )
     {
       std::cout << "make plot" << std::endl;
@@ -392,7 +392,7 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, float* tstam
       //c->SaveAs(fname+"LinearFit.png");
       delete c;
     }
-  
+
   delete flinear;
 };
 
@@ -414,10 +414,10 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float 
       if ( ydummy < fitHighEdge*ymax ) break;
     }
 
-  
+
   TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low, x_high );
   //TF1* flinear = new TF1("flinear","[0]*x+[1]", x_low,  x_low+1.4 );
-  
+
 
   pulse->Fit("flinear","Q","", x_low, x_high );
   //pulse->Fit("flinear","Q","", x_low, x_low+1.4 );
@@ -430,9 +430,9 @@ void RisingEdgeFitTime(TGraphErrors * pulse, const float index_min, const float 
   tstamp[3] = (0.30*ymax-b)/slope;
   tstamp[4] = (0.45*ymax-b)/slope;
   tstamp[5] = (0.60*ymax-b)/slope;
-  
+
   TLine* line  = new TLine( tstamp[2], 0, tstamp[2], 1000);
-  
+
   if ( makePlot )
     {
       std::cout << "make plot" << std::endl;
@@ -471,9 +471,9 @@ void TailFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int
       if ( ydummy < 0.1*ymax ) break;
     }
 
-  
+
   TF1* flinear = new TF1("flinear","expo(0)", x_low, x_high );
-  
+
   pulse->Fit("flinear","Q","", x_low, x_high );
   double constant = flinear->GetParameter(0);
   double alpha    = flinear->GetParameter(1);
@@ -483,9 +483,9 @@ void TailFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int
   tstamp[2] = -3.0/alpha;
   tstamp[3] = -4.0/alpha;
   tstamp[4] = -5.0/alpha;
-  
+
   TLine* line  = new TLine( tstamp[0], 0, tstamp[0], 1000);
-  
+
   if ( makePlot )
     {
       TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
@@ -502,8 +502,8 @@ void TailFitTime(TGraphErrors * pulse, const float index_min, float* tstamp, int
       delete c;
     }
 
-  
-  
+
+
   delete flinear;
 };
 
@@ -519,16 +519,16 @@ float ConstantThresholdTime(TGraphErrors* pulse, const float threshold)
 	break;
       }
     }
-  
+
   double y2 = yy[indexCrossThreshold];
   double x2 = xx[indexCrossThreshold];
   double y1 = y2;
-  double x1 = x2; 
+  double x1 = x2;
   if (indexCrossThreshold>0) {
     y1 = yy[indexCrossThreshold-1];
     x1 = xx[indexCrossThreshold-1];
-  } 
-  double xThreshold = (threshold - y1) * (x2-x1)/(y2-y1) + x1;  
+  }
+  double xThreshold = (threshold - y1) * (x2-x1)/(y2-y1) + x1;
 
   return xThreshold;
 };
@@ -542,21 +542,21 @@ float SigmoidTimeFit(TGraphErrors * pulse, const float index_min, int event, TSt
   double ymax;
   pulse->GetPoint(index_min, x_low, ymax);
   pulse->GetPoint(index_min-50, x_low, y);
-  
+
   for ( int i = 1; i < 500; i++ )
     {
       pulse->GetPoint(index_min-i, x_high, y);
       if ( y < 0.4*ymax ) break;
     }
-  
+
   pulse->GetPoint(index_min, dummy, y);
-  
+
   TF1* fsigmoid = new TF1("fsigmoid","[0]/(1.0+exp(-(x-[1])/[2]))",x_low,x_high);
   fsigmoid->SetParameter(0,1000);
   fsigmoid->SetParLimits(0,0,10000);
   fsigmoid->SetParameter(1,50);
   fsigmoid->SetParameter(2,2);
-  
+
   pulse->Fit("fsigmoid","Q","", x_low, x_high );
   double maxAmp   = fsigmoid->GetParameter(0);
   double midpoint = fsigmoid->GetParameter(1);
@@ -564,7 +564,7 @@ float SigmoidTimeFit(TGraphErrors * pulse, const float index_min, int event, TSt
 
   //double tstamp =  midpoint-width*log(maxAmp/0.1 -1);
   double tstamp =  midpoint-width*log(33.3 -1.0);
-  
+
   TLine* line  = new TLine( tstamp, 0, tstamp, 1000);
   if ( makePlot )
     {
@@ -582,15 +582,15 @@ float SigmoidTimeFit(TGraphErrors * pulse, const float index_min, int event, TSt
       c->SaveAs(fname+"Sigmoid.pdf");
       delete c;
     }
-  
+
 
   return tstamp;
-  
+
   delete fsigmoid;
 };
 
 
-float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot) 
+float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TString fname, bool makePlot)
 {
 
   double x_max;
@@ -601,15 +601,15 @@ float FullFitScint( TGraphErrors * pulse, const float index_min, int event, TStr
   fullFit->SetParameter(1,0.5);
   fullFit->SetParameter(2,135);
   fullFit->SetParameter(3,10);
-  
+
   float max = -9999;
   double* yy = pulse->GetY();
-  
+
   for ( int i = 0; i < 1024; i++ )
     {
       if ( yy[i] > max ) max = yy[i];
     }
- 
+
   pulse->Fit("fullFit","Q","", x_max-150, x_max+150 );
   double maxAmp   = fullFit->GetParameter(0);
   double lambda   = fullFit->GetParameter(1);
@@ -659,11 +659,11 @@ float GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname )
   double x_low, x_high, y, dummy;
   pulse->GetPoint(i_low, x_low, y);
   pulse->GetPoint(i_high, x_high, y);
-  
+
   TF1* flinear = new TF1("flinear","[0]", x_low, x_high );
-  
+
   pulse->Fit("flinear","RQ","", x_low, x_high );
-  
+
   /* std::cout << "make plot" << std::endl;
   std::cout << x_low << x_high << fname << std::endl;
   TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
@@ -672,10 +672,10 @@ float GetBaseline(TGraphErrors * pulse, int i_low, int i_high, TString fname )
   pulse->SetMarkerStyle(20);
   pulse->Draw("AP");
   c->SaveAs(fname+"LinearFit.pdf"); */
-  
+
   float a = flinear->GetParameter(0);
   delete flinear;
-  
+
   return a;
 }
 
@@ -703,7 +703,7 @@ float GetBaseline( int peak, short *a ) {
 }
 
 
-float GetPulseIntegral(int peak, short *a, std::string option, int nsamplesL , int nsamplesR ) 
+float GetPulseIntegral(int peak, short *a, std::string option, int nsamplesL , int nsamplesR )
 {
   float integral = 0.;
 
@@ -729,7 +729,7 @@ float GetPulseIntegral(int peak, int nsamplesL, int nsamplesR, short *a, float *
       integral += ( (t[i+2]-t[i]) / 6.0 ) * ( ( 2-(t[i+2]-t[i+1])/(t[i+1]-t[i]) )* a[i] + (t[i+2]-t[i])*(t[i+2]-t[i])/((t[i+2]-t[i+1])*(t[i+1]-t[i])) * a[i+1] + ( 2-(t[i+1]-t[i])/(t[i+2]-t[i+1]) ) * a[i+2] ) * 1e-9 * (1.0/4096.0) * (1.0/50.0) * 1e12; //in units of pC, for 50Ohm termination
       i++;
     }
-    
+
   return -1.0 * integral;
 
 }
@@ -737,7 +737,7 @@ float GetPulseIntegral(int peak, int nsamplesL, int nsamplesR, short *a, float *
 //----------------------------------------------
 //Gaussian Filter to reduce high frequency noise
 //----------------------------------------------
-TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseName, 
+TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseName,
 				    double sigma,
 				    bool makePlot )
 {
@@ -745,15 +745,15 @@ TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseNa
   //Setting Errors
   float errorX[1024], errorY[1024], channelFloat[1024];
   float _errorY = 0.00; //5%error on Y
-  
+
   for ( int i = 0; i < 1024; i++ )
     {
-      
+
       errorX[i]       = .0;
       errorY[i]       = _errorY*channel[i];
       channelFloat[i] = -channel[i];
     }
-  
+
   TF1 *fb = new TF1("fb","gaus(0)", 0.0, 204.6);
   //TF1 *fb = new TF1("fb","[0]*sin(2*pi*[1]*x)/(2*pi*[1]*x)", 0.0, 204.6);
   fb->SetParameter(1, 100);
@@ -765,7 +765,7 @@ TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseNa
     {
       Gauss[i] = fb->Eval( float(i)*step );
     }
-  
+
   float channelFloatFiltered[2048];
   for ( int i = 0; i < 2048; i++ )
     {
@@ -784,18 +784,18 @@ TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseNa
       //if ( i < 1024 ) channelFloatFiltered[i] = convolvedPoint;
       channelFloatFiltered[i] = convolvedPoint;
     }
-  
+
   float channelFloatFilteredFix[1024];
   for ( int i = 0; i < 1024; i++ )
     {
       channelFloatFilteredFix[i] = 0.2*channelFloatFiltered[i+523];
     }
-  
+
   TGraphErrors* tg = new TGraphErrors( 1024, time, channelFloat, errorX, errorY );
   TGraphErrors* tg2 = new TGraphErrors( 1024, time, channelFloatFilteredFix, errorX, errorY );
 
   if (makePlot) {
-    TCanvas* c = new TCanvas("canvas","canvas",800,400) ;         
+    TCanvas* c = new TCanvas("canvas","canvas",800,400) ;
     tg2->GetXaxis()->SetLimits(0, 200);
     tg->GetXaxis()->SetLimits(0, 200);
     //tg2->Fit("fb","","", 0.0, 204.6 );
@@ -815,20 +815,20 @@ TGraphErrors* WeierstrassTransform( short* channel, float* time, TString pulseNa
 //----------------------------------------------
 //Gaussian Filter to reduce high frequency noise
 //----------------------------------------------
-void WeierstrassTransform( short* channel, double* channelFilter, float* time, TString pulseName, 
+void WeierstrassTransform( short* channel, double* channelFilter, float* time, TString pulseName,
 				    double sigma
 				    )
 {
   float Gauss[1024];
   //Setting Errors
   float channelFloat[1024];
-  
+
   for ( int i = 0; i < 1024; i++ )
     {
       channelFloat[i] = 1.0*channel[i];
       channelFilter[i] = 0.0;
     }
-  
+
   TF1 *fb = new TF1("fb","gaus(0)", 0.0, 204.6);
   fb->SetParameter(1, 100);
   fb->SetParameter(2, sigma);
@@ -862,7 +862,7 @@ void WeierstrassTransform( short* channel, double* channelFilter, float* time, T
 
   for ( int i = 0; i < 1024; i++ ) channelFilter[i] = 0.2*channelFloatFiltered[i+523];
 
-  
+
   return;
 };
 
@@ -871,7 +871,7 @@ bool isRinging( int peak, short *a )
   short left_max, right_max;//Left and right maximum amplitude from the minimum
   left_max  = a[peak];
   right_max = a[peak];
-  
+
   for ( int i = 1; i < 150; i++)
     {
       if ( a[peak-i] > left_max )  left_max  = a[peak-i];
@@ -894,6 +894,6 @@ std::string ParseCommandLine( int argc, char* argv[], std::string opt )
 	  if ( tmp.find( "--" ) != std::string::npos && tmp.find( "=" ) == std::string::npos ) return "yes";
 	}
     }
-  
+
   return "";
 };
