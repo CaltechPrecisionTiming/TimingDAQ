@@ -9,6 +9,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TGraphErrors.h"
+#include "TCanvas.h"
 
 // LOCAL INCLUDES
 #include "Config.hh"
@@ -32,6 +34,7 @@ class DatAnalyzer {
           return 0;
         }
 
+        unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; } // Return the index of the time associated with the channel n_ch
         void Analyze();
 
         void RunEventsLoop();
@@ -65,6 +68,30 @@ class DatAnalyzer {
         // Output root file
         TFile *file;
         TTree *tree;
+
+        std::map<TString, float*> var;
+        const TString var_names[19] = {
+          "xmin",
+          "xminRestricted",
+          "amp",
+          "ampRestricted",
+          "base",
+          "integral",
+          "intfull",
+          "gauspeak",
+          "sigmoidTime",
+          "fullFitTime",
+          "linearTime0",
+          "linearTime15",
+          "linearTime30",
+          "linearTime45",
+          "linearTime60",
+          "fallingTime",
+          "risetime",
+          "constantThresholdTime",
+          "isRinging",
+        };
+        void ResetVar(unsigned int n_ch);
 
         // TODO: add all tree variables
 };

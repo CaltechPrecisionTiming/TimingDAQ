@@ -30,6 +30,10 @@ class VMEAnalyzer : public DatAnalyzer {
     void InitTree();
 
     int GetChannelsMeasurement();
+
+    unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch/8; }
+
+    void Analyze();
   protected:
     // Set by command line arguments or default
     TString pixel_input_file_path;

@@ -1,3 +1,5 @@
+#define DEFAULT_FOR_EMPTY_CH 0
+
 #include "DatAnalyzer.hh"
 
 using namespace std;
@@ -24,7 +26,7 @@ TString DatAnalyzer::ParseCommandLine( int argc, char* argv[], TString opt )
     TString tmp( argv[i] );
     if ( tmp.Contains("--"+opt) ) {
       if(tmp.Contains("=")) {
-        out = tmp(tmp.First("="), tmp.Length());
+        out = tmp(tmp.First("=")+1, tmp.Length());
       }
       else {
         out = "true";
@@ -49,7 +51,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
   output_file_path = ParseCommandLine( argc, argv, "output_file" );
   if ( output_file_path == "" ){
-    output_file_path = input_file_path.ReplaceAll(".dat", ".root");
+    output_file_path = input_file_path;
+    output_file_path.ReplaceAll(".dat", ".root");
   }
   else if (!output_file_path.EndsWith(".root")) output_file_path += ".root";
   cout << "Output file: " << output_file_path.Data() << endl;
@@ -84,7 +87,10 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
   aux = ParseCommandLine( argc, argv, "draw_debug_pulses" );
   aux.ToLower();
-  if(aux == "true") draw_debug_pulses =  true;
+  if(aux == "true") {
+    cout << "[INFO]: Showing debug pulses" << endl;
+    draw_debug_pulses =  true;
+  }
 }
 
 void DatAnalyzer::InitTree() {
@@ -98,10 +104,39 @@ void DatAnalyzer::InitTree() {
       tree->Branch("channel", channel, Form("channel[%d][%d]/F", NUM_CHANNELS, NUM_SAMPLES));
       tree->Branch("time", time, Form("time[4][%d]/F", NUM_SAMPLES));
     }
+
+    for(auto n : var_names){
+      var[n] = new float[NUM_CHANNELS];
+      tree->Branch(n, &var[n], n+Form("[%d]/F", NUM_CHANNELS));
+    }
+}
+
+void DatAnalyzer::ResetVar(unsigned int n_ch) {
+  for(auto n: var_names) {
+    var[n][n_ch] = DEFAULT_FOR_EMPTY_CH;
+  }
 }
 
 void DatAnalyzer::Analyze(){
   cout << "Should analyze" << endl;
+
+  for(unsigned int i=0; i<NUM_CHANNELS; i++) {
+    if ( !config->hasChannel(i) ) {
+      ResetVar(i);
+      continue;
+    }
+
+    TString name = Form("pulse_event%d_ch%d", i_evt, i);
+
+    TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, channel[i], time[GetTimeIndex(i)] );
+    pulse->SetNameTitle("g_"+name, "g_"+name);
+
+    if(draw_debug_pulses) {
+      TCanvas* c =  new TCanvas("c_"+name, "c_"+name);
+      pulse->Draw("APE1*");
+      // c->SaveAs("~/Desktop/debug/"+name+".png");
+    }
+  }
 }
 
 void DatAnalyzer::RunEventsLoop() {
@@ -109,7 +144,6 @@ void DatAnalyzer::RunEventsLoop() {
     InitTree();
 
     bin_file = fopen( input_file_path.Data(), "r" );
-
     unsigned int N_written_evts = 0;
     for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
         int out = GetChannelsMeasurement();

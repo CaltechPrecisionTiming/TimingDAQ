@@ -22,7 +22,7 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
   if(calibration_file_path == ""){
     calibration_file_path = "calibration/v1740";
   }
-  cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_offset.txt" << endl;
+  cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl;
 }
 
 void VMEAnalyzer::LoadCalibration(){
@@ -82,9 +82,19 @@ void VMEAnalyzer::InitTree(){
   }
 }
 
-
 // Fill tc, raw, time and amplitude
 int VMEAnalyzer::GetChannelsMeasurement() {
+    // Initialize the output variables
+    for(int j = 0; j < NUM_CHANNELS; j++) {
+      for ( int i = 0; i < NUM_SAMPLES; i++ ) {
+        raw[j][j] = 0;
+        channel[j][i] = 0;
+        if(j<4){
+          time[j][i] = 0;
+        }
+      }
+    }
+
     unsigned int event_header;
 
     // first header word
@@ -97,7 +107,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
 
     // check again for end of file
-    // TODO: I think this can be removed
     if (feof(bin_file)) return -1;
 
     vector<unsigned int> active_groups;
@@ -120,7 +129,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       time[k][0] = 0.0;
       for( int j = 1; j < 1024; j++ ){
       	time[k][j] = float(j);  //TODO: I think this is useless
-      	time[k][j] = float(tcal[k][(j-1+tc[k])%1024] + time[k][j-1]);
+      	time[k][j] = float(tcal[k][(j-1+tc[k])%1024]) + time[k][j-1];
       }
 
       //************************************
@@ -168,11 +177,53 @@ int VMEAnalyzer::GetChannelsMeasurement() {
         else{
           for ( int j = 0; j < 1024; j++ ) {
             raw[j_gl][j] = samples[jj][j];
-            channel[j_gl][j] = (double)(samples[jj][j]) - off_mean[k][jj][(j+tc[k])%1024];
+            channel[j_gl][j] = (float)(samples[jj][j]) - off_mean[k][jj][(j+tc[k])%1024];
+
+            if(j_gl==0 && j<100)
+            {
+              std::cout << off_mean[k][jj][(j+tc[k])%1024] << " " << channel[j_gl][j] << std::endl;
+            }
           }
         }
       }
+
+      fread( &event_header, sizeof(unsigned int), 1, bin_file);
     }
 
     return 1;
+}
+
+void VMEAnalyzer::Analyze(){
+  if(pixel_input_file_path != ""){
+    // TODO: Tha for sure is not a smart way of doing it. Should be changed
+    xIntercept = -999;
+    yIntercept = -999;
+    xSlope = -999;
+    ySlope = -999;
+    x1 = -999;
+    y1 = -999;
+    x2 = -999;
+    y2 = -999;
+    chi2 = -999.;
+    ntracks = 0;
+
+    for( int iPixelEvent = 0; iPixelEvent < pixel_tree->GetEntries(); iPixelEvent++){
+      pixel_tree->GetEntry(iPixelEvent);
+      if (pixel_event->trigger == i_evt) {
+      	xIntercept = pixel_event->xIntercept;
+      	yIntercept = pixel_event->yIntercept;
+      	xSlope = pixel_event->xSlope;
+      	ySlope = pixel_event->ySlope;
+        // DEBUG: Why 50000 is fixed..no error or measurement??
+      	x1 = xIntercept + xSlope*(-50000);
+      	y1 = yIntercept + ySlope*(-50000);
+      	x2 = xIntercept + xSlope*(50000);
+      	y2 = yIntercept + ySlope*(50000);
+      	chi2 = pixel_event->chi2;
+      	ntracks++;
+      }
+    }
+  }
+  DatAnalyzer::Analyze();
+
 }
