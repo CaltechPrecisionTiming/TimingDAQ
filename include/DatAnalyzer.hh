@@ -8,44 +8,64 @@
 // ROOT INCLUDES
 #include "TFile.h"
 #include "TTree.h"
+#include "TString.h"
 
 // LOCAL INCLUDES
 #include "Config.hh"
 
 // This is the base class for .dat --> .root converters.
-// It provides two primary functions:
-// 1) parse(), which reads a .dat file and returns arrays of
-//      raw data in a standard format.  This function is
-//      input specific and should be implemented in derived
-//      classes.
-// 2) analyze(), which takes the arrays from parse(),
-//      performs fits, calibrations, etc, and fills an
-//      output TTree.  This function
-//      is supposed to be agnostic to the original data source.
 
 class DatAnalyzer {
     public:
-        DatAnalyzer(std::string configName, int numChannels=36, int numSamples=1024);
+        DatAnalyzer(int numChannels=36, int numSamples=1024);
         ~DatAnalyzer();
         int getNumChannels() { return NUM_CHANNELS; }
         int getNumSamples() { return NUM_SAMPLES; }
 
-        virtual void parse(std::string inName) {
-            std::cerr << "Please use a child class of DatAnalyzer" << std::endl; }
-        void analyze(std::string outName);
+        TString ParseCommandLine( int argc, char* argv[], TString opt );
+        void GetCommandLineArgs(int argc, char **argv);
 
-    private:
-        void initTree(std::string fname);
+        void InitTree();
+
+        virtual int GetChannelsMeasurement() {
+          std::cerr << "Please use a child class of DatAnalyzer" << std::endl;
+          return 0;
+        }
+
+        void Analyze();
+
+        void RunEventsLoop();
+
+    protected:
 
         const int NUM_CHANNELS;
         const int NUM_SAMPLES;
-        Config config;
 
+        // Set by command line arguments or default
+        Config* config = nullptr;
+
+        TString input_file_path;
+        TString output_file_path;
+        unsigned int N_evts = 0;
+
+        bool save_raw = false;
+        bool save_meas = false;
+        bool draw_debug_pulses = false;
+
+        // Reader variables
+        FILE* bin_file = nullptr;
+
+        // Analysis variables
+        float time[4][1024];
+        float channel[36][1024];
+
+        // Output tree vars
+        unsigned int i_evt = 0;
+
+        // Output root file
         TFile *file;
         TTree *tree;
 
-        float time[4][1024] = {0};
-        short raw[36][1024] = {0};
         // TODO: add all tree variables
 };
 
