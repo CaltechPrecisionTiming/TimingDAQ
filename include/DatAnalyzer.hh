@@ -19,30 +19,35 @@
 
 class DatAnalyzer {
     public:
-        DatAnalyzer(int numChannels=36, int numSamples=1024);
+        DatAnalyzer(int numChannels, int numTimes, int numSamples);
         ~DatAnalyzer();
         int getNumChannels() { return NUM_CHANNELS; }
+        int getNumTimes() { return NUM_TIMES; }
         int getNumSamples() { return NUM_SAMPLES; }
 
         TString ParseCommandLine( int argc, char* argv[], TString opt );
-        void GetCommandLineArgs(int argc, char **argv);
+        virtual void GetCommandLineArgs(int argc, char **argv);
 
-        void InitTree();
+        virtual void InitTree();
+        virtual void ResetVar(unsigned int n_ch);
 
+        virtual void ResetAnalysisVariables();
         virtual int GetChannelsMeasurement() {
           std::cerr << "Please use a child class of DatAnalyzer" << std::endl;
           return 0;
         }
 
-        unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; } // Return the index of the time associated with the channel n_ch
-        void Analyze();
+        virtual unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; } // Return the index of the time associated with the channel n_ch
+        virtual void Analyze();
 
         void RunEventsLoop();
 
     protected:
 
-        const int NUM_CHANNELS;
-        const int NUM_SAMPLES;
+        const unsigned int NUM_CHANNELS;
+        const unsigned int NUM_TIMES;
+        const unsigned int NUM_SAMPLES;
+
 
         // Set by command line arguments or default
         Config* config = nullptr;
@@ -59,8 +64,10 @@ class DatAnalyzer {
         FILE* bin_file = nullptr;
 
         // Analysis variables
-        float time[4][1024];
-        float channel[36][1024];
+        // float time[4][1024] = {0};
+        // float channel[36][1024] = {0};
+        float** time;
+        float** channel;
 
         // Output tree vars
         unsigned int i_evt = 0;
@@ -91,8 +98,6 @@ class DatAnalyzer {
           "constantThresholdTime",
           "isRinging",
         };
-        void ResetVar(unsigned int n_ch);
-
         // TODO: add all tree variables
 };
 

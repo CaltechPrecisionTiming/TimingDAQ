@@ -31,7 +31,8 @@ void VMEAnalyzer::LoadCalibration(){
 
   for( int i = 0; i < 4; i++ ){
       TString f_offset = calibration_file_path + Form("_bd1_group_%d_offset.txt",i);
-      TString f_dV = f_offset.ReplaceAll("_offset.txt", "_dV.txt");
+      TString f_dV = f_offset;
+      f_dV.ReplaceAll("_offset.txt", "_dV.txt");
 
       FILE* fp1 = fopen( f_offset.Data(), "r" );
       for( int k = 0; k < 1024; k++ ) {
@@ -53,7 +54,7 @@ void VMEAnalyzer::LoadCalibration(){
       fclose(fp1);
 
       for( int j = 0; j < 1024; j++) {
-          tcal[i][j] = 200 * tcal_dV[j] / dV_sum;
+          tcal[i][j] = 200.0 * tcal_dV[j] / dV_sum;
       }
   }
 }
@@ -84,14 +85,12 @@ void VMEAnalyzer::InitTree(){
 
 // Fill tc, raw, time and amplitude
 int VMEAnalyzer::GetChannelsMeasurement() {
+    ResetAnalysisVariables();
     // Initialize the output variables
     for(int j = 0; j < NUM_CHANNELS; j++) {
+      if(j<NUM_TIMES){ tc[j] = 0; }
       for ( int i = 0; i < NUM_SAMPLES; i++ ) {
         raw[j][j] = 0;
-        channel[j][i] = 0;
-        if(j<4){
-          time[j][i] = 0;
-        }
       }
     }
 
@@ -178,11 +177,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
           for ( int j = 0; j < 1024; j++ ) {
             raw[j_gl][j] = samples[jj][j];
             channel[j_gl][j] = (float)(samples[jj][j]) - off_mean[k][jj][(j+tc[k])%1024];
-
-            if(j_gl==0 && j<100)
-            {
-              std::cout << off_mean[k][jj][(j+tc[k])%1024] << " " << channel[j_gl][j] << std::endl;
-            }
           }
         }
       }
@@ -224,6 +218,6 @@ void VMEAnalyzer::Analyze(){
       }
     }
   }
-  DatAnalyzer::Analyze();
 
+  DatAnalyzer::Analyze();
 }

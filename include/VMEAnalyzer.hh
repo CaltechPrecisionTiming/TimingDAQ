@@ -1,6 +1,7 @@
 #ifndef VMEAnalyzer_HH
 #define VMEAnalyzer_HH
 #define VME_CHANNELS 36
+#define VME_TIMES 4
 #define VME_SAMPLES 1024
 
 #include "DatAnalyzer.hh"
@@ -21,7 +22,7 @@ class VMEAnalyzer : public DatAnalyzer {
         Long64_t timestamp;
     };
 
-    VMEAnalyzer() : DatAnalyzer() {}
+    VMEAnalyzer() : DatAnalyzer(VME_CHANNELS, VME_TIMES, VME_SAMPLES) {}
 
     void GetCommandLineArgs(int argc, char **argv);
 
@@ -41,14 +42,14 @@ class VMEAnalyzer : public DatAnalyzer {
 
     // Calibration vars
     double off_mean[4][9][1024] = {0};
-    double tcal[4][1024] = {0};
+    double tcal[VME_TIMES][1024] = {0};
 
     // Analysis variables
-    float time[VME_CHANNELS][VME_SAMPLES] = {0};  // calibrated time
-    float channel[VME_CHANNELS][VME_SAMPLES] = {0};
+    // float time[VME_CHANNELS][VME_SAMPLES] = {0};  // calibrated time
+    // float channel[VME_CHANNELS][VME_SAMPLES] = {0};
 
     // Tree variables
-    unsigned short tc[4]; // trigger counter bin
+    unsigned short tc[VME_TIMES]; // trigger counter bin
     unsigned short raw[VME_CHANNELS][VME_SAMPLES]; // ADC counts
 
     // Pixel events variables

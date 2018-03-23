@@ -4,12 +4,19 @@
 
 using namespace std;
 
-DatAnalyzer::DatAnalyzer(int numChannels, int numSamples) :
-        NUM_CHANNELS(numChannels), NUM_SAMPLES(numSamples),
+DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples) :
+        NUM_CHANNELS(numChannels), NUM_TIMES(numTimes), NUM_SAMPLES(numSamples),
         file(0), tree(0) {
+    time = new float*[numTimes];
+    channel = new float*[numChannels];
+
+    for(unsigned int i=0; i<numChannels; i++) {
+      channel[i] = new float[numSamples];
+      if(i<numTimes) time[i] = new float[numSamples];
+    }
     cout << "In DatAnalyzer constructor. Set NUM_CHANNELS to " << NUM_CHANNELS << flush;
-    cout << ". Set NUM_SAMPLES to " << NUM_SAMPLES << endl;
-    // TODO: init all variables
+    cout << ", NUM_TIMES to " << NUM_TIMES << endl;
+    cout << " and NUM_SAMPLES to " << NUM_SAMPLES << endl;
 }
 
 DatAnalyzer::~DatAnalyzer() {
@@ -101,19 +108,28 @@ void DatAnalyzer::InitTree() {
     tree->Branch("i_evt", &i_evt, "i_evt/i");
 
     if(save_meas){
-      tree->Branch("channel", channel, Form("channel[%d][%d]/F", NUM_CHANNELS, NUM_SAMPLES));
-      tree->Branch("time", time, Form("time[4][%d]/F", NUM_SAMPLES));
+      tree->Branch("channel", &(channel[0][0]), Form("channel[%d][%d]/F", NUM_CHANNELS, NUM_SAMPLES));
+      tree->Branch("time", &(time[0][0]), Form("time[%d][%d]/F", NUM_TIMES, NUM_SAMPLES));
     }
 
     for(auto n : var_names){
       var[n] = new float[NUM_CHANNELS];
-      tree->Branch(n, &var[n], n+Form("[%d]/F", NUM_CHANNELS));
+      tree->Branch(n, &(var[n]), n+Form("[%d]/F", NUM_CHANNELS));
     }
 }
 
 void DatAnalyzer::ResetVar(unsigned int n_ch) {
   for(auto n: var_names) {
     var[n][n_ch] = DEFAULT_FOR_EMPTY_CH;
+  }
+}
+
+void DatAnalyzer::ResetAnalysisVariables() {
+  for(unsigned int i=0; i<NUM_CHANNELS; i++) {
+    for(unsigned int j=0; j<NUM_SAMPLES; j++) {
+      channel[i][j] = 0;
+      if(i < NUM_TIMES) time[i][j] = 0;
+    }
   }
 }
 
@@ -128,13 +144,13 @@ void DatAnalyzer::Analyze(){
 
     TString name = Form("pulse_event%d_ch%d", i_evt, i);
 
-    TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, channel[i], time[GetTimeIndex(i)] );
+    TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
     pulse->SetNameTitle("g_"+name, "g_"+name);
 
     if(draw_debug_pulses) {
       TCanvas* c =  new TCanvas("c_"+name, "c_"+name);
       pulse->Draw("APE1*");
-      // c->SaveAs("~/Desktop/debug/"+name+".png");
+      c->SaveAs("~/Desktop/debug/"+name+".png");
     }
   }
 }
