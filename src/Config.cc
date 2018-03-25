@@ -1,17 +1,19 @@
 #include "Config.hh"
 
-Config::Config(std::string fname) : filename(fname), _isValid(true) {
+Config::Config(std::string fname) : filename(fname), _isValid(true),
+                    _PerformGaussianFit(false), _PerformRisingEdgeFit(false) {
     std::string configLine;
     std::ifstream configStream(fname);
     if ( configStream.is_open() ) {
-        while ( getline(configStream, configLine) ) {
+        while ( std::getline(configStream, configLine) ) {
             parseConfigLine(configLine);
         }
         configStream.close();
     }
     else {
-        std::cerr << "Could not open configuration file " << filename << std::endl; 
+        std::cerr << "[ERROR]: Could not open configuration file " << filename << std::endl;
         _isValid = false;
+        exit(0);
     }
 }
 
@@ -28,7 +30,7 @@ void Config::parseConfigLine(std::string line) {
     std::stringstream ss;
     ss.str(line);
     std::string item;
-    
+
     try {
         // channel number (and check for commented line)
         int chNum = -1;
@@ -46,10 +48,15 @@ void Config::parseConfigLine(std::string line) {
         nextConfigElement(ss, item);
         if ( item == "+" ) {
             polarity.push_back(1);
+            std::cout << "    Straight polarity set" << std::endl;
+        }
+        else if ( item == "-" ) {
+            polarity.push_back(-1);
+            std::cout << "    Inverse polarity set" << std::endl;
         }
         else {
-            polarity.push_back(-1);
-            std::cout << "Config: inverse polarity for channel " << chNum << std::endl;
+          std::cerr << "[ERROR]: Invalid polarity for channel " << chNum << std::endl;
+          exit(0);
         }
 
         // amplification
@@ -57,8 +64,7 @@ void Config::parseConfigLine(std::string line) {
         float amp = std::stof(item);
         amplification.push_back(amp);
         if ( amp ) {
-            std::cout << "Config: amplification of " << amp << " dB for channel " 
-                << chNum << std::endl;
+            std::cout << "    Amplification of " << amp << " dB" << std::endl;
         }
 
         // attenuation
@@ -66,21 +72,20 @@ void Config::parseConfigLine(std::string line) {
         float att = std::stof(item);
         attenuation.push_back(att);
         if ( att ) {
-            std::cout << "Config: attenuation of " << att << " dB for channel " 
-                << chNum << std::endl;
+            std::cout << "    Attenuation of " << att << " dB" << std::endl;
         }
 
         // algorithm
         nextConfigElement(ss, item);
-        int alg = std::stoi(item);
-        algorithm.push_back(alg);
+        // DEBUG
+        algorithm.push_back(item);
         if ( doGaussFit(chNum) ) {
-            std::cout << "Config: will perform gaussian pulse fit in channel " 
-                << chNum << std::endl;
+            _PerformGaussianFit = true;
+            std::cout << "    Perform gaussian pulse fit" << std::endl;
         }
         if ( doRisingEdgeFit(chNum) ) {
-            std::cout << "Config: will perform constant-fraction fit in channel " 
-                << chNum << std::endl;
+            _PerformRisingEdgeFit = true;
+            std::cout << "    Perform constant-fraction fit" << std::endl;
         }
 
         // filter width
@@ -88,8 +93,9 @@ void Config::parseConfigLine(std::string line) {
         float width = std::stof(item);
         filterWidth.push_back(width);
         if ( width ) {
-            std::cout << "Config: will apply Weierstrass transform with filter width " 
-                << width << " to channel " << chNum << std::endl;
+            std::cout << "    Weierstrass transform with filter width " << width << std::endl;
+            std::cerr << "[ERROR]: Weierstrass transform not implemented yet" << std::endl;
+            exit(0);
         }
     }
     catch (std::invalid_argument) {
@@ -104,16 +110,17 @@ float Config::dBToAmplitudeRatio(float dB) {
 
 float Config::getChannelMultiplicationFactor(unsigned int ch) {
     unsigned int ind = getChannelIndex(ch);
-    return polarity[ind] * dBToAmplitudeRatio( amplification[ind] ) 
-        * dBToAmplitudeRatio( -attenuation[ind] );
+    return polarity[ind] * dBToAmplitudeRatio( amplification[ind] ) * dBToAmplitudeRatio( -attenuation[ind] );
 }
 
 bool Config::doGaussFit(unsigned int ch) {
-    return algorithm[getChannelIndex(ch)] & 0x1;
+    std::size_t found = algorithm[getChannelIndex(ch)].find("G");
+    return found!=std::string::npos;
 }
 
 bool Config::doRisingEdgeFit(unsigned int ch) {
-    return algorithm[getChannelIndex(ch)] & 0x2;
+  std::size_t found = algorithm[getChannelIndex(ch)].find("Re");
+  return found!=std::string::npos;
 }
 
 unsigned int Config::getChannelIndex(unsigned int ch) {

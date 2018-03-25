@@ -8,20 +8,19 @@
 #include <cmath>
 
 // This class reads a configuration file and extracts polarity, attenuation,
-// and amplification factors for each digitizer channel.  
-// 
+// and amplification factors for each digitizer channel.
+//
 // Config file lines should be of the following form (lines beginning with a '#' are ignored):
 // CH  POLARITY  AMPLIFICATION  ATTENUATION (dB)  ALGORITHM  FILTER_WIDTH
 // with:
 // CH - channel number (integer)
-// POLARITY - sign of the pulse ('+' or '-')
+// POLARITY - sign of the pulse ('+' or '-'). Pulses are supposed to have the peak below the baseline
 // AMPLIFICATION - in dB, amount of amplification that was applied to the input (float)
 // ATTENUATION - in dB, amount of attenuation that was applied to the input (float)
-// ALGORITHM - indicates the algorithm to run to extract pulse times (int):
-//      0: no algorithm
-//      1: gaussian fit
-//      2: linear constant-fraction fit
-//      3: gaussian and linear fits
+// ALGORITHM - indicates the algorithm to run to extract pulse times (string):
+//      G: gaussian fit
+//      Re: linear constant-fraction fit
+//      else --> No action
 // FILTER_WIDTH - gaussian kernel width for Weierstrass transform (gaussian filter).
 //      If 0, no Weierstrass transform will be applied.
 
@@ -34,7 +33,7 @@ class Config {
         int getPolarity(unsigned int ch) { return polarity[getChannelIndex(ch)]; }
         float getAmplification(unsigned int ch) { return amplification[getChannelIndex(ch)]; }
         float getAttenuation(unsigned int ch) { return attenuation[getChannelIndex(ch)]; }
-        int getAlgorithm(unsigned int ch) { return algorithm[getChannelIndex(ch)]; }
+        std::string getAlgorithm(unsigned int ch) { return algorithm[getChannelIndex(ch)]; }
         float getFilterWidth(unsigned int ch) { return filterWidth[getChannelIndex(ch)]; }
         bool isValid() { return _isValid; }
 
@@ -58,13 +57,15 @@ class Config {
         // convert dB to amplitude ratio
         float dBToAmplitudeRatio(float dB);
 
+        bool _PerformGaussianFit;
+        bool _PerformRisingEdgeFit;
         bool _isValid; // true if no illegal parameters found in config
         std::string filename; // config file path
         std::vector<unsigned int> channel; // channel number
         std::vector<int> polarity; // 1 or -1
         std::vector<float> amplification; // amplification factor in dB
         std::vector<float> attenuation; // attenuation factor in dB
-        std::vector<int> algorithm; // bitmask indicating algorithm to run
+        std::vector<std::string> algorithm; // bitmask indicating algorithm to run
         std::vector<float> filterWidth; // gaussian filter width
 };
 

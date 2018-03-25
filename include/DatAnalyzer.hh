@@ -9,8 +9,12 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TGraph.h"
+#include "TAxis.h"
+#include "TText.h"
 #include "TGraphErrors.h"
 #include "TCanvas.h"
+#include "TLine.h"
 
 // LOCAL INCLUDES
 #include "Config.hh"
@@ -19,7 +23,7 @@
 
 class DatAnalyzer {
     public:
-        DatAnalyzer(int numChannels, int numTimes, int numSamples);
+        DatAnalyzer(int numChannels, int numTimes, int numSamples, int res, float scale);
         ~DatAnalyzer();
         int getNumChannels() { return NUM_CHANNELS; }
         int getNumTimes() { return NUM_TIMES; }
@@ -40,6 +44,8 @@ class DatAnalyzer {
         virtual unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; } // Return the index of the time associated with the channel n_ch
         virtual void Analyze();
 
+        float GetPulseIntegral(float *a, float *t, unsigned int i_st, unsigned int i_stop); //returns charge in pC asssuming 50 Ohm termination
+
         void RunEventsLoop();
 
     protected:
@@ -47,6 +53,8 @@ class DatAnalyzer {
         const unsigned int NUM_CHANNELS;
         const unsigned int NUM_TIMES;
         const unsigned int NUM_SAMPLES;
+        const unsigned int DAC_RESOLUTION; // DAC resolution (2^[bit])
+        const float DAC_SCALE; // [V] total scale of the DAC
 
 
         // Set by command line arguments or default
@@ -64,8 +72,6 @@ class DatAnalyzer {
         FILE* bin_file = nullptr;
 
         // Analysis variables
-        // float time[4][1024] = {0};
-        // float channel[36][1024] = {0};
         float** time;
         float** channel;
 
@@ -77,12 +83,10 @@ class DatAnalyzer {
         TTree *tree;
 
         std::map<TString, float*> var;
-        const TString var_names[19] = {
-          "xmin",
-          "xminRestricted",
+        std::vector<TString> var_names = {
+          "baseline",
           "amp",
-          "ampRestricted",
-          "base",
+          "xmin",
           "integral",
           "intfull",
           "gauspeak",
@@ -98,7 +102,6 @@ class DatAnalyzer {
           "constantThresholdTime",
           "isRinging",
         };
-        // TODO: add all tree variables
 };
 
 #endif

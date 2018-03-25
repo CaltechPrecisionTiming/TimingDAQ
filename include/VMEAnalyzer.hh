@@ -22,7 +22,7 @@ class VMEAnalyzer : public DatAnalyzer {
         Long64_t timestamp;
     };
 
-    VMEAnalyzer() : DatAnalyzer(VME_CHANNELS, VME_TIMES, VME_SAMPLES) {}
+    VMEAnalyzer() : DatAnalyzer(VME_CHANNELS, VME_TIMES, VME_SAMPLES, 4096, 1.) {}
 
     void GetCommandLineArgs(int argc, char **argv);
 
@@ -43,10 +43,6 @@ class VMEAnalyzer : public DatAnalyzer {
     // Calibration vars
     double off_mean[4][9][1024] = {0};
     double tcal[VME_TIMES][1024] = {0};
-
-    // Analysis variables
-    // float time[VME_CHANNELS][VME_SAMPLES] = {0};  // calibrated time
-    // float channel[VME_CHANNELS][VME_SAMPLES] = {0};
 
     // Tree variables
     unsigned short tc[VME_TIMES]; // trigger counter bin

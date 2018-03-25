@@ -326,28 +326,28 @@ int main(int argc, char **argv) {
       //************************************
 
       for ( int i = 0; i < nsample; i++ ) {
-	dummy = fread( &temp, sizeof(uint), 3, fpin );
-	samples[0][i] =  temp[0] & 0xfff;
-	samples[1][i] = (temp[0] >> 12) & 0xfff;
-	samples[2][i] = (temp[0] >> 24) | ((temp[1] & 0xf) << 8);
-	samples[3][i] = (temp[1] >>  4) & 0xfff;
-	samples[4][i] = (temp[1] >> 16) & 0xfff;
-	samples[5][i] = (temp[1] >> 28) | ((temp[2] & 0xff) << 4);
-	samples[6][i] = (temp[2] >>  8) & 0xfff;
-	samples[7][i] =  temp[2] >> 20;
+      	dummy = fread( &temp, sizeof(uint), 3, fpin );
+      	samples[0][i] =  temp[0] & 0xfff;
+      	samples[1][i] = (temp[0] >> 12) & 0xfff;
+      	samples[2][i] = (temp[0] >> 24) | ((temp[1] & 0xf) << 8);
+      	samples[3][i] = (temp[1] >>  4) & 0xfff;
+      	samples[4][i] = (temp[1] >> 16) & 0xfff;
+      	samples[5][i] = (temp[1] >> 28) | ((temp[2] & 0xff) << 4);
+      	samples[6][i] = (temp[2] >>  8) & 0xfff;
+      	samples[7][i] =  temp[2] >> 20;
       }
 
       // Trigger channel
       for(int j = 0; j < nsample/8; j++){
-	fread( &temp, sizeof(uint), 3, fpin);
-	samples[8][j*8+0] =  temp[0] & 0xfff;
-	samples[8][j*8+1] = (temp[0] >> 12) & 0xfff;
-	samples[8][j*8+2] = (temp[0] >> 24) | ((temp[1] & 0xf) << 8);
-	samples[8][j*8+3] = (temp[1] >>  4) & 0xfff;
-	samples[8][j*8+4] = (temp[1] >> 16) & 0xfff;
-	samples[8][j*8+5] = (temp[1] >> 28) | ((temp[2] & 0xff) << 4);
-	samples[8][j*8+6] = (temp[2] >>  8) & 0xfff;
-	samples[8][j*8+7] =  temp[2] >> 20;
+      	fread( &temp, sizeof(uint), 3, fpin);
+      	samples[8][j*8+0] =  temp[0] & 0xfff;
+      	samples[8][j*8+1] = (temp[0] >> 12) & 0xfff;
+      	samples[8][j*8+2] = (temp[0] >> 24) | ((temp[1] & 0xf) << 8);
+      	samples[8][j*8+3] = (temp[1] >>  4) & 0xfff;
+      	samples[8][j*8+4] = (temp[1] >> 16) & 0xfff;
+      	samples[8][j*8+5] = (temp[1] >> 28) | ((temp[2] & 0xff) << 4);
+      	samples[8][j*8+6] = (temp[2] >>  8) & 0xfff;
+      	samples[8][j*8+7] =  temp[2] >> 20;
       }
 
       //************************************
@@ -442,12 +442,10 @@ int main(int argc, char **argv) {
 	//pulse = new TGraphErrors( *GetTGraph( channelFilter[totalIndex], time[realGroup[group]] ) );//Float Version
 	xmin[totalIndex] = index_min;
 
-        float filterWidth = config.getFilterWidth(totalIndex);
+  float filterWidth = config.getFilterWidth(totalIndex);
 	if (filterWidth) {
-	  WeierstrassTransform( channel[totalIndex], channelFilter[totalIndex], time[realGroup[group]],
-				pulseName, filterWidth);
-	  pulse = WeierstrassTransform( channel[totalIndex], time[realGroup[group]],
-					pulseName, filterWidth, false );
+	  WeierstrassTransform( channel[totalIndex], channelFilter[totalIndex], time[realGroup[group]],	pulseName, filterWidth);
+	  pulse = WeierstrassTransform( channel[totalIndex], time[realGroup[group]], pulseName, filterWidth, false );
 	}
 
 	//Compute Amplitude : use units V
@@ -473,54 +471,53 @@ int main(int argc, char **argv) {
 	pulse->GetPoint(index_min+4, high_edge, y);  // time of the upper edge of the fit range
 
 	float timepeak   = 0;
-        bool isTrigChannel = ( totalIndex == 8 || totalIndex == 17
-                            || totalIndex == 26 || totalIndex == 35 );
+        bool isTrigChannel = ( totalIndex == 8 || totalIndex == 17 || totalIndex == 26 || totalIndex == 35 );
         float fs[6]; // constant-fraction fit output
-	float fs_falling[6]; // falling exp timestapms
+      	float fs_falling[6]; // falling exp timestapms
         if ( !isTrigChannel ) {
-	  if( drawDebugPulses ) {
-	    if ( xmin[totalIndex] != 0.0 ) {
-	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, "plots/"+pulseName);
-	      RisingEdgeFitTime( pulse, index_min, 0.2, 0.80, fs, event, "plots/linearFit_" + pulseName, true );
-	      //RisingEdgeFitTime( pulse, index_min, fs, event, "linearFit_" + pulseName, true );
-	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, true );
-	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, true );
-	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
-	    }
-	  }
-	  else {
-	    if ( xmin[totalIndex] != 0.0 ) {
-	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge);
-	      RisingEdgeFitTime( pulse, index_min, 0.2, 0.60, fs, event, "plots/linearFit_" + pulseName, false );
-	      //RisingEdgeFitTime( pulse, index_min, fs, event, "linearFit_" + pulseName, false );
-	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, false );
-	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, false );
-	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
-	    }
-	  }
+      	  if( drawDebugPulses ) {
+      	    if ( xmin[totalIndex] != 0.0 ) {
+      	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge, "plots/"+pulseName);
+      	      RisingEdgeFitTime( pulse, index_min, 0.2, 0.80, fs, event, "plots/linearFit_" + pulseName, true );
+      	      //RisingEdgeFitTime( pulse, index_min, fs, event, "linearFit_" + pulseName, true );
+      	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, true );
+      	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, true );
+      	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, true );
+      	    }
+      	  }
+      	  else {
+      	    if ( xmin[totalIndex] != 0.0 ) {
+      	      timepeak =  GausFit_MeanTime(pulse, low_edge, high_edge);
+      	      RisingEdgeFitTime( pulse, index_min, 0.2, 0.60, fs, event, "plots/linearFit_" + pulseName, false );
+      	      //RisingEdgeFitTime( pulse, index_min, fs, event, "linearFit_" + pulseName, false );
+      	      //TailFitTime( pulse, index_min, fs_falling, event, "expoFit_" + pulseName, false );
+      	      //sigmoidTime[totalIndex] = SigmoidTimeFit( pulse, index_min, event, "linearFit_" + pulseName, false );
+      	      //fullFitTime[totalIndex] = FullFitScint( pulse, index_min, event, "fullFit_" + pulseName, false );
+      	    }
+      	  }
         }
 
         else {
-	  for ( int kk = 0; kk < 5; kk++ )
-	    {
-	      fs[kk] = -999;
-	      fs_falling[kk] = -999;
-	    }
+      	  for ( int kk = 0; kk < 5; kk++ )
+    	    {
+    	      fs[kk] = -999;
+    	      fs_falling[kk] = -999;
+    	    }
         }
 
-	_isRinging[totalIndex] = isRinging( index_min, channel[totalIndex] );
+        _isRinging[totalIndex] = isRinging( index_min, channel[totalIndex] );
         // for output tree
-	gauspeak[totalIndex] = timepeak;
-	risetime[totalIndex] = fs[0];
-	linearTime0[totalIndex] = fs[1];
-	linearTime15[totalIndex] = fs[2];
-	linearTime30[totalIndex] = fs[3];
-	linearTime45[totalIndex] = fs[4];
-	linearTime60[totalIndex] = fs[5];
-	fallingTime[totalIndex] = fs_falling[0];
-	constantThresholdTime[totalIndex] = ConstantThresholdTime( pulse, 50);
+        gauspeak[totalIndex] = timepeak;
+        risetime[totalIndex] = fs[0];
+        linearTime0[totalIndex] = fs[1];
+        linearTime15[totalIndex] = fs[2];
+        linearTime30[totalIndex] = fs[3];
+        linearTime45[totalIndex] = fs[4];
+        linearTime60[totalIndex] = fs[5];
+        fallingTime[totalIndex] = fs_falling[0];
+        constantThresholdTime[totalIndex] = ConstantThresholdTime( pulse, 50);
 
-	delete pulse;
+        delete pulse;
       }
 
       dummy = fread( &event_header, sizeof(uint), 1, fpin);

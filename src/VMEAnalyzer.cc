@@ -127,7 +127,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       // Define time coordinate
       time[k][0] = 0.0;
       for( int j = 1; j < 1024; j++ ){
-      	time[k][j] = float(j);  //TODO: I think this is useless
+      	time[k][j] = float(j);
       	time[k][j] = float(tcal[k][(j-1+tc[k])%1024]) + time[k][j-1];
       }
 
