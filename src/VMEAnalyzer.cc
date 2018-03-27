@@ -59,8 +59,8 @@ void VMEAnalyzer::LoadCalibration(){
   }
 }
 
-void VMEAnalyzer::InitTree(){
-  DatAnalyzer::InitTree();
+void VMEAnalyzer::InitLoop(){
+  DatAnalyzer::InitLoop();
   tree->Branch("tc", tc, "tc[4]/s");
   if(save_raw){
     tree->Branch("raw", raw, Form("raw[%d][%d]/s", NUM_CHANNELS, NUM_SAMPLES));

@@ -15,9 +15,9 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       channel[i] = new float[numSamples];
       if(i<numTimes) time[i] = new float[numSamples];
     }
-    cout << "In DatAnalyzer constructor. Set NUM_CHANNELS to " << NUM_CHANNELS << flush;
-    cout << ", NUM_TIMES to " << NUM_TIMES << endl;
-    cout << " and NUM_SAMPLES to " << NUM_SAMPLES << endl;
+    cout << "NUM_CHANNELS: " << NUM_CHANNELS << flush;
+    cout << "NUM_TIMES: " << NUM_TIMES << endl;
+    cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
 }
 
 DatAnalyzer::~DatAnalyzer() {
@@ -101,8 +101,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
   }
 }
 
-void DatAnalyzer::InitTree() {
-    cout << "In DatAnalyzer::InitTree" << endl;
+void DatAnalyzer::InitLoop() {
+    cout << "Initializing infut file reader and output tree" << endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
     tree = new TTree("pulse", "Digitized waveforms");
 
@@ -117,6 +117,9 @@ void DatAnalyzer::InitTree() {
       var[n] = new float[NUM_CHANNELS];
       tree->Branch(n, &(var[n]), n+Form("[%d]/F", NUM_CHANNELS));
     }
+
+    // Initialize the input file stream
+    bin_file = fopen( input_file_path.Data(), "r" );
 }
 
 void DatAnalyzer::ResetVar(unsigned int n_ch) {
@@ -207,7 +210,9 @@ void DatAnalyzer::Analyze(){
       TLine* line = new TLine();
       // Draw pulse
       pulse->SetMarkerStyle(4);
+      pulse->SetMarkerSize(0.5);
       pulse->GetYaxis()->SetTitle("Amplitude [mV]");
+      pulse->GetXaxis()->SetTitle("Time [ns]");
       pulse->Draw("APE1");
       // Draw baseline
       line->SetLineWidth(1);
@@ -239,10 +244,9 @@ void DatAnalyzer::Analyze(){
 }
 
 void DatAnalyzer::RunEventsLoop() {
-    cout << "In DatAnalyzer::RunEventsLoop" << endl;
-    InitTree();
+    InitLoop();
 
-    bin_file = fopen( input_file_path.Data(), "r" );
+    cout << "Events loop started" << endl;
     unsigned int N_written_evts = 0;
     for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
         int out = GetChannelsMeasurement();

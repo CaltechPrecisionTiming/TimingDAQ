@@ -2,9 +2,11 @@
 #pragma link C++ class vector<vector<float> >+;
 #endif
 
+'''HAVE to be deleted at the end'''
+
 #include <iostream>
 #include <string>
-#include <fstream> 
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include "TFile.h"
@@ -25,7 +27,7 @@
 #include "TLatex.h"
 #include "TGaxis.h"
 #include "TPad.h"
-#include <math.h> 
+#include <math.h>
 
 int FindRisingEdge( int n, int binMax, TH1F *a);
 
@@ -46,7 +48,7 @@ void MakeAmplitudePlot(std::string filename, std::string plotname) {
   TH2F *AmplitudeMap = new TH2F("AmplitudeMap","; X; Y", 8, 0, 8, 8, 0, 8);
 
   std::vector<TH1F*> Amplitudes;
-  for (int i=0; i < 36; ++i) {    
+  for (int i=0; i < 36; ++i) {
     Amplitudes.push_back( new TH1F( Form("Amplitudes_%d",i), ";Amplitude;Number of Events", 100, 0, 2500));
 
     Amplitudes[i]->Sumw2();
@@ -54,17 +56,17 @@ void MakeAmplitudePlot(std::string filename, std::string plotname) {
 
   //read all entries and fill the histograms
   Long64_t nentries = tree->GetEntries();
-  std::cout<<"Number of events in Physics Sample: "<<nentries<<std::endl;  
+  std::cout<<"Number of events in Physics Sample: "<<nentries<<std::endl;
 
   //  for (Long64_t iEntry=0;iEntry<nentries;iEntry++) {
   for (Long64_t iEntry=442;iEntry<443;iEntry++) {
-      tree->GetEntry(iEntry);    
-      
+      tree->GetEntry(iEntry);
+
       for(int pixel = 0; pixel<36; pixel++)
 	Amplitudes[pixel]->Fill(amp[pixel]);
   }
 
-   
+
   std::cout<<"AAAAAAAAAAA "<< FindRisingEdge(1024, 30, Amplitudes[3] )<<std::endl;
 
 
@@ -111,7 +113,7 @@ void MakeAmplitudePlot(std::string filename, std::string plotname) {
 
   Amplitudes[0]->SaveAs("test.root");
   AmplitudeMap->SaveAs("test2.root");
-  
+
 }
 
 
@@ -131,10 +133,9 @@ int FindRisingEdge( int n, int binMax, TH1F *a) {
   { // sometimes there is noise, check that it is rising in three bins
     if ( a->GetBinContent(i) > 5. && a->GetBinContent(i+1) > a->GetBinContent(i) && a->GetBinContent(i+2) < a->GetBinContent(i+1) )
       {
-	loc = i; 
+	loc = i;
 	break;
       }
-  }  
-  return loc;  
+  }
+  return loc;
 }
-

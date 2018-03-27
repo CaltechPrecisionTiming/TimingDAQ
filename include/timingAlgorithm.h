@@ -3,13 +3,16 @@
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include <TMath.h>
- 
+
+''' HAVE to be deletated at the end'''
+
+
 
 
 double comparator(const std::vector<double>& time, const std::vector<double>& data, const double threshold, const double hysteresis, double& timeOverThreshold, int& numberOfpeaks, int& i_th, const bool chooseFirst=false, const int startFrom=0) {
   numberOfpeaks=0;
   i_th=-1;
-  int i_peakStart=0; 
+  int i_peakStart=0;
   double firstCrossing_tmp;
   double firstCrossing=-1;
   double secondCrossing;
@@ -17,7 +20,7 @@ double comparator(const std::vector<double>& time, const std::vector<double>& da
   bool lockForHysteresis=false;
   TGraph rising, falling;
   int spline_n=2;
-  
+
   std::vector<double>::const_iterator max = std::max_element(data.begin(), data.end());
   int i_max = max - data.begin();
   for (int i=startFrom+spline_n; i<data.size()-spline_n; ++i) {
@@ -44,11 +47,11 @@ double comparator(const std::vector<double>& time, const std::vector<double>& da
         }
         secondCrossing = falling.Eval(threshold,NULL,"");
         i_th=i_peakStart;
-      } 
+      }
       ++numberOfpeaks;
       above = false;
     }
-    
+
     if (above && i>=data.size()-spline_n-2) {
 //       std::cout<<i<<"\t"<<"above && !lockForHysteresis && i>data.size()-spline_n-1"<<std::endl;
         if ( numberOfpeaks==0  ) secondCrossing = time.at(i);
@@ -70,7 +73,7 @@ double comparator(const std::vector<double>& time, const std::vector<double>& da
     for (int j=0; j<spline_n; ++j) {
       rising.SetPoint(j,data.at(i_th+j-spline_n/2),time.at(i_th+j-spline_n/2));
     }
-    firstCrossing = rising.Eval(threshold,NULL,"S");   
+    firstCrossing = rising.Eval(threshold,NULL,"S");
   }
   timeOverThreshold = secondCrossing-firstCrossing;
   if (timeOverThreshold<0) timeOverThreshold=-1;
@@ -93,27 +96,27 @@ struct AlgorithmParameters{
   bool plot;
   double sigma;
   double scaleFactor;
-  
+
   double hysteresis;
   double timeOverThreshold;
   int numberOfpeaks;
-  
+
   double baseline_n;
   double baseline;
   double baseline_rms;
   double risetime;
   std::vector<double> gauss_values_d0;
   std::vector<double> gauss_values_d1;
-  
+
   double referenceTime;
   double thresholdTime;
-  
+
   int found;
   int rejectedCounter;
   int detectorNumber;
-  
-  
-  
+
+
+
   AlgorithmParameters(const double cfdRatio, const double threshold_ch0=.0, const double threshold_ch1=.0, const double sigma=0, const double hysteresis=1e-3, const double minCh0=-10., const double maxCh0=10., const double minCh1=-10., const double maxCh1=10., const double baseline_n=0.15): cfdRatio(cfdRatio), polarity(polarity), threshold_ch0(threshold_ch0), threshold_ch1(threshold_ch1), counter(0), rangeMin_ch0(minCh0), rangeMax_ch0(maxCh0), rangeMin_ch1(minCh1), rangeMax_ch1(maxCh1), maximum(0), maximum2(0), plot(true), sigma(sigma), hysteresis(hysteresis), timeOverThreshold(0), baseline_n(baseline_n), baseline(.0), baseline_rms(.0), risetime(.0), referenceTime(.0), thresholdTime(.0), found(0), rejectedCounter(0), detectorNumber(-1) {};
 };
 
@@ -125,19 +128,19 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
   if (data.size()==0) {
     std::cout<<"Size 0"<<std::endl;
     return 0.;
-  }     
-  
+  }
+
   ++param.counter;
   double SamplingPeriod = time.at(2) - time.at(1);
-  param.threshold_used = (param.detectorNumber==0) ? param.threshold_ch0 : param.threshold_ch1; 
-  
+  param.threshold_used = (param.detectorNumber==0) ? param.threshold_ch0 : param.threshold_ch1;
+
   //Polarity
   if (param.threshold_used>0)   param.polarity = 1;
   else  {
     param.polarity = -1;
     param.threshold_used=0-param.threshold_used;
   }
-  
+
   // Compute the baseline
   double baseline=.0;
   double baseline_rms=.0;
@@ -151,7 +154,7 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
   }
   param.baseline = baseline/baseline_nOfP;
   param.baseline_rms = TMath::Sqrt(baseline_rms/baseline_nOfP);
-    
+
   //Inverting negative signals and removing baseline
   if (param.polarity==-1) {
     for (uint i=0; i<data.size(); ++i) {
@@ -163,16 +166,16 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
       data.at(i) = data.at(i)-param.baseline;
     }
   }
-  
+
   std::vector<double>::const_iterator max = std::max_element(data.begin(), data.end());
   double maxTime = time.at(max-data.begin());
   int max_i = max-data.begin();
   param.maximum=*max;
-  
+
   std::vector<double>* gauss_values_pt=NULL;
   if (param.detectorNumber==0) gauss_values_pt=&(param.gauss_values_d0);
   else gauss_values_pt=&(param.gauss_values_d1);
-  
+
   //Adjusting timing intervals if smoothing is required
   if ( param.sigma!=0 && (time.at(2) - time.at(1) != time.at(3) - time.at(2)) ) { //Different sampling periods... needs interpolation to apply digital filters
     double avgSamplingPeriod=.0;
@@ -190,9 +193,9 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
     for (int i=1; i<time.size(); ++i) {
       time.at(i) = time.at(0) + SamplingPeriod*i;
       data.at(i) = timeCalibration.Eval( time.at(i) );
-    }   
+    }
   }
-    
+
   //Smoothing
   if (gauss_values_pt->size() == 0 && param.sigma!=0) {
     if (param.detectorNumber==1) param.sigma = 0.8e9;   //Fixed for ch0
@@ -205,7 +208,7 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
     /* std::cout<< "Low pass freq: " << param.sigma <<std::endl; */
     /* std::cout<< "Number of points: " << threeSigmaInteger <<std::endl; */
     /* std::cout<< "SamplingPeriod: " << SamplingPeriod <<std::endl; */
-    
+
     gauss_values_pt->resize(2*threeSigmaInteger+1);
     for (int jj=-threeSigmaInteger; jj<=threeSigmaInteger; ++jj) {
       gauss_values_pt->at(threeSigmaInteger+jj) = sinc.Eval(jj * SamplingPeriod);
@@ -213,7 +216,7 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
     gauss_values_pt->at(threeSigmaInteger) = 1;
   }
 
-  std::vector<double> smoothed_data(data.size(),.0); 
+  std::vector<double> smoothed_data(data.size(),.0);
   int highLimit = (gauss_values_pt->size()-1)/2;
   if (gauss_values_pt->size() != 0) {
     for (int i=0; i<data.size(); ++i) {
@@ -228,10 +231,10 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
     param.maximum2 = (*max_smoothed)/10;
     for (int i=0; i<data.size(); ++i) {
       data.at(i) = smoothed_data.at(i) * param.scaleFactor;
-    } 
-  
+    }
+
   }
-  
+
   baseline=.0;
   baseline_rms=.0;
   for (uint i= 0; i<baseline_nOfP; ++i) {
@@ -246,7 +249,7 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
   int i_th,peaks_tmp;
   double thCrossing = comparator(time, data, param.threshold_used, param.hysteresis, param.timeOverThreshold, param.numberOfpeaks, i_th);
   param.thresholdTime = thCrossing;
-  
+
   bool selectedEvent=true;
   if (param.numberOfpeaks!=1) selectedEvent=false;
   if (param.detectorNumber==0) {
@@ -257,12 +260,12 @@ double PreProcess(std::vector<double>& time, std::vector<double>& data, Algorith
     if (param.timeOverThreshold<0.2e-9) selectedEvent==false;
   }
   else selectedEvent=false;
-  
+
   if (selectedEvent == false) {
     param.timeOverThreshold=-1;
     param.thresholdTime=-1;
     param.risetime=-1;
-  }  
+  }
   return selectedEvent;
 }
 
@@ -270,14 +273,14 @@ double ComputeExactTimeCFD(std::vector<double>& time, std::vector<double>& data,
   //Smoothing and preprocessing
   PreProcess(time, data, param);
   if (IsGoodSignal(time, data, param) == false) return -1;
- 
- std::vector<double> smoothed_data_norm(data.size(),.0); 
+
+ std::vector<double> smoothed_data_norm(data.size(),.0);
  std::vector<double>::const_iterator max_smoothed = std::max_element(data.begin(), data.end());
  param.scaleFactor = 1. / (*max_smoothed);
  for (int i=0; i<data.size(); ++i) {
    smoothed_data_norm.at(i) = data.at(i) * param.scaleFactor;
- } 
- 
+ }
+
  /**
  * Compute rise time
  **/
@@ -290,8 +293,8 @@ double ComputeExactTimeCFD(std::vector<double>& time, std::vector<double>& data,
  }
  else
    param.risetime = -1;
- 
- /**  
+
+ /**
  * CFD
  **/
   double t_cfd=0;
@@ -308,7 +311,7 @@ double ComputeExactTimeCFD(std::vector<double>& time, std::vector<double>& data,
       ++cfdCounter;
     }
     t_cfd = t_cfd / cfdCounter;
-    
+
     return t_cfd;
   }
   else {
@@ -321,8 +324,7 @@ double ComputeExactTimeCFD(std::vector<double>& time, std::vector<double>& data,
       ++cfdCounter;
     }
     t_cfd = t_cfd / cfdCounter;
-    
+
     return t_cfd;
   }
 }
-

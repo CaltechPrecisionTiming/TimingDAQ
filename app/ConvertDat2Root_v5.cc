@@ -61,12 +61,12 @@ bool _debug = false;
 
 int main (int argc, char **argv)
 {
-  
+
   std::cout << "********************************************************************" << std::endl;
   std::cout << "*****              Welcome to DRS4 data analysis               *****" << std::endl;
   std::cout << "********************************************************************" << std::endl;
   std::cout << std::endl;
-  
+
   ifstream file;// read file directly
   int nChannels = 4;// Assumes 4 active channels by default
   int nTotalEvents = -1;
@@ -79,13 +79,13 @@ int main (int argc, char **argv)
       std::cout << "[INFO]: Opening file " << argv[1] << " ......" << std::endl;
       std::cout << endl;
       if ( !file.is_open () )
-	{
-	  //--------------------------------------
-	  // terminate if the file can't be opened
-	  //--------------------------------------
-	  std::cerr << "!! File open error:" << argv[1] << "; make sure the file is in the correct location" << std::endl;
-	  return 1;
-	}
+    	{
+    	  //--------------------------------------
+    	  // terminate if the file can't be opened
+    	  //--------------------------------------
+    	  std::cerr << "!! File open error:" << argv[1] << "; make sure the file is in the correct location" << std::endl;
+    	  return 1;
+    	}
       std::cout << "[INFO] Assuming all channel were active while data was taken; for <n> channel active use ./dat2rootCP filename.dat <n>\n" << std::endl;
     }
   else if ( argc == 3 )
@@ -94,10 +94,10 @@ int main (int argc, char **argv)
       cout << "[INFO] Opening file " << argv[1] << " ......" << endl;
       cout << endl;
       if (!file.is_open ())
-	{			// terminate if the file can't be opened
-	  cerr << "!! File open error:" << argv[1] << endl;
-	  return 1;
-	}
+    	{			// terminate if the file can't be opened
+    	  cerr << "!! File open error:" << argv[1] << endl;
+    	  return 1;
+    	}
       std::cout << "[INFO]: Converting a total of <" << argv[2]  << "> channels \n" << std::endl;
       nChannels = atoi( argv[2] );
     }
@@ -107,10 +107,10 @@ int main (int argc, char **argv)
       cout << "[INFO] Opening file " << argv[1] << " ......" << endl;
       cout << endl;
       if (!file.is_open ())
-	{			// terminate if the file can't be opened
-	  cerr << "!! File open error:" << argv[1] << endl;
-	  return 1;
-	}
+    	{			// terminate if the file can't be opened
+    	  cerr << "!! File open error:" << argv[1] << endl;
+    	  return 1;
+    	}
       std::cout << "[INFO]: Converting a total of <" << argv[2]  << "> channels \n" << std::endl;
       std::cout << "[INFO]: Converting a total of <" << argv[3]  << "> events \n" << std::endl;
       nChannels    = atoi( argv[2] );
@@ -124,7 +124,7 @@ int main (int argc, char **argv)
       cerr << "[ERROR]!! No input file, please provide one" << endl;
       return 1;
     }
-  
+
   //-------------------------------------------
   // automatically change XXXX.dat to XXXX.root
   //-------------------------------------------
@@ -138,7 +138,7 @@ int main (int argc, char **argv)
   // create a new rootfile here
   TFile *treefile = new TFile ((char *) filename.c_str (), "recreate");
   std::cout << ">> Creating rootfile " << filename << " ......\n" << std::endl;
-  
+
   // Save waveform of 1st 5 events
   TH1F *CH1event1 = new TH1F ("CH1event1", "CH1event1", 1024, 0, 1024);
   TH1F *CH1event2 = new TH1F ("CH1event2", "CH1event2", 1024, 0, 1024);
@@ -261,7 +261,7 @@ int main (int argc, char **argv)
   float t1[1024], t2[1024], t3[1024], t4[1024];
   int j, tcell;
   float time1, time2, time3, time4, dt;
-  
+
   float c1[1024];
   float c2[1024];
   float c3[1024];
@@ -280,7 +280,7 @@ int main (int argc, char **argv)
   tree->Branch ("mean", &mean, "ch1:ch2:ch3:ch4");
   tree->Branch ("RMS", &rms, "ch1:ch2:ch3:ch4");
   tree->Branch ("tcell", &tcell, "tcell/I");
-  
+
   tree->Branch ("c1", c1, "c1[1024]/F");
   tree->Branch ("c2", c2, "c2[1024]/F");
   tree->Branch ("c3", c3, "c3[1024]/F");
@@ -311,17 +311,17 @@ int main (int argc, char **argv)
   float EventTime2[1024];
   float EventTime3[1024];
   float EventTime4[1024];
-	
+
   std::cout << ">> Start reading file" << argv[1] << " ......\n" << std::endl;
-  
+
   // Read additional headers introduced in v5 of DRS software
-  char tmpTimeHeader[1];
-  file.read ((char *) &tmpTimeHeader, 4);
+  char tmpTimeHeader[8];
+  file.read ((char *) &tmpTimeHeader, 8);
   cout << tmpTimeHeader << "\n";
-  file.read ((char *) &tmpTimeHeader, 4);
+  file.read ((char *) &tmpTimeHeader, 8);
   cout << tmpTimeHeader << "\n";
-  char tmpBoardSerialNumber[5];
-  file.read ((char *) &tmpBoardSerialNumber, 4);
+  char tmpBoardSerialNumber[8];
+  file.read ((char *) &tmpBoardSerialNumber, 8);
 
   cout << tmpBoardSerialNumber <<"\n";
   for ( int i = 0; i < nChannels; i++ )
@@ -334,365 +334,363 @@ int main (int argc, char **argv)
       else if ( strcmp( tmpChannel1Header,"C003" ) == 0 ) file.read ((char *) &EventTime3, 4096);
       else if ( strcmp( tmpChannel1Header,"C004" ) == 0 ) file.read ((char *) &EventTime4, 4096);
       else
-	{
-	  std::cerr << "[ERROR]: something is wrong with the data! the active channels are not what they are suppose to be" << std::endl;
-	  return -1;
-	}
+    	{
+    	  std::cerr << "[ERROR]: something is wrong with the data! the active channels are not what they are suppose to be" << std::endl;
+    	  return -1;
+    	}
     }
 
   // Read event header
   file.read ((char *) &EventHeader, 4);
   EventHeader[4] = '\0';
-  
+
   std::cout << EventHeader << std::endl;
   std::cout << "\nSTART\n";
 
   while (!endoffile)
-    {				// event loop
+  {				// event loop
 
-      // Count Event, show the progress every 1000 events
-      if (n % 1000 == 0)
-	{
-	  time (&realtime);
-	  std::cout << ">> Processing event No." << n << ", Time elapsed : " <<
-	    (double) (clock () -
-		      start) /
-	    CLOCKS_PER_SEC << " secs, Current time : " << ctime (&realtime) <<
-	    std::endl;
-	  //start = clock ();
-	}
+    // Count Event, show the progress every 1000 events
+    if (n % 1000 == 0)
+  	{
+  	  time (&realtime);
+  	  std::cout << ">> Processing event No." << n << ", Time elapsed : " <<
+  	    (double) (clock () -
+  		      start) /
+  	    CLOCKS_PER_SEC << " secs, Current time : " << ctime (&realtime) <<
+  	    std::endl;
+  	  //start = clock ();
+  	}
 
-      //-------------------------------------------------------------------------
-      // stop conversion if <nTotalEvents> is provided via command line arguments
-      //-------------------------------------------------------------------------
-      if ( nTotalEvents != -1 && n > nTotalEvents ) break;
+    //-------------------------------------------------------------------------
+    // stop conversion if <nTotalEvents> is provided via command line arguments
+    //-------------------------------------------------------------------------
+    if ( nTotalEvents != -1 && n > nTotalEvents ) break;
 
-      ++n;			//  n + 1
-      // if(n>2) break;
-      event.event = n;
+    ++n;			//  n + 1
+    // if(n>2) break;
+    event.event = n;
 
-      // Read serial number
-      file.read ((char *) &SerialNumber, 4);
-      //cout << "Event Serial Number " << SerialNumber << "\n";
-
-
-      // Read date (YY/MM/DD/HH/mm/ss/ms/rr)
-      unsigned short Year;
-      unsigned short Month;
-      unsigned short Day;
-      unsigned short Hour;
-      unsigned short Minute;
-      unsigned short Second;
-      unsigned short Millisecond;
-      unsigned short Range;
-      // file.read ((char *) &Date, 16);
-      // cout << "Event date/time 16-bit values "<< Date << "\n";
-      file.read ((char *) &Year, 2);
-      file.read ((char *) &Month, 2);
-      file.read ((char *) &Day, 2);
-      file.read ((char *) &Hour, 2);
-      file.read ((char *) &Minute, 2);
-      file.read ((char *) &Second, 2);
-      file.read ((char *) &Millisecond, 2);
-      file.read ((char *) &Range, 2);
-      if ( _debug )
-	{
-	  std::cout << "Event date/time: Year: "<< Year
-		    <<", Month: "<<Month
-		    <<", Day: " <<Day
-		    <<", Hour: "<< Hour
-		    <<", Minute: "<< Minute
-		    <<", Second: "<<Second
-		    <<", Millisecond: "<<Millisecond
-		    <<",Range: "<<Range
-		    << std::endl;
-	}
-      //        int LastTime;
-      //        int CurrentTime;
-      //        int PassedTime;
-      //        int RunTime;
-      
-      // calculate time since last event in milliseconds
-      //        LastTime = CurrentTime;
-      //        CurrentTime =
-      //          Date[3] * 3600000 + Date[4] * 60000 + Date[5] * 1000 + Date[6];
-      
-      // Read event times
-      char tmpBoardNumber[5];
-      file.read ((char *) &tmpBoardNumber, 2);
-      short int tempB;
-      file.read ((char *) &tempB, 2);
-      if ( _debug ) cout << "Board serial number: "<<tmpBoardNumber<<" "<<tempB << "\n";
-
-      char tmpTriggerCell[5];
-      file.read ((char *) &tmpTriggerCell, 2);
-      if ( _debug ) cout << tmpTriggerCell << "\n";
-      short int  tmpT;//real trigger cell;
-      file.read ((char *) &tmpT, 2);
-      if ( _debug ) std::cout << "Number of first readout cell "<<tmpT << std::endl;
-      if ( _debug ) std::cout << "Trigger Cell " << tmpTriggerCell << std::endl;
-      //--------------------------------------------
-      //Assign trigger cell to variable in the TTree
-      //--------------------------------------------
-      tcell = tmpT;
-      
-      while (loopchannel)	// loop all available channels. When reach end of event, will be stopped.
-	{
-	  
-	  // Read channel header
-	  file.read ((char *) &ChannelHeader, 4);
-	  ChannelHeader[4] = '\0';
-	  if ( _debug ) std::cout << "Channel Header : " << ChannelHeader << std::endl;
-
-	  if (strcmp (ChannelHeader, "EHDR") == 0)
-	    {
-	      break;
-	    }
-
-	  else if (file.eof ())
-	    {
-	      endoffile = true;
-	      break;
-	    }
-
-	  file.read ((char *) &Scaler, 4);
-	  Scaler[4] = '\0';
-	  //cout << "Scaler : " << Scaler << endl;
-
-	  // get amplitude of each channel
-	  file.read ((char *) &ChannelDataRaw, 2048);
-
-	  for (int i = 0; i < 1024; i++)
-	    {
-	      ChannelData[i] = ChannelDataRaw[i];
-	      ChannelDataVoltage[i] = ChannelDataRaw[i]/65535.-0.5;
-	      //cout << i << " : " << ChannelDataVoltage[i] << "\n";
-	    }
-
-	  // Find the base line using average 
-	  double v_RMS[5];
-	  
-	  for (int j = 0; j < 5; j++)
-	    {
-	      v_RMS[j] = TMath::RMS (&ChannelData[j * 200], &ChannelData[(j + 1) * 200]);	// calculate RMS for 5 sections
-//          cout<<"v_RMS["<<j<<"] : "<<v_RMS[j]<<endl;
-	    }
-
-	  int index_v_RMS = TMath::LocMin (5, v_RMS);	// locate the section for minimum RMS 
-	  double vRMS = v_RMS[index_v_RMS];	// use RMS in that section
-	  double vmean = TMath::Mean (&ChannelData[index_v_RMS * 200], &ChannelData[(index_v_RMS + 1) * 200]);	// use mean in that section
-	  
-	  // Find Max and Min of the Channel data (Voltage)
-	  int index_min = TMath::LocMin (1024, ChannelData);	// return index of the min
-	  double vmin = ChannelData[index_min];	// return value of the vmin
-	  double tmin = EventTime[index_min];	// return value of the tmin
-	  
-
-	  if (strcmp (ChannelHeader, "C001") == 0)
-	    {
-	      for (int i = 0; i < 1024; i++)
-		{
-		  if (n == 1)
-		    {
-		      CH1event1->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 2)
-		    {
-		      CH1event2->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 3)
-		    {
-		      CH1event3->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 4)
-		    {
-		      CH1event4->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 5)
-		    {
-		      CH1event5->Fill (i, ChannelDataVoltage[i]);
-		    }
-		}
+    // Read serial number
+    file.read ((char *) &SerialNumber, 4);
+    //cout << "Event Serial Number " << SerialNumber << "\n";
 
 
-	      // Fill in the tree for ch1
-	      amplitude.ch1 = vmean - vmin;
-	      peaktime.ch1 = tmin;
-	      mean.ch1 = vmean;
-	      rms.ch1 = vRMS;
+    // Read date (YY/MM/DD/HH/mm/ss/ms/rr)
+    unsigned short Year;
+    unsigned short Month;
+    unsigned short Day;
+    unsigned short Hour;
+    unsigned short Minute;
+    unsigned short Second;
+    unsigned short Millisecond;
+    unsigned short Range;
+    // file.read ((char *) &Date, 16);
+    // cout << "Event date/time 16-bit values "<< Date << "\n";
+    file.read ((char *) &Year, 2);
+    file.read ((char *) &Month, 2);
+    file.read ((char *) &Day, 2);
+    file.read ((char *) &Hour, 2);
+    file.read ((char *) &Minute, 2);
+    file.read ((char *) &Second, 2);
+    file.read ((char *) &Millisecond, 2);
+    file.read ((char *) &Range, 2);
+    if ( _debug )
+  	{
+  	  std::cout << "Event date/time: Year: "<< Year
+  		    <<", Month: "<<Month
+  		    <<", Day: " <<Day
+  		    <<", Hour: "<< Hour
+  		    <<", Minute: "<< Minute
+  		    <<", Second: "<<Second
+  		    <<", Millisecond: "<<Millisecond
+  		    <<",Range: "<<Range
+  		    << std::endl;
+  	}
+    //        int LastTime;
+    //        int CurrentTime;
+    //        int PassedTime;
+    //        int RunTime;
 
-	      for (int i = 0; i < 1024; i++)
-		{
-		  c1[i] = ChannelDataVoltage[i];
-               // calculate time for this cell
-		  for (j=0,t1[i]=0; j<i ; j++)
-		    t1[i] += EventTime1[(j+tmpT) % 1024];
-		  // t1[i] = i;
-		}
-	    }			// end of channel 1
+    // calculate time since last event in milliseconds
+    //        LastTime = CurrentTime;
+    //        CurrentTime =
+    //          Date[3] * 3600000 + Date[4] * 60000 + Date[5] * 1000 + Date[6];
 
-	  else if (strcmp (ChannelHeader, "C002") == 0)
-	    {
-	      for (int i = 0; i < 1024; i++)
-		{
-		  if (n == 1)
-		    {
-		      CH2event1->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 2)
-		    {
-		      CH2event2->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 3)
-		    {
-		      CH2event3->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 4)
-		    {
-		      CH2event4->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 5)
-		    {
-		      CH2event5->Fill (i, ChannelDataVoltage[i]);
-		    }
-		}
+    // Read event times
+    char tmpBoardNumber[5];
+    file.read ((char *) &tmpBoardNumber, 2);
+    short int tempB;
+    file.read ((char *) &tempB, 2);
+    if ( _debug ) cout << "Board serial number: "<<tmpBoardNumber<<" "<<tempB << "\n";
 
+    char tmpTriggerCell[5];
+    file.read ((char *) &tmpTriggerCell, 2);
+    if ( _debug ) cout << tmpTriggerCell << "\n";
+    short int  tmpT;//real trigger cell;
+    file.read ((char *) &tmpT, 2);
+    if ( _debug ) std::cout << "Number of first readout cell "<<tmpT << std::endl;
+    if ( _debug ) std::cout << "Trigger Cell " << tmpTriggerCell << std::endl;
+    //--------------------------------------------
+    //Assign trigger cell to variable in the TTree
+    //--------------------------------------------
+    tcell = tmpT;
 
-	      // Fill in the tree for ch2
-	      amplitude.ch2 = vmean - vmin;
-	      peaktime.ch2 = tmin;
-	      mean.ch2 = vmean;
-	      rms.ch2 = vRMS;
+    while (loopchannel)	// loop all available channels. When reach end of event, will be stopped.
+  	{
 
-	      for (int i = 0; i < 1024; i++)
-		{
-		  c2[i] = ChannelDataVoltage[i];
-               // calculate time for this cell
-		  for (j=0,t2[i]=0; j<i ; j++)
-		    t2[i] += EventTime2[(j+tmpT) % 1024];
-		 // t2[i] = i;
-		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
-		}
-	    }			// end of channel 2
+  	  // Read channel header
+  	  file.read ((char *) &ChannelHeader, 4);
+  	  ChannelHeader[4] = '\0';
+  	  if ( _debug ) std::cout << "Channel Header : " << ChannelHeader << std::endl;
 
-	  else if (strcmp (ChannelHeader, "C003") == 0)
-	    {
-	      for (int i = 0; i < 1024; i++)
-		{
-		  if (n == 1)
-		    {
-		      CH3event1->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 2)
-		    {
-		      CH3event2->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 3)
-		    {
-		      CH3event3->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 4)
-		    {
-		      CH3event4->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 5)
-		    {
-		      CH3event5->Fill (i, ChannelDataVoltage[i]);
-		    }
-		}
+  	  if (strcmp (ChannelHeader, "EHDR") == 0)
+      {
+        break;
+      }
 
+  	  else if (file.eof ())
+      {
+        endoffile = true;
+        break;
+      }
 
-	      // Fill in the tree for ch3
-	      amplitude.ch3 = vmean - vmin;
-	      peaktime.ch3 = tmin;
-	      mean.ch3 = vmean;
-	      rms.ch3 = vRMS;
+  	  file.read ((char *) &Scaler, 4);
+  	  Scaler[4] = '\0';
+  	  //cout << "Scaler : " << Scaler << endl;
 
-	      for (int i = 0; i < 1024; i++)
-		{
-		  c3[i] = ChannelDataVoltage[i];
-               // calculate time for this cell
-		  for (j=0,t3[i]=0; j<i ; j++)
-		    t3[i] += EventTime3[(j+tmpT) % 1024];
-		 //t3[i] = i;
-		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
-		}
+  	  // get amplitude of each channel
+  	  file.read ((char *) &ChannelDataRaw, 2048);
 
-	    }			// end of channel 3
+  	  for (int i = 0; i < 1024; i++)
+      {
+        ChannelData[i] = ChannelDataRaw[i];
+        ChannelDataVoltage[i] = ChannelDataRaw[i]/65535.-0.5;
+        //cout << i << " : " << ChannelDataVoltage[i] << "\n";
+      }
 
+  	  // Find the base line using average
+  	  double v_RMS[5];
 
+  	  for (int j = 0; j < 5; j++)
+      {
+        v_RMS[j] = TMath::RMS (&ChannelData[j * 200], &ChannelData[(j + 1) * 200]);	// calculate RMS for 5 sections
+  //          cout<<"v_RMS["<<j<<"] : "<<v_RMS[j]<<endl;
+      }
 
-	  else if (strcmp (ChannelHeader, "C004") == 0)
-	    {
-	      for (int i = 0; i < 1024; i++)
-		{
-		  if (n == 1)
-		    {
-		      CH4event1->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 2)
-		    {
-		      CH4event2->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 3)
-		    {
-		      CH4event3->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 4)
-		    {
-		      CH4event4->Fill (i, ChannelDataVoltage[i]);
-		    }
-		  if (n == 5)
-		    {
-		      CH4event5->Fill (i, ChannelDataVoltage[i]);
-		    }
-		}
+  	  int index_v_RMS = TMath::LocMin (5, v_RMS);	// locate the section for minimum RMS
+  	  double vRMS = v_RMS[index_v_RMS];	// use RMS in that section
+  	  double vmean = TMath::Mean (&ChannelData[index_v_RMS * 200], &ChannelData[(index_v_RMS + 1) * 200]);	// use mean in that section
+
+  	  // Find Max and Min of the Channel data (Voltage)
+  	  int index_min = TMath::LocMin (1024, ChannelData);	// return index of the min
+  	  double vmin = ChannelData[index_min];	// return value of the vmin
+  	  double tmin = EventTime[index_min];	// return value of the tmin
 
 
-	      // Fill in the tree for ch4
-	      amplitude.ch4 = vmean - vmin;
-	      peaktime.ch4 = tmin;
-	      mean.ch4 = vmean;
-	      rms.ch4 = vRMS;
+  	  if (strcmp (ChannelHeader, "C001") == 0)
+      {
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  if (n == 1)
+    		    {
+    		      CH1event1->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 2)
+    		    {
+    		      CH1event2->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 3)
+    		    {
+    		      CH1event3->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 4)
+    		    {
+    		      CH1event4->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 5)
+    		    {
+    		      CH1event5->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		}
 
-	      for (int i = 0; i < 1024; i++)
-		{
-		  c4[i] = ChannelDataVoltage[i];
-               // calculate time for this cell
-		  for (j=0,t4[i]=0; j<i ; j++)
-		    t4[i] += EventTime4[(j+tmpT) % 1024];
-		 //t4[i] = i;		 
-		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
-		}
-	    }			// end of channel 4
 
-	  //----------------------------------------------------------------------
-	  // align cell #0 of all channels; this is the first sample in the scope;
-	  //this is the only time the signals have the same absolute time;
-	  //-----------------------------------------------------------------------
-	  
-	  float time1_0 =  t1[(1024-tcell) % 1024];//get time of cell#0 for ch1
-	  float time2_0 =  t2[(1024-tcell) % 1024];//get time of cell#0 for ch1
-	  float time3_0 =  t3[(1024-tcell) % 1024];//get time of cell#0 for ch1
-	  float time4_0 =  t4[(1024-tcell) % 1024];//get time of cell#0 for ch1
-	  for (int i=0 ; i<1024 ; i++)
-	    {
-	      t2[i] -= (time2_0-time1_0);
-	      t3[i] -= (time3_0-time1_0);
-	      t4[i] -= (time4_0-time1_0);
-	    }
-	}			// end of channel loop
+        // Fill in the tree for ch1
+        amplitude.ch1 = vmean - vmin;
+        peaktime.ch1 = tmin;
+        mean.ch1 = vmean;
+        rms.ch1 = vRMS;
 
-      tree->Fill ();		// fill the tree event by event 
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  c1[i] = ChannelDataVoltage[i];
+                   // calculate time for this cell
+    		  for (j=0,t1[i]=0; j<i ; j++)
+    		    t1[i] += EventTime1[(j+tmpT) % 1024];
+    		  // t1[i] = i;
+    		}
+      }			// end of channel 1
 
-      if (file.eof ())
-	{
-	  cout << ">> Reach End of the file .... " << endl;
-	  cout << ">> Total event no." << n << endl;
-	  endoffile = true;
-	  break;
-	}
-    }				// end of event loop
+  	  else if (strcmp (ChannelHeader, "C002") == 0)
+      {
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  if (n == 1)
+    		    {
+    		      CH2event1->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 2)
+    		    {
+    		      CH2event2->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 3)
+    		    {
+    		      CH2event3->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 4)
+    		    {
+    		      CH2event4->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 5)
+    		    {
+    		      CH2event5->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		}
+
+
+        // Fill in the tree for ch2
+        amplitude.ch2 = vmean - vmin;
+        peaktime.ch2 = tmin;
+        mean.ch2 = vmean;
+        rms.ch2 = vRMS;
+
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  c2[i] = ChannelDataVoltage[i];
+                   // calculate time for this cell
+    		  for (j=0,t2[i]=0; j<i ; j++)
+    		    t2[i] += EventTime2[(j+tmpT) % 1024];
+    		 // t2[i] = i;
+    		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
+    		}
+      }			// end of channel 2
+
+  	  else if (strcmp (ChannelHeader, "C003") == 0)
+      {
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  if (n == 1)
+    		    {
+    		      CH3event1->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 2)
+    		    {
+    		      CH3event2->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 3)
+    		    {
+    		      CH3event3->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 4)
+    		    {
+    		      CH3event4->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 5)
+    		    {
+    		      CH3event5->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		}
+
+
+        // Fill in the tree for ch3
+        amplitude.ch3 = vmean - vmin;
+        peaktime.ch3 = tmin;
+        mean.ch3 = vmean;
+        rms.ch3 = vRMS;
+
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  c3[i] = ChannelDataVoltage[i];
+                   // calculate time for this cell
+    		  for (j=0,t3[i]=0; j<i ; j++)
+    		    t3[i] += EventTime3[(j+tmpT) % 1024];
+    		 //t3[i] = i;
+    		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
+    		}
+
+      }			// end of channel 3
+
+  	  else if (strcmp (ChannelHeader, "C004") == 0)
+      {
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  if (n == 1)
+    		    {
+    		      CH4event1->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 2)
+    		    {
+    		      CH4event2->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 3)
+    		    {
+    		      CH4event3->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 4)
+    		    {
+    		      CH4event4->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		  if (n == 5)
+    		    {
+    		      CH4event5->Fill (i, ChannelDataVoltage[i]);
+    		    }
+    		}
+
+
+        // Fill in the tree for ch4
+        amplitude.ch4 = vmean - vmin;
+        peaktime.ch4 = tmin;
+        mean.ch4 = vmean;
+        rms.ch4 = vRMS;
+
+        for (int i = 0; i < 1024; i++)
+    		{
+    		  c4[i] = ChannelDataVoltage[i];
+                   // calculate time for this cell
+    		  for (j=0,t4[i]=0; j<i ; j++)
+    		    t4[i] += EventTime4[(j+tmpT) % 1024];
+    		 //t4[i] = i;
+    		  // std::cout<<"KKK "<<c1[i]<<" "<<ChannelDataVoltage[i]<<std::endl;
+    		}
+      }			// end of channel 4
+
+  	  //----------------------------------------------------------------------
+  	  // align cell #0 of all channels; this is the first sample in the scope;
+  	  //this is the only time the signals have the same absolute time;
+  	  //-----------------------------------------------------------------------
+
+  	  float time1_0 =  t1[(1024-tcell) % 1024];//get time of cell#0 for ch1
+  	  float time2_0 =  t2[(1024-tcell) % 1024];//get time of cell#0 for ch1
+  	  float time3_0 =  t3[(1024-tcell) % 1024];//get time of cell#0 for ch1
+  	  float time4_0 =  t4[(1024-tcell) % 1024];//get time of cell#0 for ch1
+  	  for (int i=0 ; i<1024 ; i++)
+      {
+        t2[i] -= (time2_0-time1_0);
+        t3[i] -= (time3_0-time1_0);
+        t4[i] -= (time4_0-time1_0);
+      }
+  	}			// end of channel loop
+
+    tree->Fill ();		// fill the tree event by event
+
+    if (file.eof ())
+  	{
+  	  cout << ">> Reach End of the file .... " << endl;
+  	  cout << ">> Total event no." << n << endl;
+  	  endoffile = true;
+  	  break;
+  	}
+  }				// end of event loop
 
 //  tree->Print ();
   cout << "The tree was saved." << endl;

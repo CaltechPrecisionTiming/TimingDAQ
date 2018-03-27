@@ -32,7 +32,7 @@ class DatAnalyzer {
         TString ParseCommandLine( int argc, char* argv[], TString opt );
         virtual void GetCommandLineArgs(int argc, char **argv);
 
-        virtual void InitTree();
+        virtual void InitLoop();
         virtual void ResetVar(unsigned int n_ch);
 
         virtual void ResetAnalysisVariables();
@@ -55,6 +55,8 @@ class DatAnalyzer {
         const unsigned int NUM_SAMPLES;
         const unsigned int DAC_RESOLUTION; // DAC resolution (2^[bit])
         const float DAC_SCALE; // [V] total scale of the DAC
+
+        float scale_minimum = -500; // [mV] Voltage value corresponding to 0 DAC counts
 
 
         // Set by command line arguments or default

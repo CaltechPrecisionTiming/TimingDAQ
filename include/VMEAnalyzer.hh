@@ -28,7 +28,7 @@ class VMEAnalyzer : public DatAnalyzer {
 
     void LoadCalibration();
 
-    void InitTree();
+    void InitLoop();
 
     int GetChannelsMeasurement();
 

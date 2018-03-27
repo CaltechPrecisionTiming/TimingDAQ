@@ -5,6 +5,8 @@
 // found on file: Run502_CMSTiming_converted.root
 //////////////////////////////////////////////////////////
 
+''' HAVE to be deletated at the end'''
+
 #ifndef FTBFPixelEvent_h
 #define FTBFPixelEvent_h
 
@@ -48,7 +50,7 @@ public :
 #endif
 
 #ifdef FTBFPixelEvent_cxx
-FTBFPixelEvent::FTBFPixelEvent(TTree *tree) : fChain(0) 
+FTBFPixelEvent::FTBFPixelEvent(TTree *tree) : fChain(0)
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.

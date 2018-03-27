@@ -1,7 +1,14 @@
 #ifndef DRSAnalyzer_HH
 #define DRSAnalyzer_HH
 #define DRS_CHANNELS 4
+#define DRS_TIMES 4
 #define DRS_SAMPLES 1024
+
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <cstring>
 
 #include "DatAnalyzer.hh"
 
@@ -9,14 +16,22 @@
 // DRS data files in .dat format.
 
 class DRSAnalyzer : public DatAnalyzer {
-    public:
-        DRSAnalyzer(std::string configName) :
-            DatAnalyzer(configName, DRS_CHANNELS) {
-              // TODO: Complain if the config is giving a larget or smallr number of channel (Maybe in the base class)
-            } // specify only DRS_CHANNELS channels
-        void parse(std::string inName);
-    private:
-        short raw[DRS_CHANNELS][DRS_SAMPLES] = {0};
+  public:
+    DRSAnalyzer() : DatAnalyzer(DRS_CHANNELS, DRS_TIMES, DRS_SAMPLES, 65536, 1.) {}
+
+    // void GetCommandLineArgs(int argc, char **argv);
+
+    void InitLoop();
+
+    int GetChannelsMeasurement();
+
+    unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; }
+
+    void Analyze();
+  protected:
+    float event_time[4][1024] = {0};
+    std::vector<unsigned int> active_channels;
+
 };
 
 #endif

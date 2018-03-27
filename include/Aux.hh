@@ -1,6 +1,9 @@
 #ifndef Aux_HH
 #define Aux_HH
 
+''' HAVE to be deletated at the end'''
+
+
 #include <TGraphErrors.h>
 #include <TH1F.h>
 #include <TF1.h>

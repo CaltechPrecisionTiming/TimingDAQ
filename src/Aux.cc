@@ -3,6 +3,8 @@
 #include <string>
 #include "TLine.h"
 
+'''HAVE to be deleted at the end'''
+
 //*********************************************************
 // Get amplification factor used for the silicon sensor
 //*********************************************************
