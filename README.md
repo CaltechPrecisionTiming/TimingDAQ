@@ -7,9 +7,11 @@ The main executable applications will be created by the istallation in the main 
 If you are not interested in the details just use the following commands
 
 ### Installation
-To install copy paste the following::
-git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
-make -j8
+To install copy paste the following:
+
+``git clone https://github.com/CaltechPrecisionTiming/TimingDAQ``
+
+``make -j8``
 
 
 ### Examples
@@ -17,7 +19,7 @@ make -j8
 ``./DRSDat2Root --input_file=<your_file>.dat --config=config/DRS_Na22.config --N_evts=10000``
 
 ## Command line options
-All the command line option must be passed using the sintax ``--<opt>=<val>``. For all options ``--<opt>`` is equal to ``--<opt>=true``.
+All the command line option must be passed using the sintax ``--<opt>=<val>``. For all options, ``--<opt>`` is equal to ``--<opt>=true``.
 The following option are common to all the devices.
 
 Compulsory arguments don't have default value
