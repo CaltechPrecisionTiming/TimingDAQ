@@ -6,10 +6,10 @@ The main executable applications will be created by the istallation in the main 
 ## Quick start
 If you are not interested in the details just use the following commands
 
-### Installation::
-
+### Installation
+To install copy paste the following::
 git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
-make -j8``
+make -j8
 
 
 ### Examples
@@ -20,14 +20,13 @@ make -j8``
 All the command line option must be passed using the sintax ``--<opt>=<val>``.
 The following option are common to all the devices.
 
-Compulsory arguments:
+Compulsory arguments don't have default value
 
-``input_file``            Binary input file with the data. Must end in ``.dat``.
-``config``                Configuration file (see below).
-
-Complementary arguments:
-
-``output_file``           Output root file containing a singe tree called ``pulse``. If not provided, the default option is to have the same name of the input file with the ``.root`` extension.
+| Argument | Default | Notes|
+| -------- | :-------: | ---- |
+|``input_file``|    |Binary input file with the data. Must end in ``.dat``.|
+|``config``       |Configuration file (see below).|
+``output_file``| ``<input>.root`` | Output root file containing a singe tree called ``pulse``. If not provided, the default option is to have the same name of the input file with the ``.root`` extension.|
 
 ### VME additional options:
 
