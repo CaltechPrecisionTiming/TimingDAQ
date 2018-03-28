@@ -85,8 +85,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
     aux = "config/15may2017_new.config";
   }
   cout << "Config file: " << aux.Data() << endl;
-  config = new Config(aux.Data());
-  if ( !config->hasChannels() || !config->isValid() ) {
+  config = new Configuration(aux.Data());
+  if ( !config->isValid() ) {
     cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
     exit(0);
   }

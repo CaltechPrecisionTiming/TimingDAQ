@@ -20,7 +20,7 @@
 #include "TDecompSVD.h"
 
 // LOCAL INCLUDES
-#include "Config.hh"
+#include "Configuration.hh"
 
 // This is the base class for .dat --> .root converters.
 
@@ -66,7 +66,7 @@ class DatAnalyzer {
 
 
         // Set by command line arguments or default
-        Config* config = nullptr;
+        Configuration* config = nullptr;
 
         TString input_file_path;
         TString output_file_path;
