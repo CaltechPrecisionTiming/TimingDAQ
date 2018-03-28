@@ -374,12 +374,12 @@ void DatAnalyzer::Analyze(){
       // -------------- Do  linear fit
       if( config->channels[i].algorithm.Contains("Reo") ) {
         unsigned int i_min = GetIdxFirstCross(0.15*amp, channel[i], idx_min, -1);
-        unsigned int i_max = GetIdxFirstCross(0.70*amp, channel[i], idx_min, +1);
+        unsigned int i_max = GetIdxFirstCross(0.50*amp, channel[i], i_min, +1);
         float t_min = time[GetTimeIndex(i)][i_min];
         float t_max = time[GetTimeIndex(i)][i_max];
 
         TF1* flinear = new TF1("flinear"+name, "[0]*x+[1]", t_min, t_max);
-        flinear->SetLineColor(4);
+        flinear->SetLineColor(2);
 
         TString opt = "R";
         if ( draw_debug_pulses ) opt += "+";

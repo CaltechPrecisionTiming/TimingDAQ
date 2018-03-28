@@ -847,16 +847,16 @@ void WeierstrassTransform( short* channel, double* channelFilter, float* time, T
     {
       float convolvedPoint = 0;
       for ( int j = 0; j <= i; j++ )
-	{
-	  if ( i < 1024 )
-	    {
-	      convolvedPoint += channelFloat[i-j]*Gauss[1023-j];
-	    }
-	  else
-	    {
-	      if ( 1023-(i-1023)-j >= 0 ) convolvedPoint += channelFloat[1023-j]*Gauss[1023-(i-1023)-j];
-	    }
-	}
+    	{
+    	  if ( i < 1024 )
+    	    {
+    	      convolvedPoint += channelFloat[i-j]*Gauss[1023-j];
+    	    }
+    	  else
+    	    {
+    	      if ( 1023-(i-1023)-j >= 0 ) convolvedPoint += channelFloat[1023-j]*Gauss[1023-(i-1023)-j];
+    	    }
+    	}
       //if ( i < 1024 ) channelFloatFiltered[i] = convolvedPoint;
       channelFloatFiltered[i] = convolvedPoint;
     }
