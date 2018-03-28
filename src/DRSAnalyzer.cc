@@ -2,16 +2,6 @@
 
 using namespace std;
 
-// void DRSAnalyzer::GetCommandLineArgs(int argc, char **argv){
-//   DatAnalyzer::GetCommandLineArgs(argc, argv);
-//
-//   calibration_file_path = ParseCommandLine( argc, argv, "calibration_file" );
-//   if(calibration_file_path == ""){
-//     calibration_file_path = "calibration/v1740";
-//   }
-//   cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl;
-// }
-
 void DRSAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
 
