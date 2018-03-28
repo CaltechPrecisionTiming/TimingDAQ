@@ -18,6 +18,7 @@
 #include "TVectorF.h"
 #include "TMatrixF.h"
 #include "TDecompSVD.h"
+#include "TF1.h"
 
 // LOCAL INCLUDES
 #include "Configuration.hh"
@@ -101,7 +102,6 @@ class DatAnalyzer {
           "intfull",
           "risetime",
           "fallingtime",
-          // "gauspeak",
           // "sigmoidTime",
           // "fullFitTime",
           // "linearTime0",

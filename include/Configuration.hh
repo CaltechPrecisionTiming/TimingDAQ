@@ -15,6 +15,7 @@ using namespace std;
 // and amplification factors for each digitizer channel.
 //
 // Configuration file lines should be of the following form (lines beginning with a '#' are ignored):
+// baseline i_start n_samples
 // CH  POLARITY  AMPLIFICATION  ATTENUATION (dB)  ALGORITHM  FILTER_WIDTH
 // with:
 // CH - channel number (integer)
@@ -37,7 +38,7 @@ class Configuration {
         float attenuation = 0;
         TString algorithm = "";
         float weierstrass_filter_width = 0;
-        float frec_high_pass = 0;
+        // float frec_high_pass = 0;
       };
 
       // Read and initilize from the configuration file

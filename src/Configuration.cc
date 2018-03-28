@@ -39,7 +39,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       baseline[1] = std::stoi(item);
 
-      cout << "[CONFIG]: baseline = [ " << baseline[0] << "," << baseline[1] << " ]" << endl;
+      cout << "[CONFIG]: baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
     }
     else if (line[0] <= '9' && line[0] >= '0') {
       Channel aux_ch;

@@ -82,7 +82,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
   aux = ParseCommandLine( argc, argv, "config" );
   if(aux == ""){
-    aux = "config/15may2017_new.config";
+    cerr << "[ERROR]: Missing config file" << endl;
+    exit(0);
   }
   cout << "Config file: " << aux.Data() << endl;
   config = new Configuration(aux.Data());
@@ -117,6 +118,16 @@ void DatAnalyzer::InitLoop() {
     if(save_meas){
       tree->Branch("channel", &(channel[0][0]), Form("channel[%d][%d]/F", NUM_CHANNELS, NUM_SAMPLES));
       tree->Branch("time", &(time[0][0]), Form("time[%d][%d]/F", NUM_TIMES, NUM_SAMPLES));
+    }
+
+    bool at_least_1_gaus_fit = false;
+    for(auto c : config->channels) {
+      if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
+    }
+    if( at_least_1_gaus_fit ) {
+      var_names.push_back("gaus_mu");
+      var_names.push_back("gaus_sigma");
+      var_names.push_back("gaus_chi2");
     }
 
     for(auto n : var_names){
@@ -263,8 +274,8 @@ void DatAnalyzer::Analyze(){
 
     // ------- Get baseline ------
     float baseline = 0;
-    unsigned int bl_st_idx = 5;
-    unsigned int bl_lenght = 150;
+    unsigned int bl_st_idx = config->baseline[0];
+    unsigned int bl_lenght = config->baseline[1];
     for(unsigned int j=bl_st_idx; j<(bl_st_idx+bl_lenght); j++) {
       baseline += channel[i][j];
     }
@@ -292,22 +303,23 @@ void DatAnalyzer::Analyze(){
     baseline_RMS = sqrt(baseline_RMS/bl_lenght);
     var["baseline_RMS"][i] = baseline_RMS;
 
-    // --------------- Find closest 10% and 90% index
-    unsigned int integral_l_bound = idx_min;
-    unsigned int integral_r_bound = idx_min;
-    unsigned int j_90_pre, j_10_pre;
-    unsigned int j_90_post, j_10_post;
+    // --------------- Define pulse graph
+    float * yerr = new float[NUM_SAMPLES];
+    for(unsigned j = 0; j < NUM_SAMPLES; j++) yerr[j] = 0 * var["baseline_RMS"][i];
+    TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
+    pulse->SetNameTitle("g_"+name, "g_"+name);
 
-    unsigned int deg = 3;
-    float * coeff_poly_fit = 0;
+    unsigned int j_90_pre = 0, j_10_pre = 0;
+    unsigned int j_90_post = 0, j_10_post = 0;
+
+    // unsigned int deg = 3;
+    // float * coeff_poly_fit = 0;
     if( fabs(amp) > 3*baseline_RMS && fabs(channel[i][idx_min+1]) > 2*baseline_RMS && fabs(channel[i][idx_min-1]) > 2*baseline_RMS) {
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
       // -------------- Integrate the pulse
-      integral_l_bound = j_10_pre;
-      integral_r_bound = j_10_post;
-      var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], integral_l_bound, integral_r_bound);
+      var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], j_10_pre, j_10_post);
       var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
 
       // -------------- Compute rise and falling time
@@ -316,19 +328,43 @@ void DatAnalyzer::Analyze(){
       j_90_post = GetIdxFirstCross(amp*0.9, channel[i], j_10_post, -1);
       var["fallingtime"][i] = time[GetTimeIndex(i)][j_10_post] - time[GetTimeIndex(i)][j_10_post];
 
-      AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), deg, coeff_poly_fit);
+      // -------------- Do the gaussian fit
+      if( config->channels[i].algorithm.Contains("G") ) {
+        unsigned int j_down = GetIdxFirstCross(amp*0.5, channel[i], idx_min, -1);
+        unsigned int j_up = GetIdxFirstCross(amp*0.5, channel[i], idx_min, +1);
+        if( j_up - j_down < 4 ) {
+          j_up = idx_min + 2;
+          j_down = idx_min - 2;
+        }
+
+        TF1* fpeak = new TF1("fpeak"+name, "gaus", time[GetTimeIndex(i)][j_down], time[GetTimeIndex(i)][j_up]);
+
+        float ext_sigma = 0.2*(time[GetTimeIndex(i)][j_up] - time[GetTimeIndex(i)][j_down]);
+        fpeak->SetParameter(0, amp*(sqrt(2*3.14))*ext_sigma);
+        fpeak->SetParameter(1, time[GetTimeIndex(i)][idx_min]);
+        fpeak->SetParameter(2, ext_sigma);
+
+        TString opt = "R";
+        if ( draw_debug_pulses ) opt += "+";
+        else opt += "QN0";
+        pulse->Fit("fpeak"+name, opt);
+
+        var["gaus_mu"][i] = fpeak->GetParameter(1);
+        var["gaus_sigma"][i] = fpeak->GetParameter(2);
+        var["gaus_chi2"][i] = pulse->Chisquare(fpeak, "R");
+
+        if ( !draw_debug_pulses ) delete fpeak;
+      }
+
+      // AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), deg, coeff_poly_fit);
     }
 
 
 
     // Draw plot of the pulse
     if(draw_debug_pulses) {
-      float * yerr = new float[NUM_SAMPLES];
-      for(unsigned j = 0; j < NUM_SAMPLES; j++) yerr[j] = 0 * var["baseline_RMS"][i];
-      TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
-      pulse->SetNameTitle("g_"+name, "g_"+name);
 
-      TCanvas* c =  new TCanvas("c_"+name, "c_"+name, 1200, 600);
+      TCanvas* c =  new TCanvas("c_"+name, "c_"+name, 1400, 600);
       TLine* line = new TLine();
       // Draw pulse
       pulse->SetMarkerStyle(4);
@@ -359,15 +395,15 @@ void DatAnalyzer::Analyze(){
       line->DrawLine(time[GetTimeIndex(i)][0], 0.9*var["V_peak"][i], var["t_peak"][NUM_SAMPLES], 0.9*var["V_peak"][i]);
 
       // Draw integral area
-      int N_tot_integral = integral_r_bound-integral_l_bound;
+      int N_tot_integral = j_10_post-j_10_pre;
       if(N_tot_integral > 0) {
-        vector<float> aux_time = {time[GetTimeIndex(i)][integral_l_bound]};
+        vector<float> aux_time = {time[GetTimeIndex(i)][j_10_pre]};
         vector<float> aux_volt = {0};
-        for(unsigned int j = integral_l_bound; j <= integral_r_bound; j++) {
+        for(unsigned int j = j_10_pre; j <= j_10_post; j++) {
           aux_time.push_back(time[GetTimeIndex(i)][j]);
           aux_volt.push_back(channel[i][j]);
         }
-        aux_time.push_back(time[GetTimeIndex(i)][integral_r_bound]);
+        aux_time.push_back(time[GetTimeIndex(i)][j_10_post]);
         aux_volt.push_back(0);
         TGraph * integral_pulse = new TGraph(aux_time.size(), &(aux_time[0]), &(aux_volt[0]));
         integral_pulse->SetFillColor(40);
@@ -386,26 +422,28 @@ void DatAnalyzer::Analyze(){
         gr_pre_post->SetMarkerColor(4);
         gr_pre_post->Draw("P*");
 
-        vector<float> polyval;
-        for(unsigned int j = j_10_pre; j <= j_90_pre; j++) {
-          float aux = 0;
-          for( int n = 0; n <= deg; n++) {
-            aux += coeff_poly_fit[n] * pow(time[GetTimeIndex(i)][j] , n);
-          }
-          polyval.push_back(aux);
-        }
-        TGraph* g_poly = new TGraph(polyval.size(), &(time[GetTimeIndex(i)][j_10_pre]), &(polyval[0]) );
-        g_poly->SetLineColor(2);
-        g_poly->SetLineWidth(2);
-        g_poly->SetLineStyle(7);
-        g_poly->Draw("C");
+        // vector<float> polyval;
+        // for(unsigned int j = j_10_pre; j <= j_90_pre; j++) {
+        //   float aux = 0;
+        //   for( int n = 0; n <= deg; n++) {
+        //     aux += coeff_poly_fit[n] * pow(time[GetTimeIndex(i)][j] , n);
+        //   }
+        //   polyval.push_back(aux);
+        // }
+        // TGraph* g_poly = new TGraph(polyval.size(), &(time[GetTimeIndex(i)][j_10_pre]), &(polyval[0]) );
+        // g_poly->SetLineColor(2);
+        // g_poly->SetLineWidth(2);
+        // g_poly->SetLineStyle(7);
+        // g_poly->Draw("C");
       }
 
       c->SetGrid();
       c->SaveAs("~/Desktop/debug/"+name+".png");
     }
 
-    if(coeff_poly_fit != 0) delete coeff_poly_fit;
+    // if(coeff_poly_fit != 0) delete coeff_poly_fit;
+    delete [] yerr;
+    delete pulse;
   }
 }
 
