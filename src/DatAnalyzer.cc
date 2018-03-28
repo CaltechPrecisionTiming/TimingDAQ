@@ -153,10 +153,30 @@ float DatAnalyzer::GetPulseIntegral(float *a, float *t, unsigned int i_st, unsig
   return integral;
 }
 
+unsigned int DatAnalyzer::GetIdxClosest(float value, float* v, unsigned int i_st, int direction) {
+  unsigned int idx_end = direction>0 ? NUM_SAMPLES-1 : 0;
+
+  unsigned int i = i_st;
+  unsigned int i_min = i_st;
+  float min_distance = fabs(value - v[i]);
+
+  while( i != idx_end ) {
+    i += direction;
+    float d = fabs(value - v[i]);
+    if( d < min_distance ) {
+      min_distance = d;
+      i_min = i;
+    }
+  }
+
+  return i_min;
+}
+
+
 void DatAnalyzer::Analyze(){
   for(unsigned int i=0; i<NUM_CHANNELS; i++) {
+    ResetVar(i);
     if ( !config->hasChannel(i) ) {
-      ResetVar(i);
       continue;
     }
 
@@ -174,7 +194,6 @@ void DatAnalyzer::Analyze(){
       baseline += channel[i][j];
     }
     baseline /= (float) bl_lenght;
-    var["baseline"][i] = baseline;
 
 
     // ------------- Get minimum position, max amplitude and scale the signal
@@ -187,26 +206,44 @@ void DatAnalyzer::Analyze(){
         amp = channel[i][j];
       }
     }
-    var["amp"][i] = amp;
-    var["xmin"][i] = time[GetTimeIndex(i)][idx_min];
+    var["baseline"][i] = scale_factor * baseline;
+    var["V_peak"][i] = amp;
+    var["t_peak"][i] = time[GetTimeIndex(i)][idx_min];
 
-    // -------------- Integrate the pulse
-    const int L_pk_shift = 20;
-    const int R_pk_shift = 50;
-    unsigned int l_bound = max(0, (int)idx_min-L_pk_shift);
-    unsigned int r_bound = min(idx_min+R_pk_shift, NUM_SAMPLES-3);
-    var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], l_bound, r_bound);
-    var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 0, NUM_SAMPLES-3);
+    float baseline_RMS = 0;
+    for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
+      baseline_RMS += channel[i][j]*channel[i][j];
+    }
+    baseline_RMS = sqrt(baseline_RMS/bl_lenght);
+    var["baseline_RMS"][i] = baseline_RMS;
+
+    // --------------- Find closest 10% and 90% index
+    unsigned int integral_l_bound = idx_min;
+    unsigned int integral_r_bound = idx_min;
+    if( fabs(amp) > 3*baseline_RMS) {
+      unsigned int j_10_pre = GetIdxClosest(amp*0.1, channel[i], idx_min, -1);
+      unsigned int j_10_post = GetIdxClosest(amp*0.1, channel[i], idx_min, +1);
+
+      // -------------- Integrate the pulse
+      integral_l_bound = j_10_pre;
+      integral_r_bound = j_10_post;
+      var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], integral_l_bound, integral_r_bound);
+      var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
+
+      // -------------- Compute rise time
+
+    }
 
 
 
     // Draw plot of the pulse
     if(draw_debug_pulses) {
-      // TODO: Set Y errors properly
-      TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
+      float * yerr = new float[NUM_SAMPLES];
+      for(unsigned j = 0; j < NUM_SAMPLES; j++) yerr[j] = 0 * var["baseline_RMS"][i];
+      TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
       pulse->SetNameTitle("g_"+name, "g_"+name);
 
-      TCanvas* c =  new TCanvas("c_"+name, "c_"+name);
+      TCanvas* c =  new TCanvas("c_"+name, "c_"+name, 1200, 600);
       TLine* line = new TLine();
       // Draw pulse
       pulse->SetMarkerStyle(4);
@@ -221,21 +258,35 @@ void DatAnalyzer::Analyze(){
       line->DrawLine(time[GetTimeIndex(i)][0], 0, time[GetTimeIndex(i)][NUM_SAMPLES-1], 0);
       line->SetLineStyle(1);
       line->DrawLine(time[GetTimeIndex(i)][bl_st_idx], 0, time[GetTimeIndex(i)][bl_st_idx+bl_lenght], 0);
+      line->SetLineColor(47);
+      line->DrawLine(time[GetTimeIndex(i)][0], var["baseline_RMS"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], var["baseline_RMS"][i]);
+      line->DrawLine(time[GetTimeIndex(i)][0], -var["baseline_RMS"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], -var["baseline_RMS"][i]);
+
       // Draw peak
       line->SetLineColor(8);
       line->SetLineStyle(4);
-      line->DrawLine(time[GetTimeIndex(i)][0], var["amp"][i], var["xmin"][i], var["amp"][i]);
-      line->DrawLine(var["xmin"][i], 0, var["xmin"][i], var["amp"][i]);
+      line->DrawLine(time[GetTimeIndex(i)][0], var["V_peak"][i], var["t_peak"][i], var["V_peak"][i]);
+      line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], var["V_peak"][i]);
+
       // Draw integral area
-      int left_bound = max(0, (int)idx_min-L_pk_shift);
-      int right_bound = min(idx_min+R_pk_shift, NUM_SAMPLES-3);
-      TGraph * integral_pulse = new TGraph(right_bound-left_bound, &(time[GetTimeIndex(i)][left_bound]), &(channel[i][left_bound]));
-      integral_pulse->SetFillColor(40);
-      integral_pulse->SetFillStyle(3144);
-      integral_pulse->Draw("FC");
-      TText* t_int = new TText(var["xmin"][i], var["amp"][i], Form("Int = %1.2e (%1.2e) pC", var["integral"][i], var["intfull"][i]));
-      t_int->SetTextAlign(kHAlignLeft+kVAlignBottom);
-      t_int->Draw();
+      int N_tot_integral = integral_r_bound-integral_l_bound;
+      if(N_tot_integral > 0) {
+        vector<float> aux_time = {time[GetTimeIndex(i)][integral_l_bound]};
+        vector<float> aux_volt = {0};
+        for(unsigned int j = integral_l_bound; j <= integral_r_bound; j++) {
+          aux_time.push_back(time[GetTimeIndex(i)][j]);
+          aux_volt.push_back(channel[i][j]);
+        }
+        aux_time.push_back(time[GetTimeIndex(i)][integral_r_bound]);
+        aux_volt.push_back(0);
+        TGraph * integral_pulse = new TGraph(aux_time.size(), &(aux_time[0]), &(aux_volt[0]));
+        integral_pulse->SetFillColor(40);
+        integral_pulse->SetFillStyle(3144);
+        integral_pulse->Draw("FC");
+        TText* t_int = new TText(var["t_peak"][i], var["V_peak"][i], Form("Int = %1.2e (%1.2e) pC", var["integral"][i], var["intfull"][i]));
+        t_int->SetTextAlign(kHAlignLeft+kVAlignBottom);
+        t_int->Draw();
+      }
 
       c->SetGrid();
       c->SaveAs("~/Desktop/debug/"+name+".png");

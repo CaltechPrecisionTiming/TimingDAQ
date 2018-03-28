@@ -45,6 +45,7 @@ class DatAnalyzer {
         virtual void Analyze();
 
         float GetPulseIntegral(float *a, float *t, unsigned int i_st, unsigned int i_stop); //returns charge in pC asssuming 50 Ohm termination
+        unsigned int GetIdxClosest(float value, float* v, unsigned int i_st, int direction = +1);
 
         void RunEventsLoop();
 
@@ -87,22 +88,23 @@ class DatAnalyzer {
         std::map<TString, float*> var;
         std::vector<TString> var_names = {
           "baseline",
-          "amp",
-          "xmin",
+          "baseline_RMS",
+          "V_peak",
+          "t_peak",
           "integral",
           "intfull",
-          "gauspeak",
-          "sigmoidTime",
-          "fullFitTime",
-          "linearTime0",
-          "linearTime15",
-          "linearTime30",
-          "linearTime45",
-          "linearTime60",
-          "fallingTime",
-          "risetime",
-          "constantThresholdTime",
-          "isRinging",
+          // "risetime",
+          // "fallingTime",
+          // "gauspeak",
+          // "sigmoidTime",
+          // "fullFitTime",
+          // "linearTime0",
+          // "linearTime15",
+          // "linearTime30",
+          // "linearTime45",
+          // "linearTime60",
+          // "constantThresholdTime",
+          // "isRinging",
         };
 };
 
