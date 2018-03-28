@@ -24,7 +24,8 @@ using namespace std;
 // ATTENUATION - in dB, amount of attenuation that was applied to the input (float)
 // ALGORITHM - indicates the algorithm to run to extract pulse times (string):
 //      G: gaussian fit
-//      Re: linear constant-fraction fit
+//      Reo: old linear fit at the rising edge
+//      (Not implemented) LP#: Local polinomial fit. For the moment min 1, max 3. e.g LP2
 //      else --> No action
 // FILTER_WIDTH - gaussian kernel width for Weierstrass transform (gaussian filter).
 //      If 0, no Weierstrass transform will be applied.

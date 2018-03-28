@@ -102,8 +102,9 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
   aux = ParseCommandLine( argc, argv, "draw_debug_pulses" );
   aux.ToLower();
-  if(aux == "true") {
-    cout << "[INFO]: Showing debug pulses" << endl;
+  if(aux != "false" && aux != "") {
+    if(aux != "true") img_format = aux;
+    cout << "[INFO]: Saving debug pulses in " << img_format.Data() << endl;
     draw_debug_pulses =  true;
   }
 }
@@ -121,19 +122,34 @@ void DatAnalyzer::InitLoop() {
     }
 
     bool at_least_1_gaus_fit = false;
+    bool at_least_1_rising_edge = false;
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
+      if( c.second.algorithm.Contains("Reo")) at_least_1_rising_edge = true;
     }
+
     if( at_least_1_gaus_fit ) {
       var_names.push_back("gaus_mu");
       var_names.push_back("gaus_sigma");
       var_names.push_back("gaus_chi2");
     }
-
-    for(auto n : var_names){
-      var[n] = new float[NUM_CHANNELS];
-      tree->Branch(n, &(var[n]), n+Form("[%d]/F", NUM_CHANNELS));
+    if( at_least_1_rising_edge ) {
+      var_names.push_back("linear_RE_risetime");
+      var_names.push_back("linear_RE_0");
+      var_names.push_back("linear_RE_15");
+      var_names.push_back("linear_RE_30");
+      var_names.push_back("linear_RE_45");
+      var_names.push_back("linear_RE_60");
     }
+
+    // Create the tree beanches an the associated variables
+    for(TString n : var_names){
+      var[n] = new float[NUM_CHANNELS];
+      tree->Branch(n, &(var[n][0]), n+Form("[%d]/F", NUM_CHANNELS));
+    }
+
+    cout << "Initializing all the tree variables" << endl;
+    for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
 
     // Initialize the input file stream
     bin_file = fopen( input_file_path.Data(), "r" );
@@ -312,8 +328,6 @@ void DatAnalyzer::Analyze(){
     unsigned int j_90_pre = 0, j_10_pre = 0;
     unsigned int j_90_post = 0, j_10_post = 0;
 
-    // unsigned int deg = 3;
-    // float * coeff_poly_fit = 0;
     if( fabs(amp) > 3*baseline_RMS && fabs(channel[i][idx_min+1]) > 2*baseline_RMS && fabs(channel[i][idx_min-1]) > 2*baseline_RMS) {
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
@@ -353,9 +367,40 @@ void DatAnalyzer::Analyze(){
         var["gaus_sigma"][i] = fpeak->GetParameter(2);
         var["gaus_chi2"][i] = pulse->Chisquare(fpeak, "R");
 
-        if ( !draw_debug_pulses ) delete fpeak;
+        delete fpeak;
       }
 
+
+      // -------------- Do  linear fit
+      if( config->channels[i].algorithm.Contains("Reo") ) {
+        unsigned int i_min = GetIdxFirstCross(0.15*amp, channel[i], idx_min, -1);
+        unsigned int i_max = GetIdxFirstCross(0.70*amp, channel[i], idx_min, +1);
+        float t_min = time[GetTimeIndex(i)][i_min];
+        float t_max = time[GetTimeIndex(i)][i_max];
+
+        TF1* flinear = new TF1("flinear"+name, "[0]*x+[1]", t_min, t_max);
+        flinear->SetLineColor(4);
+
+        TString opt = "R";
+        if ( draw_debug_pulses ) opt += "+";
+        else opt += "QN0";
+        pulse->Fit("flinear"+name, opt);
+        float slope = flinear->GetParameter(0);
+        float b     = flinear->GetParameter(1);
+
+        var["linear_RE_risetime"][i] = (0.90*amp-b)/slope - (0.10*amp-b)/slope;
+        var["linear_RE_0"][i] = (0.0*amp-b)/slope;
+        var["linear_RE_15"][i] = (0.15*amp-b)/slope;
+        var["linear_RE_30"][i] = (0.30*amp-b)/slope;
+        var["linear_RE_45"][i] = (0.45*amp-b)/slope;
+        var["linear_RE_60"][i] = (0.60*amp-b)/slope;
+
+        delete flinear;
+      }
+
+      // -------------- Local polinomial fit
+      // unsigned int deg = 3;
+      // float * coeff_poly_fit = 0;
       // AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), deg, coeff_poly_fit);
     }
 
@@ -438,7 +483,7 @@ void DatAnalyzer::Analyze(){
       }
 
       c->SetGrid();
-      c->SaveAs("~/Desktop/debug/"+name+".png");
+      c->SaveAs("~/Desktop/debug/"+name+img_format);
     }
 
     // if(coeff_poly_fit != 0) delete coeff_poly_fit;

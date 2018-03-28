@@ -77,6 +77,7 @@ class DatAnalyzer {
         bool save_raw = false;
         bool save_meas = false;
         bool draw_debug_pulses = false;
+        TString img_format = ".png";
 
         // Reader variables
         FILE* bin_file = nullptr;
@@ -101,14 +102,9 @@ class DatAnalyzer {
           "integral",
           "intfull",
           "risetime",
-          "fallingtime",
+          "fallingtime"
           // "sigmoidTime",
           // "fullFitTime",
-          // "linearTime0",
-          // "linearTime15",
-          // "linearTime30",
-          // "linearTime45",
-          // "linearTime60",
           // "constantThresholdTime",
           // "isRinging",
         };
