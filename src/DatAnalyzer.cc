@@ -74,6 +74,12 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
   if(N_evts == 0){ cout << "Not specified." << endl;}
   else{ cout << N_evts << endl;}
 
+  aux = ParseCommandLine( argc, argv, "start_evt" );
+  if(aux != "") {
+    start_evt = aux.Atoi();
+    cout << "[INFO]: Starting from event: " << start_evt << endl;
+   }
+
   aux = ParseCommandLine( argc, argv, "config" );
   if(aux == ""){
     aux = "config/15may2017_new.config";
@@ -172,6 +178,75 @@ unsigned int DatAnalyzer::GetIdxClosest(float value, float* v, unsigned int i_st
   return i_min;
 }
 
+unsigned int DatAnalyzer::GetIdxFirstCross(float value, float* v, unsigned int i_st, int direction) {
+  unsigned int idx_end = direction>0 ? NUM_SAMPLES-1 : 0;
+
+  bool rising = value > v[i_st]? true : false;
+
+  unsigned int i = i_st;
+
+  while( i != idx_end ) {
+    if(rising && v[i] > value) break;
+    else if( !rising && v[i] < value) break;
+    i += direction;
+  }
+
+  return i;
+}
+
+void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err) {
+  if(deg <= 0 || deg>3) { cout << "[ERROR]: You don't need AnalyticalPolinomialSolver for this" << endl; exit(0);}
+
+  TVectorF x, x2, x3;
+  x.Use(Np, in_x);
+
+  TVectorF y;
+  y.Use(Np, in_y);
+
+  TVectorF e;
+  if (err != 0) e.Use(Np, err);
+
+  TMatrixF A(Np, deg+1);
+  TMatrixFColumn(A, 0) = 1.;
+  TMatrixFColumn(A, 1) = x;
+
+
+  float *in_x2, *in_x3;
+  if( deg >= 2 ) {
+    in_x2 = new float[Np];
+    for(unsigned int i = 0; i < Np; i++) in_x2[i] = in_x[i]*in_x[i];
+    x2.Use(Np, in_x2);
+    TMatrixFColumn(A, 2) = x2;
+  }
+  if ( deg >= 3 ) {
+    in_x3 = new float[Np];
+    for(unsigned int i = 0; i < Np; i++) in_x3[i] = in_x2[i] * in_x[i];
+    x3.Use(Np, in_x3);
+    TMatrixFColumn(A, 3) = x3;
+  }
+
+  TMatrixF Aw = A;
+  TVectorF yw = y;
+  if( err != 0 ) {
+    for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
+      TMatrixFRow(Aw,irow) *= 1/e(irow);
+      yw(irow) /= e(irow);
+    }
+  }
+
+  TDecompSVD svd(Aw);
+  Bool_t ok;
+  const TVectorF c_svd = svd.Solve(yw,ok);
+
+  out_coeff = new float[deg+1];
+  for(unsigned int i = 0; i<= deg; i++) {
+    out_coeff[i] = c_svd[i];
+  }
+
+  delete [] in_x2;
+  delete [] in_x3;
+  return;
+}
 
 void DatAnalyzer::Analyze(){
   for(unsigned int i=0; i<NUM_CHANNELS; i++) {
@@ -201,7 +276,7 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(channel[i][j] < amp || j == 0) {
+      if(( j>0 && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == 1) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -220,9 +295,14 @@ void DatAnalyzer::Analyze(){
     // --------------- Find closest 10% and 90% index
     unsigned int integral_l_bound = idx_min;
     unsigned int integral_r_bound = idx_min;
-    if( fabs(amp) > 3*baseline_RMS) {
-      unsigned int j_10_pre = GetIdxClosest(amp*0.1, channel[i], idx_min, -1);
-      unsigned int j_10_post = GetIdxClosest(amp*0.1, channel[i], idx_min, +1);
+    unsigned int j_90_pre, j_10_pre;
+    unsigned int j_90_post, j_10_post;
+
+    unsigned int deg = 3;
+    float * coeff_poly_fit = 0;
+    if( fabs(amp) > 3*baseline_RMS && fabs(channel[i][idx_min+1]) > 2*baseline_RMS && fabs(channel[i][idx_min-1]) > 2*baseline_RMS) {
+      j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
+      j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
       // -------------- Integrate the pulse
       integral_l_bound = j_10_pre;
@@ -230,8 +310,13 @@ void DatAnalyzer::Analyze(){
       var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], integral_l_bound, integral_r_bound);
       var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
 
-      // -------------- Compute rise time
+      // -------------- Compute rise and falling time
+      j_90_pre = GetIdxFirstCross(amp*0.9, channel[i], j_10_pre, +1);
+      var["risetime"][i] = time[GetTimeIndex(i)][j_90_pre] - time[GetTimeIndex(i)][j_10_pre];
+      j_90_post = GetIdxFirstCross(amp*0.9, channel[i], j_10_post, -1);
+      var["fallingtime"][i] = time[GetTimeIndex(i)][j_10_post] - time[GetTimeIndex(i)][j_10_post];
 
+      AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), deg, coeff_poly_fit);
     }
 
 
@@ -268,6 +353,11 @@ void DatAnalyzer::Analyze(){
       line->DrawLine(time[GetTimeIndex(i)][0], var["V_peak"][i], var["t_peak"][i], var["V_peak"][i]);
       line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], var["V_peak"][i]);
 
+      // Draw 10% and 90% lines;
+      line->SetLineColor(4);
+      line->DrawLine(time[GetTimeIndex(i)][0], 0.1*var["V_peak"][i], var["t_peak"][NUM_SAMPLES], 0.1*var["V_peak"][i]);
+      line->DrawLine(time[GetTimeIndex(i)][0], 0.9*var["V_peak"][i], var["t_peak"][NUM_SAMPLES], 0.9*var["V_peak"][i]);
+
       // Draw integral area
       int N_tot_integral = integral_r_bound-integral_l_bound;
       if(N_tot_integral > 0) {
@@ -286,11 +376,36 @@ void DatAnalyzer::Analyze(){
         TText* t_int = new TText(var["t_peak"][i], var["V_peak"][i], Form("Int = %1.2e (%1.2e) pC", var["integral"][i], var["intfull"][i]));
         t_int->SetTextAlign(kHAlignLeft+kVAlignBottom);
         t_int->Draw();
+
+        // Draw 90% and 10% pre and post points
+        TGraph* gr_pre_post = new TGraph(4);
+        gr_pre_post->SetPoint(0, time[GetTimeIndex(i)][j_10_pre], channel[i][j_10_pre]);
+        gr_pre_post->SetPoint(1, time[GetTimeIndex(i)][j_90_pre], channel[i][j_90_pre]);
+        gr_pre_post->SetPoint(2, time[GetTimeIndex(i)][j_10_post], channel[i][j_10_post]);
+        gr_pre_post->SetPoint(3, time[GetTimeIndex(i)][j_90_post], channel[i][j_90_post]);
+        gr_pre_post->SetMarkerColor(4);
+        gr_pre_post->Draw("P*");
+
+        vector<float> polyval;
+        for(unsigned int j = j_10_pre; j <= j_90_pre; j++) {
+          float aux = 0;
+          for( int n = 0; n <= deg; n++) {
+            aux += coeff_poly_fit[n] * pow(time[GetTimeIndex(i)][j] , n);
+          }
+          polyval.push_back(aux);
+        }
+        TGraph* g_poly = new TGraph(polyval.size(), &(time[GetTimeIndex(i)][j_10_pre]), &(polyval[0]) );
+        g_poly->SetLineColor(2);
+        g_poly->SetLineWidth(2);
+        g_poly->SetLineStyle(7);
+        g_poly->Draw("C");
       }
 
       c->SetGrid();
       c->SaveAs("~/Desktop/debug/"+name+".png");
     }
+
+    if(coeff_poly_fit != 0) delete coeff_poly_fit;
   }
 }
 
@@ -303,10 +418,12 @@ void DatAnalyzer::RunEventsLoop() {
         int out = GetChannelsMeasurement();
         if(out == -1) break;
 
-        Analyze();
+        if( i_evt >= start_evt ) {
+          Analyze();
 
-        N_written_evts++;
-        tree->Fill();
+          N_written_evts++;
+          tree->Fill();
+        }
     }
 
     fclose(bin_file);

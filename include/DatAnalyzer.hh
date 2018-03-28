@@ -15,6 +15,9 @@
 #include "TGraphErrors.h"
 #include "TCanvas.h"
 #include "TLine.h"
+#include "TVectorF.h"
+#include "TMatrixF.h"
+#include "TDecompSVD.h"
 
 // LOCAL INCLUDES
 #include "Config.hh"
@@ -45,7 +48,9 @@ class DatAnalyzer {
         virtual void Analyze();
 
         float GetPulseIntegral(float *a, float *t, unsigned int i_st, unsigned int i_stop); //returns charge in pC asssuming 50 Ohm termination
-        unsigned int GetIdxClosest(float value, float* v, unsigned int i_st, int direction = +1);
+        unsigned int GetIdxClosest(float value, float* v, unsigned int i_st, int direction=+1);
+        unsigned int GetIdxFirstCross(float value, float* v, unsigned int i_st, int direction=+1);
+        void AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err = 0);
 
         void RunEventsLoop();
 
@@ -66,6 +71,7 @@ class DatAnalyzer {
         TString input_file_path;
         TString output_file_path;
         unsigned int N_evts = 0;
+        unsigned int start_evt = 0;
 
         bool save_raw = false;
         bool save_meas = false;
@@ -93,8 +99,8 @@ class DatAnalyzer {
           "t_peak",
           "integral",
           "intfull",
-          // "risetime",
-          // "fallingTime",
+          "risetime",
+          "fallingtime",
           // "gauspeak",
           // "sigmoidTime",
           // "fullFitTime",
