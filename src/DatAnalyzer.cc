@@ -506,6 +506,8 @@ void DatAnalyzer::RunEventsLoop() {
 
           N_written_evts++;
           tree->Fill();
+
+          if(N_written_evts%1000 == 0) { cout << N_written_evts << endl; }
         }
     }
 
