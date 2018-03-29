@@ -29,7 +29,7 @@ class DRSAnalyzer : public DatAnalyzer {
 
     void Analyze();
   protected:
-    float event_time[4][1024] = {0};
+    float event_time[4][1024];
     std::vector<unsigned int> active_channels;
 
 };
