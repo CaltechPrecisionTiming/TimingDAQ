@@ -27,6 +27,14 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
 void VMEAnalyzer::LoadCalibration(){
   cout << "---------- Loading calibrations -------------" << endl;
+  for(unsigned int ig = 0; ig < 4; ig++) {
+    for(unsigned int is = 0; is < 4; is++) {
+      tcal[ig][is] = 0;
+      for(unsigned int ic = 0; ic < 9; ic++) off_mean[ig][ic][is] = 0;
+    }
+  }
+
+
   if(calibration_file_path == "ZEROS") return; //Uses defaul values (all 0)
 
   for( int i = 0; i < 4; i++ ){

@@ -524,20 +524,22 @@ void DatAnalyzer::Analyze(){
         // ---------- Rising edge only inverted!! -----
         c->cd(2);
 
-        // if( config->channels[i].algorithm.Contains("Re") ) {
-        //   unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
-        //   unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
-        //   float y_min = (channel[i][i_min] - Re_b)/Re_slope;
-        //   float y_max = (channel[i][i_max] - Re_b)/Re_slope;
-        //
-        //   TLine* Re_line = new TLine();
-        //   Re_line->SetLineColor(46);
-        //   Re_line->SetLineWidth(1);
-        //   Re_line->SetLineStyle(7);
-        //
-        //   Re_line->DrawLine(channel[i][i_min], y_min, channel[i][i_max], y_max);
-        //   delete Re_line;
-        // }
+        if( config->channels[i].algorithm.Contains("Re") ) {
+          unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
+          unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
+          float y[2], x[2];
+          x[0] = channel[i][i_min];
+          x[1] = channel[i][i_max];
+          y[0] = (channel[i][i_min] - Re_b)/Re_slope;
+          y[1] = (channel[i][i_max] - Re_b)/Re_slope;
+
+          TGraph* gr_Re = new TGraph(2, x, y);
+
+          gr_Re->SetLineColor(46);
+          gr_Re->SetLineWidth(1);
+          gr_Re->SetLineStyle(7);
+          gr_Re->Draw("CP");
+        }
 
         TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 5, &(channel[i][j_10_pre-2]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
         inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);

@@ -41,8 +41,8 @@ class VMEAnalyzer : public DatAnalyzer {
     TString calibration_file_path = "";
 
     // Calibration vars
-    double off_mean[4][9][1024] = {0};
-    double tcal[VME_TIMES][1024] = {0};
+    double off_mean[4][9][1024];
+    double tcal[VME_TIMES][1024];
 
     // Tree variables
     unsigned short tc[VME_TIMES]; // trigger counter bin

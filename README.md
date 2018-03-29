@@ -39,7 +39,7 @@ Compulsory arguments don't have default value
 | Argument | Default | Notes|
 | -------- | :-------: | ---- |
 |``pixel_input_file``| "" | If not empty, the TFile with the tree of the pixel event is opened and the content analysed and added to the output file.|
-|``calibration_file`` | ``calibration/v1740`` | Load the calibration from the locations ``<calibration_file>_bd1_group_[0-3]_[offset-dV].txt``.|
+|``calibration_file`` | ``calibration/v1740`` | Load the calibration from the locations ``<calibration_file>_bd1_group_[0-3]_[offset-dV].txt``. If ``ZEROS``, put all calibration values to 0.|
 
 ### DRS additional options:
 
