@@ -112,6 +112,11 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 void DatAnalyzer::InitLoop() {
     cout << "Initializing infut file reader and output tree" << endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
+    ifstream out_file(output_file_path.Data());
+    if (!out_file){
+      cerr << "[ERROR]: Cannot create output file: " << output_file_path.Data() << endl;
+      exit(0);
+    }
     tree = new TTree("pulse", "Digitized waveforms");
 
     tree->Branch("i_evt", &i_evt, "i_evt/i");
