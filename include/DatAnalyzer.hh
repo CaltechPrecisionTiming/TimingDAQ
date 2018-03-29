@@ -52,6 +52,7 @@ class DatAnalyzer {
         unsigned int GetIdxClosest(float value, float* v, unsigned int i_st, int direction=+1);
         unsigned int GetIdxFirstCross(float value, float* v, unsigned int i_st, int direction=+1);
         void AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err = 0);
+        float PolyEval(float x, float* coeff, unsigned int deg);
 
         void RunEventsLoop();
 

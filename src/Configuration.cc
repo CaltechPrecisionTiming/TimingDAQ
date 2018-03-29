@@ -99,7 +99,7 @@ void Configuration::parseConfigurationLine(std::string line) {
         aux_ch.gaus_fraction = stof(aux(1,2).Data()) / 100.;
       }
       for(unsigned int i = 1; i <= 3; i++) {
-        if ( aux_ch.algorithm.Contains(Form("PL%d", i)) ) {
+        if ( aux_ch.algorithm.Contains(Form("LP%d", i)) ) {
           aux_ch.PL_deg.push_back(i);
         }
       }

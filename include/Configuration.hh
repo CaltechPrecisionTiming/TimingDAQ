@@ -41,8 +41,8 @@ class Configuration {
         float gaus_fraction = 0.5;
         float re_bounds[2] = {0.15, 0.75};
         vector<int> PL_deg;
+
         float weierstrass_filter_width = 0;
-        // float frec_high_pass = 0;
       };
 
       // Read and initilize from the configuration file
@@ -59,6 +59,8 @@ class Configuration {
       bool hasChannel(unsigned int ch);
 
       unsigned int baseline[2] = {5, 150};
+      // must be between 0.1 and 0.9
+      vector<float> constant_fraction = {0.15, 0.3, 0.45};
 
     private:
       // process one line of the config file

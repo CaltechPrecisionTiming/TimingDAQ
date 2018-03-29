@@ -44,7 +44,7 @@ TString DatAnalyzer::ParseCommandLine( int argc, char* argv[], TString opt )
   return out;
 }
 
-void DatAnalyzer::GetCommandLineArgs(int argc, char **argv){
+void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 
   input_file_path = ParseCommandLine( argc, argv, "input_file" );
   ifstream in_file(input_file_path.Data());
@@ -139,28 +139,27 @@ void DatAnalyzer::InitLoop() {
     }
     if( at_least_1_rising_edge ) {
       var_names.push_back("linear_RE_risetime");
-      var_names.push_back("linear_RE_0");
-      var_names.push_back("linear_RE_15");
-      var_names.push_back("linear_RE_30");
-      var_names.push_back("linear_RE_45");
-      var_names.push_back("linear_RE_60");
+      for (auto f : config->constant_fraction) {
+        var_names.push_back(Form("linear_RE_%d", (int)(100*f)));
+      }
     }
 
     for(unsigned int i = 0; i< 3; i++) {
       if(at_least_1_LP[i]) {
-        var_names.push_back(Form("LP%d_15", i+1));
-        var_names.push_back(Form("LP%d_30", i+1));
-        var_names.push_back(Form("LP%d_45", i+1));
+        for (auto f : config->constant_fraction) {
+          var_names.push_back(Form("LP%d_%d", i+1, (int)(100*f)));
+        }
       }
     }
 
     // Create the tree beanches an the associated variables
+    cout << "Initializing all the tree variables" << endl;
     for(TString n : var_names){
       var[n] = new float[NUM_CHANNELS];
       tree->Branch(n, &(var[n][0]), n+Form("[%d]/F", NUM_CHANNELS));
+      cout << "   " << n.Data() << endl;
     }
 
-    cout << "Initializing all the tree variables" << endl;
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
 
     // Initialize the input file stream
@@ -257,7 +256,7 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
     x2.Use(Np, in_x2);
     TMatrixFColumn(A, 2) = x2;
   }
-  if ( deg >= 3 ) {
+  if( deg >= 3 ) {
     in_x3 = new float[Np];
     for(unsigned int i = 0; i < Np; i++) in_x3[i] = in_x2[i] * in_x[i];
     x3.Use(Np, in_x3);
@@ -282,9 +281,17 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
     out_coeff[i] = c_svd[i];
   }
 
-  delete [] in_x2;
-  delete [] in_x3;
+  if( deg >= 2 ) delete [] in_x2;
+  if( deg >= 3 ) delete [] in_x3;
   return;
+}
+
+float DatAnalyzer::PolyEval(float x, float* coeff, unsigned int deg) {
+  float out = coeff[0] + x*coeff[1];
+  for(unsigned int i=2; i<=deg; i++) {
+    out += coeff[i]*pow(x, i);
+  }
+  return out;
 }
 
 void DatAnalyzer::Analyze(){
@@ -337,8 +344,12 @@ void DatAnalyzer::Analyze(){
     TGraphErrors* pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
     pulse->SetNameTitle("g_"+name, "g_"+name);
 
+    // Variables used both by analysis and pulse drawer
     unsigned int j_90_pre = 0, j_10_pre = 0;
     unsigned int j_90_post = 0, j_10_post = 0;
+    vector<float*> coeff_poly_fit;
+    vector<pair<int, int>> poly_bounds;
+    float Re_b, Re_slope;
 
     if( fabs(amp) > 3*baseline_RMS && fabs(channel[i][idx_min+1]) > 2*baseline_RMS && fabs(channel[i][idx_min-1]) > 2*baseline_RMS) {
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
@@ -398,36 +409,52 @@ void DatAnalyzer::Analyze(){
         if ( draw_debug_pulses ) opt += "+";
         else opt += "QN0";
         pulse->Fit("flinear"+name, opt);
-        float slope = flinear->GetParameter(0);
-        float b     = flinear->GetParameter(1);
+        Re_slope = flinear->GetParameter(0);
+        Re_b     = flinear->GetParameter(1);
 
-        var["linear_RE_risetime"][i] = (0.90*amp-b)/slope - (0.10*amp-b)/slope;
-        var["linear_RE_0"][i] = (0.0*amp-b)/slope;
-        var["linear_RE_15"][i] = (0.15*amp-b)/slope;
-        var["linear_RE_30"][i] = (0.30*amp-b)/slope;
-        var["linear_RE_45"][i] = (0.45*amp-b)/slope;
-        var["linear_RE_60"][i] = (0.60*amp-b)/slope;
+        var["linear_RE_risetime"][i] = (0.90*amp-Re_b)/Re_slope - (0.10*amp-Re_b)/Re_slope;
+        for ( auto f : config->constant_fraction ) {
+          var[Form("linear_RE_%d", (int)(100*f))][i] = (f*amp-Re_b)/Re_slope;
+        }
 
         delete flinear;
       }
 
       // -------------- Local polinomial fit
-      vector<float*> coeff_poly_fit;
-      for(auto n : config->channels[i].PL_deg) {
-        float* coeff;
-        // AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), n, coeff);
+      for(auto f : config->constant_fraction) {
+        unsigned int j_close = GetIdxFirstCross(amp*f, channel[i], j_10_pre, +1);
+        if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
 
-        // coeff_poly_fit.push_back(coeff);
+        for(auto n : config->channels[i].PL_deg) {
+          unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_10_pre)/1.5));
+          float* coeff = new float[n];
+          AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+
+          var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+
+          if(draw_debug_pulses) {
+            coeff_poly_fit.push_back(coeff);
+            poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+          }
+          else delete [] coeff;
+        }
       }
     }
 
 
 
-    // Draw plot of the pulse
+    // ===================  Draw plot of the pulse
     if(draw_debug_pulses) {
 
-      TCanvas* c =  new TCanvas("c_"+name, "c_"+name, 1400, 600);
+      cout << "========= Event: " << i_evt << " - ch: " << i << endl;
+
+      TCanvas* c =  new TCanvas("c_"+name, "c_"+name, 1600, 600);
+      c->Divide(2);
+
       TLine* line = new TLine();
+
+      // ---------- All range plot
+      c->cd(1);
       // Draw pulse
       pulse->SetMarkerStyle(4);
       pulse->SetMarkerSize(0.5);
@@ -452,9 +479,18 @@ void DatAnalyzer::Analyze(){
       line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], var["V_peak"][i]);
 
       // Draw 10% and 90% lines;
-      line->SetLineColor(4);
-      line->DrawLine(time[GetTimeIndex(i)][0], 0.1*var["V_peak"][i], var["t_peak"][NUM_SAMPLES], 0.1*var["V_peak"][i]);
-      line->DrawLine(time[GetTimeIndex(i)][0], 0.9*var["V_peak"][i], var["t_peak"][NUM_SAMPLES], 0.9*var["V_peak"][i]);
+      TLine* line_lvs = new TLine();
+      line_lvs->SetLineWidth(1);
+      line_lvs->SetLineColor(4);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.1*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], 0.1*var["V_peak"][i]);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.9*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], 0.9*var["V_peak"][i]);
+      // Draw constant fractions lines
+      line_lvs->SetLineColor(38);
+      line_lvs->SetLineStyle(10);
+      for(auto f : config->constant_fraction) {
+        line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], f*var["V_peak"][i]);
+      }
+
 
       // Draw integral area
       int N_tot_integral = j_10_post-j_10_pre;
@@ -484,23 +520,64 @@ void DatAnalyzer::Analyze(){
         gr_pre_post->SetMarkerColor(4);
         gr_pre_post->Draw("P*");
 
-        // vector<float> polyval;
-        // for(unsigned int j = j_10_pre; j <= j_90_pre; j++) {
-        //   float aux = 0;
-        //   for( int n = 0; n <= deg; n++) {
-        //     aux += coeff_poly_fit[n] * pow(time[GetTimeIndex(i)][j] , n);
-        //   }
-        //   polyval.push_back(aux);
+
+        // ---------- Rising edge only inverted!! -----
+        c->cd(2);
+
+        // if( config->channels[i].algorithm.Contains("Re") ) {
+        //   unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
+        //   unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
+        //   float y_min = (channel[i][i_min] - Re_b)/Re_slope;
+        //   float y_max = (channel[i][i_max] - Re_b)/Re_slope;
+        //
+        //   TLine* Re_line = new TLine();
+        //   Re_line->SetLineColor(46);
+        //   Re_line->SetLineWidth(1);
+        //   Re_line->SetLineStyle(7);
+        //
+        //   Re_line->DrawLine(channel[i][i_min], y_min, channel[i][i_max], y_max);
+        //   delete Re_line;
         // }
-        // TGraph* g_poly = new TGraph(polyval.size(), &(time[GetTimeIndex(i)][j_10_pre]), &(polyval[0]) );
-        // g_poly->SetLineColor(2);
-        // g_poly->SetLineWidth(2);
-        // g_poly->SetLineStyle(7);
-        // g_poly->Draw("C");
+
+        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 5, &(channel[i][j_10_pre-2]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
+        inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
+        inv_pulse->SetMarkerStyle(4);
+        inv_pulse->SetMarkerSize(0.5);
+        inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
+        inv_pulse->GetYaxis()->SetTitle("Time [ns]");
+        inv_pulse->Draw("APE1");
+
+        TGraph* gr_inv_pre_post = new TGraph(2);
+        gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
+        gr_inv_pre_post->SetPoint(1, channel[i][j_90_pre], time[GetTimeIndex(i)][j_90_pre]);
+        gr_inv_pre_post->SetMarkerColor(4);
+        gr_inv_pre_post->Draw("P*");
+
+        // -------------- If exist, draw local polinomial fit
+        unsigned int count = 0;
+        //TODO: draw lines at the eval point
+        for(auto f : config->constant_fraction) {
+          for(auto n : config->channels[i].PL_deg) {
+            vector<float> polyval;
+            for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
+              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+            }
+
+            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+            g_poly->SetLineColor(2);
+            g_poly->SetLineWidth(2);
+            g_poly->SetLineStyle(7);
+            g_poly->Draw("C");
+            // delete g_poly;
+
+            count++;
+          }
+        }
       }
 
       c->SetGrid();
       c->SaveAs("~/Desktop/debug/"+name+img_format);
+      delete c;
     }
 
     // if(coeff_poly_fit != 0) delete coeff_poly_fit;
