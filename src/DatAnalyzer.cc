@@ -123,9 +123,13 @@ void DatAnalyzer::InitLoop() {
 
     bool at_least_1_gaus_fit = false;
     bool at_least_1_rising_edge = false;
+    int at_least_1_LP[3] = {false};
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
-      if( c.second.algorithm.Contains("Reo")) at_least_1_rising_edge = true;
+      if( c.second.algorithm.Contains("Re")) at_least_1_rising_edge = true;
+      if( c.second.algorithm.Contains("LP1")) at_least_1_LP[0] = true;
+      if( c.second.algorithm.Contains("LP2")) at_least_1_LP[1] = true;
+      if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
     }
 
     if( at_least_1_gaus_fit ) {
@@ -140,6 +144,14 @@ void DatAnalyzer::InitLoop() {
       var_names.push_back("linear_RE_30");
       var_names.push_back("linear_RE_45");
       var_names.push_back("linear_RE_60");
+    }
+
+    for(unsigned int i = 0; i< 3; i++) {
+      if(at_least_1_LP[i]) {
+        var_names.push_back(Form("LP%d_15", i+1));
+        var_names.push_back(Form("LP%d_30", i+1));
+        var_names.push_back(Form("LP%d_45", i+1));
+      }
     }
 
     // Create the tree beanches an the associated variables
@@ -344,8 +356,9 @@ void DatAnalyzer::Analyze(){
 
       // -------------- Do the gaussian fit
       if( config->channels[i].algorithm.Contains("G") ) {
-        unsigned int j_down = GetIdxFirstCross(amp*0.5, channel[i], idx_min, -1);
-        unsigned int j_up = GetIdxFirstCross(amp*0.5, channel[i], idx_min, +1);
+        float frac = config->channels[i].gaus_fraction;
+        unsigned int j_down = GetIdxFirstCross(amp*frac, channel[i], idx_min, -1);
+        unsigned int j_up = GetIdxFirstCross(amp*frac, channel[i], idx_min, +1);
         if( j_up - j_down < 4 ) {
           j_up = idx_min + 2;
           j_down = idx_min - 2;
@@ -372,9 +385,9 @@ void DatAnalyzer::Analyze(){
 
 
       // -------------- Do  linear fit
-      if( config->channels[i].algorithm.Contains("Reo") ) {
-        unsigned int i_min = GetIdxFirstCross(0.15*amp, channel[i], idx_min, -1);
-        unsigned int i_max = GetIdxFirstCross(0.50*amp, channel[i], i_min, +1);
+      if( config->channels[i].algorithm.Contains("Re") ) {
+        unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
+        unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
         float t_min = time[GetTimeIndex(i)][i_min];
         float t_max = time[GetTimeIndex(i)][i_max];
 
@@ -399,9 +412,13 @@ void DatAnalyzer::Analyze(){
       }
 
       // -------------- Local polinomial fit
-      // unsigned int deg = 3;
-      // float * coeff_poly_fit = 0;
-      // AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), deg, coeff_poly_fit);
+      vector<float*> coeff_poly_fit;
+      for(auto n : config->channels[i].PL_deg) {
+        float* coeff;
+        // AnalyticalPolinomialSolver( j_90_pre-j_10_pre , &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), n, coeff);
+
+        // coeff_poly_fit.push_back(coeff);
+      }
     }
 
 

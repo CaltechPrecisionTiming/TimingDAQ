@@ -8,7 +8,7 @@
 #include <map>
 
 #include "TString.h"
-
+#include "TRegexp.h"
 using namespace std;
 
 // This class reads a configuration file and extracts polarity, attenuation,
@@ -22,10 +22,10 @@ using namespace std;
 // POLARITY - sign of the pulse ('+' or '-'). Pulses are supposed to have the peak below the baseline
 // AMPLIFICATION - in dB, amount of amplification that was applied to the input (float)
 // ATTENUATION - in dB, amount of attenuation that was applied to the input (float)
-// ALGORITHM - indicates the algorithm to run to extract pulse times (string):
-//      G: gaussian fit
-//      Reo: old linear fit at the rising edge
-//      (Not implemented) LP#: Local polinomial fit. For the moment min 1, max 3. e.g LP2
+// ALGORITHM - indicates the algorithm to run to extract pulse times (string).Usa a '+' to separate them
+//      G: gaussian fit, G##
+//      Re: linear fit at the rising edge, Re##-## possible in %
+//      LP#: Local polinomial fit. For the moment min 1, max 3. e.g LP2
 //      else --> No action
 // FILTER_WIDTH - gaussian kernel width for Weierstrass transform (gaussian filter).
 //      If 0, no Weierstrass transform will be applied.
@@ -38,6 +38,9 @@ class Configuration {
         float amplification = 0;
         float attenuation = 0;
         TString algorithm = "";
+        float gaus_fraction = 0.5;
+        float re_bounds[2] = {0.15, 0.75};
+        vector<int> PL_deg;
         float weierstrass_filter_width = 0;
         // float frec_high_pass = 0;
       };

@@ -85,6 +85,24 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       aux_ch.algorithm = item;
       cout << "    Algorithm: " << aux_ch.algorithm.Data() << endl;
+      TString aux = aux_ch.algorithm(TRegexp("Re[0-9][0-9]-[0-9][0-9]"));
+      if ( aux.Length() == 7 ) {
+        aux_ch.re_bounds[0] = stof(aux(2,2).Data()) / 100.;
+        aux_ch.re_bounds[1] = stof(aux(5,2).Data()) / 100.;
+        if( aux_ch.re_bounds[0] > aux_ch.re_bounds[1] ) {
+          cerr << "[ERROR]: Rising edge bounds in Config file wrong (maybe swapped?)" << endl;
+          exit(0);
+        }
+      }
+      aux = aux_ch.algorithm(TRegexp("G[0-9][0-9]"));
+      if ( aux.Length() == 3 ) {
+        aux_ch.gaus_fraction = stof(aux(1,2).Data()) / 100.;
+      }
+      for(unsigned int i = 1; i <= 3; i++) {
+        if ( aux_ch.algorithm.Contains(Form("PL%d", i)) ) {
+          aux_ch.PL_deg.push_back(i);
+        }
+      }
 
       // filter width
       nextConfigurationElement(ss, item);
