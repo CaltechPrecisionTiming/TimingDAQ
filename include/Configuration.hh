@@ -66,7 +66,7 @@ class Configuration {
       // process one line of the config file
       void parseConfigurationLine(std::string line);
       // get next non-space token from config
-      void nextConfigurationElement(std::stringstream &ss, std::string &item);
+      int nextConfigurationElement(std::stringstream &ss, std::string &item);
 };
 
 #endif

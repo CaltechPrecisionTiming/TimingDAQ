@@ -15,13 +15,14 @@ Configuration::Configuration(std::string fname) {
     }
 }
 
-void Configuration::nextConfigurationElement(std::stringstream &ss, std::string &item) {
+int Configuration::nextConfigurationElement(std::stringstream &ss, std::string &item) {
     while( std::getline(ss, item, ' ') ) {
         if ( item.size() && item != " " ) {
-            return;
+            return 1;
         }
     }
-    std::cout << "Warning in Configuration::nextConfigurationElement: next config element not found" << std::endl;
+    return 0;
+    // std::cout << "Warning in Configuration::nextConfigurationElement: next config element not found" << std::endl;
 }
 
 void Configuration::parseConfigurationLine(std::string line) {
@@ -32,14 +33,25 @@ void Configuration::parseConfigurationLine(std::string line) {
     if ( line[0] == '#' ) {
         return;
     }
-    else if (line.substr(0, 8) == "baseline") {
+    else if (line.substr(0, 8) == "Baseline") {
       nextConfigurationElement(ss, item);
       nextConfigurationElement(ss, item);
       baseline[0] = std::stoi(item);
       nextConfigurationElement(ss, item);
       baseline[1] = std::stoi(item);
 
-      cout << "[CONFIG]: baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
+      cout << "[CONFIG]: Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
+    }
+    else if (line.substr(0, 16) == "ConstantFraction") {
+      nextConfigurationElement(ss, item);
+      constant_fraction.clear();
+
+      cout << "[CONFIG]: ConstantFraction = { " << flush;
+      while(nextConfigurationElement(ss, item)) {
+        constant_fraction.push_back(0.01*std::stof(item));
+        cout << 0.01*std::stof(item) << " " << flush;
+      }
+      cout << "}" << endl;
     }
     else if (line[0] <= '9' && line[0] >= '0') {
       Channel aux_ch;
