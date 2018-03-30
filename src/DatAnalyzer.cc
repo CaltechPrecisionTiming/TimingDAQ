@@ -8,12 +8,18 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
         NUM_CHANNELS(numChannels), NUM_TIMES(numTimes), NUM_SAMPLES(numSamples),
         DAC_RESOLUTION(res), DAC_SCALE(scale),
         file(0), tree(0) {
+
+    float* aux_time = new float[numTimes*numSamples];
+    float* aux_channel = new float[numChannels*numSamples];
+
     time = new float*[numTimes];
     channel = new float*[numChannels];
 
     for(unsigned int i=0; i<numChannels; i++) {
-      channel[i] = new float[numSamples];
-      if(i<numTimes) time[i] = new float[numSamples];
+      // channel[i] = new float[numSamples];
+      // if(i<numTimes) time[i] = new float[numSamples];
+      channel[i] = &(aux_channel[i*numSamples]);
+      if(i<numTimes) time[i] = &(aux_time[i*numSamples]);
     }
     cout << "NUM_CHANNELS: " << NUM_CHANNELS << flush;
     cout << "NUM_TIMES: " << NUM_TIMES << endl;
