@@ -154,7 +154,7 @@ void DatAnalyzer::InitLoop() {
     }
 
     if( at_least_1_gaus_fit ) {
-      var_names.push_back("gaus_mu");
+      var_names.push_back("gaus_mean");
       var_names.push_back("gaus_sigma");
       var_names.push_back("gaus_chi2");
     }
@@ -414,7 +414,7 @@ void DatAnalyzer::Analyze(){
         else opt += "QN0";
         pulse->Fit("fpeak"+name, opt);
 
-        var["gaus_mu"][i] = fpeak->GetParameter(1);
+        var["gaus_mean"][i] = fpeak->GetParameter(1);
         var["gaus_sigma"][i] = fpeak->GetParameter(2);
         var["gaus_chi2"][i] = pulse->Chisquare(fpeak, "R");
 
