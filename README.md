@@ -47,4 +47,36 @@ No additional options.
 
 ## Configuration file
 
-Specify how the analysis should be run. All the lines starting with ``#`` are ignored.
+Specify how the analysis should be run. The first part is supposed to specify general settings. The second one is supposed to set the channel specific configuration.
+
+All the lines starting with ``#`` are ignored.
+### General settings
+
+| Line | Default | Notes|
+| -------- | :-------: | ---- |
+| ``Baseline <start> <stop>`` | ``Baseline 5 150`` | Specify the indexes which delimit the constant fit to determine the baseline. The waveform is then fitted with a constant form the sample number ``<start>`` (included) to the sample number ``<stop>`` (excluded).
+| ``ConstantFraction <f_1> .. <f_n>`` | ``ConstantFraction 15 30 45`` | List of all fraction [%] at which the rising time has to be computed and saved in the tree. |
+
+### Channel specific settings
+
+To activate a channel is sufficient to have line that starts with the channel number. The channel number must be followed by other 5 parameters:
+
+``<ch_num> <pol> <amp> <att> <algo> <weies_filter>``
+
+An example line is:
+``2   +  1.  4. Re20-70+LP2+G  0.``
+
+Recommended algorithm are ``G40`` for Photek pulses and ``LP2`` for SiPMs pulses.
+
+The meaning of each parameter is explained below:
+
+| Parameter | Values | Notes|
+| -------- | ----- |
+|``ch_num``| ``unsigned int`` | Number of the channel to be activated.|
+|``pol``| ``+`` or ``-`` | Polarity of the waveform. Pulses are supposed to have the peak below the baseline.|
+|``amp`` | ``float`` | Value of the amplification applied [dB]. |
+|``att`` | ``float`` | Value of the attenuation applied [dB]. |
+|``algo`` | ``string`` | Algorithms to be applied to fit the rising edge to compute the constant fraction times. |
+|``amp`` | ``float`` | Not implemented yet. |
+
+### Available fitting algorithms
