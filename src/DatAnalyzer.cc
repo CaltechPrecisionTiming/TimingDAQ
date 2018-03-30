@@ -16,12 +16,10 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
     channel = new float*[numChannels];
 
     for(unsigned int i=0; i<numChannels; i++) {
-      // channel[i] = new float[numSamples];
-      // if(i<numTimes) time[i] = new float[numSamples];
       channel[i] = &(aux_channel[i*numSamples]);
       if(i<numTimes) time[i] = &(aux_time[i*numSamples]);
     }
-    cout << "NUM_CHANNELS: " << NUM_CHANNELS << flush;
+    cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
     cout << "NUM_TIMES: " << NUM_TIMES << endl;
     cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
 }
@@ -351,7 +349,7 @@ void DatAnalyzer::Analyze(){
       }
     }
     var["baseline"][i] = scale_factor * baseline;
-    var["V_peak"][i] = amp;
+    var["amp"][i] = -amp;
     var["t_peak"][i] = time[GetTimeIndex(i)][idx_min];
 
     float baseline_RMS = 0;
@@ -498,21 +496,21 @@ void DatAnalyzer::Analyze(){
       // Draw peak
       line->SetLineColor(8);
       line->SetLineStyle(4);
-      line->DrawLine(time[GetTimeIndex(i)][0], var["V_peak"][i], var["t_peak"][i], var["V_peak"][i]);
-      line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], var["V_peak"][i]);
+      line->DrawLine(time[GetTimeIndex(i)][0], amp, var["t_peak"][i], amp);
+      line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], amp);
 
       // Draw 10% and 90% lines;
       // DEBUG: Why this is not drawn??
       TLine* line_lvs = new TLine();
       line_lvs->SetLineWidth(1);
       line_lvs->SetLineColor(4);
-      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.1*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], 0.1*var["V_peak"][i]);
-      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.9*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], 0.9*var["V_peak"][i]);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.1*amp, time[GetTimeIndex(i)][NUM_SAMPLES], 0.1*amp);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.9*amp, time[GetTimeIndex(i)][NUM_SAMPLES], 0.9*amp);
       // Draw constant fractions lines
       line_lvs->SetLineColor(38);
       line_lvs->SetLineStyle(10);
       for(auto f : config->constant_fraction) {
-        line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*var["V_peak"][i], time[GetTimeIndex(i)][NUM_SAMPLES], f*var["V_peak"][i]);
+        line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*amp, time[GetTimeIndex(i)][NUM_SAMPLES], f*amp);
       }
 
 
@@ -531,7 +529,7 @@ void DatAnalyzer::Analyze(){
         integral_pulse->SetFillColor(40);
         integral_pulse->SetFillStyle(3144);
         integral_pulse->Draw("FC");
-        TText* t_int = new TText(var["t_peak"][i], var["V_peak"][i], Form("Int = %1.2e (%1.2e) pC", var["integral"][i], var["intfull"][i]));
+        TText* t_int = new TText(var["t_peak"][i], amp, Form("Int = %1.2e (%1.2e) pC", var["integral"][i], var["intfull"][i]));
         t_int->SetTextAlign(kHAlignLeft+kVAlignBottom);
         t_int->Draw();
 

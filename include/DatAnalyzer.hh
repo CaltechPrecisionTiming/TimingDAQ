@@ -102,7 +102,7 @@ class DatAnalyzer {
         std::vector<TString> var_names = {
           "baseline",
           "baseline_RMS",
-          "V_peak",
+          "amp",
           "t_peak",
           "integral",
           "intfull",

@@ -70,8 +70,11 @@ void VMEAnalyzer::LoadCalibration(){
 void VMEAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
   tree->Branch("tc", tc, "tc[4]/s");
+  cout << "   tc" << endl;
   if(save_raw){
     tree->Branch("raw", raw, Form("raw[%d][%d]/s", NUM_CHANNELS, NUM_SAMPLES));
+    cout << "   raw" << endl;
+
   }
 
   if(pixel_input_file_path != ""){
@@ -88,6 +91,7 @@ void VMEAnalyzer::InitLoop(){
     tree->Branch("y2", &y2, "y2/F");
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
+    cout << "   pixel variables" << endl;
   }
 }
 
