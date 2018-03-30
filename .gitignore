@@ -3,5 +3,6 @@
 VMEDat2Root
 DRSDat2Root
 ScopeDat2Root
+pulses_imgs
 *.o
 *.dSYM

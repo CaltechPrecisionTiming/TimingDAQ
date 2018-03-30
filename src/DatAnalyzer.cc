@@ -106,6 +106,13 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     if(aux != "true") img_format = aux;
     cout << "[INFO]: Saving debug pulses in " << img_format.Data() << endl;
     draw_debug_pulses =  true;
+
+    struct stat info;
+    if( stat( "./pulses_imgs", &info ) != 0 ) {
+      cout << "[ERROR]: Cannot access ./pulses_imgs" << endl;
+      cout << "--------> Please create it and rerun." << endl;
+      exit(0);
+    }
   }
 }
 
@@ -584,7 +591,7 @@ void DatAnalyzer::Analyze(){
       }
 
       c->SetGrid();
-      c->SaveAs("~/Desktop/debug/"+name+img_format);
+      c->SaveAs("./pulses_imgs/"+name+img_format);
       delete c;
     }
 

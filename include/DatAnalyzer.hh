@@ -5,6 +5,10 @@
 #include <iostream>
 #include <string>
 
+// SYS includes
+#include <sys/types.h>
+#include <sys/stat.h>
+
 // ROOT INCLUDES
 #include "TFile.h"
 #include "TTree.h"
