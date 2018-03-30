@@ -630,7 +630,7 @@ void DatAnalyzer::RunEventsLoop() {
 
         if( i_evt >= start_evt ) {
           Analyze();
-          
+
           N_written_evts++;
           tree->Fill();
 
@@ -642,5 +642,4 @@ void DatAnalyzer::RunEventsLoop() {
     cout << "\nProcessed total of " << N_written_evts << " events\n";
 
     file->Write();
-    file->Close();
 }

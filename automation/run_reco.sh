@@ -4,6 +4,7 @@ numberhi=$2
 
 data_dir=/eos/uscms/store/user/cmstestbeam/BTL/March2018/OTSDAQ/CMSTiming
 code_dir=/uscms_data/d2/sxie/releases/CMSSW_9_0_2/src/TimingDAQ
+config_file=$code_dir/config/VME_FNALTestbeam_180329_v1.config
 
 echo "range from run number  ${numberlo} to run number ${numberhi}"
 
@@ -32,12 +33,13 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
     flag=$(ls ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*.dat | tail -c 10 | head -c 5)
   fi
 
-  echo $flag
+  echo "Recostructing VME and merging pixel data"
 
-  echo "Recostructing VME and merging pixel data:"
-  echo "$code_dir/VMEDat2Root --input_file=$data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_${flag}.dat --pixel_input_file=$data_dir/Run${runNum}_CMSTiming_converted.root --output_file=$data_dir/RECO/V1/RawDataSaver0CMSVMETiming_Run${runNum}.root --config=$code_dir/config/VME_FNALTestbeam_180329_v1.config"
+  pixel_file=$data_dir/Run${runNum}_CMSTiming_converted.root
+  output_file=$data_dir/RECO/V2/RawDataSaver0CMSVMETiming_Run${runNum}.root
+  input_file=$data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_${flag}.dat
 
-  $code_dir/VMEDat2Root --input_file=$data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_${flag}.dat --pixel_input_file=$data_dir/Run${runNum}_CMSTiming_converted.root --output_file=$data_dir/RECO/V2/RawDataSaver0CMSVMETiming_Run${runNum}.root --config=$code_dir/config/VME_FNALTestbeam_180329_v1.config
+  $code_dir/VMEDat2Root --input_file=$input_file --pixel_input_file=$pixel_file --output_file=$output_file --config=$config_file --save_meas
 
-  echo "finish with processing run number " ${runNum}
+  echo "Finished processing run " ${runNum}
 }

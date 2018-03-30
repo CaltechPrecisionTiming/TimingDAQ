@@ -10,7 +10,7 @@ If you are not interested in the details just use the following commands
 To install copy paste the following:
 
 ```
-git clone https://github.com/CaltechPrecisionTiming/TimingDAQ``
+git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
 make -j8
 ```
 
