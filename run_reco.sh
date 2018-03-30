@@ -11,7 +11,7 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
   echo "processing run number " ${runNum}
   echo "copying Raw VME data to lpc eos"
-  rsync otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_03_March_CMSTiming/CMSTiming/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat $data_dir/
+  rsync -artv --progress otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_03_March_CMSTiming/CMSTiming/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat $data_dir/
   nfiles=$(ls /eos/uscms/store/user/cmstestbeam/BTL/March2018/OTSDAQ/CMSTiming/RawDataSaver0CMSVMETiming_Run${runNum}_*.dat | wc -l)
   echo "number of raw DRS files: ${nfiles}"
   if [ $nfiles -gt 1 ]
