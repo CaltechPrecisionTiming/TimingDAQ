@@ -9,9 +9,10 @@ If you are not interested in the details just use the following commands
 ### Installation
 To install copy paste the following:
 
-``git clone https://github.com/CaltechPrecisionTiming/TimingDAQ``
-
-``make -j8``
+```
+git clone https://github.com/CaltechPrecisionTiming/TimingDAQ``
+make -j8
+```
 
 
 ### Examples
@@ -64,6 +65,7 @@ To activate a channel is sufficient to have line that starts with the channel nu
 ``<ch_num> <pol> <amp> <att> <algo> <weies_filter>``
 
 An example line is:
+
 ``2   +  1.  4. Re20-70+LP2+G  0.``
 
 Recommended algorithm are ``G40`` for Photek pulses and ``LP2`` for SiPMs pulses.
@@ -71,12 +73,17 @@ Recommended algorithm are ``G40`` for Photek pulses and ``LP2`` for SiPMs pulses
 The meaning of each parameter is explained below:
 
 | Parameter | Values | Notes|
-| -------- | ----- |
+| -------- | :-----: | ------|
 |``ch_num``| ``unsigned int`` | Number of the channel to be activated.|
 |``pol``| ``+`` or ``-`` | Polarity of the waveform. Pulses are supposed to have the peak below the baseline.|
 |``amp`` | ``float`` | Value of the amplification applied [dB]. |
 |``att`` | ``float`` | Value of the attenuation applied [dB]. |
 |``algo`` | ``string`` | Algorithms to be applied to fit the rising edge to compute the constant fraction times. |
-|``amp`` | ``float`` | Not implemented yet. |
+|``weies_filter`` | ``float`` | Not implemented yet. |
 
 ### Available fitting algorithms
+
+The following list include all the algorithms that can be performed. If more than one algorithm is deisred, the flags shouls be separed by the character ``+``.
+
+* ``G[<frac>]`` : Fit with a gaussian. The range is defined by ``frac``:  takes all the point near the peak that are above ``<frac>`` of the peak amplitude. If only ``G`` is given, it is interpreted as ``G40``.
+* ``PL<deg> : 

@@ -38,7 +38,7 @@ class Configuration {
         float amplification = 0;
         float attenuation = 0;
         TString algorithm = "";
-        float gaus_fraction = 0.5;
+        float gaus_fraction = 0.4;
         float re_bounds[2] = {0.15, 0.75};
         vector<int> PL_deg;
 
