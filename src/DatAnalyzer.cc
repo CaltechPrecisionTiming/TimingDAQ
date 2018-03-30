@@ -69,7 +69,12 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   TString aux;
 
   aux = ParseCommandLine( argc, argv, "N_evts" );
-  N_evts = aux.Atoi();
+  long int N_tmp = aux.Atoi();
+  if(N_tmp<0) {
+    cout << "[ERROR]: Number of events has to be positive or 0. If 0 the whole file will be analyzed." << endl;
+    exit(0);
+  }
+  N_evts = N_tmp;
   cout << "Number of events: " << flush;
   if(N_evts == 0){ cout << "Not specified." << endl;}
   else{ cout << N_evts << endl;}

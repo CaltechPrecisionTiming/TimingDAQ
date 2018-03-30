@@ -76,7 +76,7 @@ class DatAnalyzer {
 
         TString input_file_path;
         TString output_file_path;
-        unsigned int N_evts = 0;
+        unsigned long int N_evts = 0;
         unsigned int start_evt = 0;
 
         bool save_raw = false;
