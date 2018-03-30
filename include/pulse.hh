@@ -172,14 +172,14 @@ void pulse::Init(TTree *tree)
    fChain->SetBranchAddress("time", time, &b_time);
    //fChain->SetBranchAddress("xmin", xmin, &b_xmin);
    fChain->SetBranchAddress("t_peak", xmin, &b_xmin);
-   //fChain->SetBranchAddress("amp", amp, &b_amp);
-   fChain->SetBranchAddress("V_peak", amp, &b_amp);
+   fChain->SetBranchAddress("amp", amp, &b_amp);
+   //fChain->SetBranchAddress("V_peak", amp, &b_amp);
    //fChain->SetBranchAddress("base", base, &b_base);
    fChain->SetBranchAddress("baseline", base, &b_base);
    fChain->SetBranchAddress("integral", integral, &b_integral);
    fChain->SetBranchAddress("intfull", intfull, &b_intfull);
    //fChain->SetBranchAddress("gauspeak", gauspeak, &b_gauspeak);
-   fChain->SetBranchAddress("gaus_mu", gauspeak, &b_gauspeak);
+   fChain->SetBranchAddress("gaus_mean", gauspeak, &b_gauspeak);
    fChain->SetBranchAddress("sigmoidTime", sigmoidTime, &b_sigmoidTime);
    fChain->SetBranchAddress("fullFitTime", fullFitTime, &b_fullFitTime);
    fChain->SetBranchAddress("linearTime0", linearTime0, &b_linearTime0);

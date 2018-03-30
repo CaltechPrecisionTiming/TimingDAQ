@@ -50,12 +50,12 @@ else:
 if(args.config is None):
     print "#### Need to specify config file using --config <desired config file> ####"
     print "#### Using default  [===== WARNING =====] config/config/VME_FNALTestbeam_180329.config [===== WARNING =====] ####\n"
-    args.config = "config/VME_FNALTestbeam_180329.config"
+    args.config = "config/VME_FNALTestbeam_180329_v1.config"
 else:
     if ( not os.path.exists(args.config) ):
         print "#### Specified input .config file ({0}) DNE. Using default (DANGER) ####.\nEXITING".format(args.config)
         print "#### Using default  [===== WARNING =====] config/config/VME_FNALTestbeam_180329.config [===== WARNING =====] ####\n"
-        args.config = "config/VME_FNALTestbeam_180329.config"
+        args.config = "config/VME_FNALTestbeam_180329_v1.config"
     else:
         print '-- Setting config = {0}'.format(args.config)
 
@@ -98,5 +98,9 @@ if (args.BTLRunMode == "None"):
     quit()
 
 print "##########     Running BTL_Analysis in {0} Mode     ##########".format(args.BTLRunMode)
-os.system(" ./BTL_Analysis --inputRootFile={0}".format(args.outputFile))
+
+btlRunString = " ./BTL_Analysis --inputRootFile={0}".format(args.outputFile)
+if (args.BTLRunMode == "Calibrate"):
+    btlRunString += " --calibrateChannels=true"
+os.system(btlRunString)
 

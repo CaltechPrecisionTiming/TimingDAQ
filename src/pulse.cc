@@ -60,8 +60,8 @@ TTree* pulse::GetOutputTree()
 void pulse::SimpleCheck(int channelID = 10, std::string channelName = "ch10")
 {
   if (fChain == 0) return;
-  //Long64_t nentries = fChain->GetEntries();
-  Long64_t nentries = 2000;
+  Long64_t nentries = fChain->GetEntries();
+  //Long64_t nentries = 2000;
   Long64_t nbytes = 0, nb = 0;
 
 
@@ -120,6 +120,7 @@ void pulse::SimpleCheck(int channelID = 10, std::string channelName = "ch10")
     int group = channelID / 8;
     for(int is=0; is<1024; is++){
       waveForm[is] = channel[channelID][is];
+      //waveForm[is] = channel[channelID][is] / 1e3; // conversion from mV to V
       timeAxis[is] = time[group][is];
       //if (jentry==0)
       //std::cout<<"entry 0, channelID=" << channelID << ", wave[" << is << "] = " << channel[channelID][is] << std::endl;
