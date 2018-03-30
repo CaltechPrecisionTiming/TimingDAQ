@@ -9,15 +9,15 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
         DAC_RESOLUTION(res), DAC_SCALE(scale),
         file(0), tree(0) {
 
-    float* aux_time = new float[numTimes*numSamples];
-    float* aux_channel = new float[numChannels*numSamples];
+    float* AUX_time = new float[numTimes*numSamples];
+    float* AUX_channel = new float[numChannels*numSamples];
 
     time = new float*[numTimes];
     channel = new float*[numChannels];
 
     for(unsigned int i=0; i<numChannels; i++) {
-      channel[i] = &(aux_channel[i*numSamples]);
-      if(i<numTimes) time[i] = &(aux_time[i*numSamples]);
+      channel[i] = &(AUX_channel[i*numSamples]);
+      if(i<numTimes) time[i] = &(AUX_time[i*numSamples]);
     }
     cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
     cout << "NUM_TIMES: " << NUM_TIMES << endl;
@@ -630,11 +630,11 @@ void DatAnalyzer::RunEventsLoop() {
 
         if( i_evt >= start_evt ) {
           Analyze();
-
+          
           N_written_evts++;
           tree->Fill();
 
-          if(N_written_evts%100 == 0) { cout << N_written_evts << endl; }
+          if(N_written_evts%500 == 0) { cout << N_written_evts << endl; }
         }
     }
 

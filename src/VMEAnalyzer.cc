@@ -74,7 +74,6 @@ void VMEAnalyzer::InitLoop(){
   if(save_raw){
     tree->Branch("raw", raw, Form("raw[%d][%d]/s", NUM_CHANNELS, NUM_SAMPLES));
     cout << "   raw" << endl;
-
   }
 
   if(pixel_input_file_path != ""){
@@ -91,8 +90,30 @@ void VMEAnalyzer::InitLoop(){
     tree->Branch("y2", &y2, "y2/F");
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
-    cout << "   pixel variables" << endl;
+    cout << "   -->All pixel variables" << endl;
   }
+}
+
+bool VMEAnalyzer::IsCorrupted(FILE* stream, int count){
+  // Not used for the moment; //DEBUG
+  // Look for words of size unsigned int that are "0", indicating that the third word of the header is appearing where it's not supposed to.
+  // if found, return "true" and seek back to beginning of the header
+  if(count < 1)
+    return false;
+
+  unsigned int event_header;
+
+  for(size_t i = 0; i < count; i++){
+    fread( &event_header, sizeof(unsigned int), 1, stream);
+    if(event_header == 0){
+       fseek(stream, -3*sizeof(unsigned int), SEEK_CUR);
+       cout << "[WARNING]: Corruption detected at event " << i_evt << ". Stopping the tree filling." << endl;
+       return true;
+    }
+  }
+  // rewind
+  fseek(stream, -count*sizeof(unsigned int), SEEK_CUR);
+  return false;
 }
 
 // Fill tc, raw, time and amplitude
@@ -102,7 +123,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     for(int j = 0; j < NUM_CHANNELS; j++) {
       if(j<NUM_TIMES){ tc[j] = 0; }
       for ( int i = 0; i < NUM_SAMPLES; i++ ) {
-        raw[j][j] = 0;
+        raw[j][i] = 0;
       }
     }
 
@@ -135,6 +156,11 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
       // Check if all channels were active (if 8 channels active return 3072)
       int nsample = (event_header & 0xfff) / 3;
+      if(nsample != 1024) {
+        cout << "[WARNING]: Corruption detected at event " << i_evt << ". Stopping the tree filling." << endl;
+        cout << "[WARNING]: Corruption supposed by unexpected numeber of events. Events from header " << nsample << endl;
+        return -1;
+      }
 
       // Define time coordinate
       time[k][0] = 0.0;
@@ -176,7 +202,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       //************************************
       // Loop over channels 0-8
       //************************************
-
       for(int jj = 0; jj < 9; jj++) {
         int j_gl = k*9 + jj;
         if ( !config->hasChannel(j_gl) ) {
@@ -195,8 +220,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
       fread( &event_header, sizeof(unsigned int), 1, bin_file);
     }
-
-    return 1;
+    return 0;
 }
 
 void VMEAnalyzer::Analyze(){
