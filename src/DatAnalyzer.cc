@@ -266,9 +266,9 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   if (err != 0) e.Use(Np, err);
 
   TMatrixF A(Np, deg+1);
+
   TMatrixFColumn(A, 0) = 1.;
   TMatrixFColumn(A, 1) = x;
-
 
   float *in_x2, *in_x3;
   if( deg >= 2 ) {
@@ -372,7 +372,13 @@ void DatAnalyzer::Analyze(){
     vector<pair<int, int>> poly_bounds;
     float Re_b, Re_slope;
 
-    if( fabs(amp) > 3*baseline_RMS && fabs(channel[i][idx_min+1]) > 2*baseline_RMS && fabs(channel[i][idx_min-1]) > 2*baseline_RMS) {
+    bool fittable = true;
+    fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
+    fittable *= fabs(amp) > 3*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+1]) > 2*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-1]) > 2*baseline_RMS;
+
+    if( fittable ) {
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
@@ -415,7 +421,6 @@ void DatAnalyzer::Analyze(){
         delete fpeak;
       }
 
-
       // -------------- Do  linear fit
       if( config->channels[i].algorithm.Contains("Re") ) {
         unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
@@ -448,6 +453,12 @@ void DatAnalyzer::Analyze(){
 
         for(auto n : config->channels[i].PL_deg) {
           unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_10_pre)/1.5));
+
+          if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
+            cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+            continue;
+          }
+
           float* coeff = new float[n];
           AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
@@ -461,7 +472,6 @@ void DatAnalyzer::Analyze(){
         }
       }
     }
-
 
 
     // ===================  Draw plot of the pulse
@@ -516,7 +526,7 @@ void DatAnalyzer::Analyze(){
 
       // Draw integral area
       int N_tot_integral = j_10_post-j_10_pre;
-      if(N_tot_integral > 0) {
+      if( N_tot_integral > 0 ) {
         vector<float> aux_time = {time[GetTimeIndex(i)][j_10_pre]};
         vector<float> aux_volt = {0};
         for(unsigned int j = j_10_pre; j <= j_10_post; j++) {
@@ -604,7 +614,6 @@ void DatAnalyzer::Analyze(){
       delete c;
     }
 
-    // if(coeff_poly_fit != 0) delete coeff_poly_fit;
     delete [] yerr;
     delete pulse;
   }
@@ -625,7 +634,7 @@ void DatAnalyzer::RunEventsLoop() {
           N_written_evts++;
           tree->Fill();
 
-          if(N_written_evts%1000 == 0) { cout << N_written_evts << endl; }
+          if(N_written_evts%100 == 0) { cout << N_written_evts << endl; }
         }
     }
 

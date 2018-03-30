@@ -55,7 +55,7 @@ All the lines starting with ``#`` are ignored.
 
 | Line | Default | Notes|
 | -------- | :-------: | ---- |
-| ``Baseline <start> <stop>`` | ``Baseline 5 150`` | Specify the indexes which delimit the constant fit to determine the baseline. The waveform is then fitted with a constant form the sample number ``<start>`` (included) to the sample number ``<stop>`` (excluded).
+| ``Baseline <start> <len>`` | ``Baseline 5 150`` | Specify the indexes which delimit the constant fit to determine the baseline. The waveform is then fitted with a constant form the sample number ``<start>`` (included) to the sample number ``<start> + <len>`` (excluded).
 | ``ConstantFraction <f_1> .. <f_n>`` | ``ConstantFraction 15 30 45`` | List of all fraction [%] at which the rising time has to be computed and saved in the tree. |
 
 ### Channel specific settings
