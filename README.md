@@ -1,3 +1,16 @@
+## Quick git commands
+- to checkout branch: 
+     1) git clone https://github.com/CaltechPrecisionTiming/TimingDAQ.git
+     2) git fetch
+     3) git checkout analysisUVA
+- to pull updates from master
+     1) git fetch master
+     2) git merge origin/master
+- to push updates to branch
+     1) add files as normal
+     2) git commit -m <message>
+     3) git push --> Ignore warning messages about not pushing updates to master... you don't want to do this anyway
+
 # Timing DAQ repository
 
 The main aim of this code is to convert raw binary data recorded from SiPMs from different devices and analyze them in a coherent and standardised way.
