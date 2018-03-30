@@ -30,6 +30,8 @@ class VMEAnalyzer : public DatAnalyzer {
 
     void InitLoop();
 
+    bool IsCorrupted(FILE* stream, int count);
+
     int GetChannelsMeasurement();
 
     unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch/9; }
