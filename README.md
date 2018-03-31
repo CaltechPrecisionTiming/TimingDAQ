@@ -20,6 +20,7 @@ The main executable applications will be created by the istallation in the main 
 If you are not interested in the details just use the following commands
 
 ### Installation
+Requirements: ROOT (v6.9 or greater), a c++ compiler.
 To install copy paste the following:
 
 ```
@@ -27,6 +28,11 @@ git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
 make -j8
 ```
 
+If willing to run on cmslpc cluster, all the requirements to run are satisfied running:
+```
+source /cvmfs/sft.cern.ch/lcg/views/LCG_89/x86_64-slc6-gcc62-opt/setup.sh
+source  /cvmfs/sft.cern.ch/lcg/releases/ROOT/6.10.02-19565/x86_64-slc6-gcc62-opt/bin/thisroot.sh
+```
 
 ### Examples
 
