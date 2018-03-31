@@ -1,6 +1,7 @@
-#define DEFAULT_FOR_EMPTY_CH 0
-
 #include "DatAnalyzer.hh"
+
+#define DEFAULT_FOR_EMPTY_CH 0
+#define THR_OVER_NOISE 3
 
 using namespace std;
 
@@ -377,7 +378,7 @@ void DatAnalyzer::Analyze(){
 
     bool fittable = true;
     fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
-    fittable *= fabs(amp) > 3*baseline_RMS;
+    fittable *= fabs(amp) > 2 * THR_OVER_NOISE * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 2*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 2*baseline_RMS;
 
@@ -450,28 +451,41 @@ void DatAnalyzer::Analyze(){
       }
 
       // -------------- Local polinomial fit
-      for(auto f : config->constant_fraction) {
-        unsigned int j_close = GetIdxFirstCross(amp*f, channel[i], j_10_pre, +1);
-        if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
+      if ( config->constant_fraction.size() ) {
+        float start_level = TMath::Sign(THR_OVER_NOISE * baseline_RMS, amp);
+        unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
-        for(auto n : config->channels[i].PL_deg) {
-          unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_10_pre)/1.5));
-
-          if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
-            cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
-            continue;
+        for(auto f : config->constant_fraction) {
+          unsigned int j_st = j_start;
+          if ( fabs(amp*f) < fabs(start_level) ) {
+            if ( fabs(amp*f) < fabs(baseline_RMS) ) {
+              cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
+            }
+            j_st =  GetIdxFirstCross( amp*f, channel[i], idx_min, -1);
           }
 
-          float* coeff = new float[n];
-          AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+          unsigned int j_close = GetIdxFirstCross(amp*f, channel[i], j_st, +1);
+          if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
 
-          var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+          for(auto n : config->channels[i].PL_deg) {
+            unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_st)/1.5));
 
-          if(draw_debug_pulses) {
-            coeff_poly_fit.push_back(coeff);
-            poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+            if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
+              cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+              continue;
+            }
+
+            float* coeff = new float[n];
+            AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+
+            var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+
+            if(draw_debug_pulses) {
+              coeff_poly_fit.push_back(coeff);
+              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+            }
+            else delete [] coeff;
           }
-          else delete [] coeff;
         }
       }
     }
@@ -489,6 +503,7 @@ void DatAnalyzer::Analyze(){
 
       // ---------- All range plot
       c->cd(1);
+      c->SetGrid();
       // Draw pulse
       pulse->SetMarkerStyle(4);
       pulse->SetMarkerSize(0.5);
@@ -513,17 +528,16 @@ void DatAnalyzer::Analyze(){
       line->DrawLine(var["t_peak"][i], 0, var["t_peak"][i], amp);
 
       // Draw 10% and 90% lines;
-      // DEBUG: Why this is not drawn??
       TLine* line_lvs = new TLine();
       line_lvs->SetLineWidth(1);
       line_lvs->SetLineColor(4);
-      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.1*amp, time[GetTimeIndex(i)][NUM_SAMPLES], 0.1*amp);
-      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.9*amp, time[GetTimeIndex(i)][NUM_SAMPLES], 0.9*amp);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.1*amp, time[GetTimeIndex(i)][NUM_SAMPLES-1], 0.1*amp);
+      line_lvs->DrawLine(time[GetTimeIndex(i)][0], 0.9*amp, time[GetTimeIndex(i)][NUM_SAMPLES-1], 0.9*amp);
       // Draw constant fractions lines
       line_lvs->SetLineColor(38);
       line_lvs->SetLineStyle(10);
       for(auto f : config->constant_fraction) {
-        line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*amp, time[GetTimeIndex(i)][NUM_SAMPLES], f*amp);
+        line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*amp, time[GetTimeIndex(i)][NUM_SAMPLES-1], f*amp);
       }
 
 
@@ -558,6 +572,7 @@ void DatAnalyzer::Analyze(){
 
         // ---------- Rising edge only inverted!! -----
         c->cd(2);
+        c->SetGrid();
 
         if( config->channels[i].algorithm.Contains("Re") ) {
           unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
@@ -576,7 +591,7 @@ void DatAnalyzer::Analyze(){
           gr_Re->Draw("CP");
         }
 
-        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 5, &(channel[i][j_10_pre-2]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
+        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre - 4]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
         inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
         inv_pulse->SetMarkerStyle(4);
         inv_pulse->SetMarkerSize(0.5);
@@ -592,8 +607,14 @@ void DatAnalyzer::Analyze(){
 
         // -------------- If exist, draw local polinomial fit
         unsigned int count = 0;
-        //TODO: draw lines at the eval point
-        for(auto f : config->constant_fraction) {
+        vector<int> frac_colors = {2, 6, 8, 5, 40};
+        while(frac_colors.size() < config->constant_fraction.size()) {
+          frac_colors.push_back(2);
+        }
+        for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
+          float f = config->constant_fraction[kk];
+          line_lvs->SetLineColor(frac_colors[kk]);
+          line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_10_pre-4], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
           for(auto n : config->channels[i].PL_deg) {
             vector<float> polyval;
             for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
@@ -601,7 +622,7 @@ void DatAnalyzer::Analyze(){
             }
 
             TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
-            g_poly->SetLineColor(2);
+            g_poly->SetLineColor(frac_colors[kk]);
             g_poly->SetLineWidth(2);
             g_poly->SetLineStyle(7);
             g_poly->Draw("C");

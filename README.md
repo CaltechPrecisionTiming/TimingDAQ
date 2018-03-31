@@ -32,6 +32,8 @@ make -j8
 
 ``./DRSDat2Root --input_file=<your_file>.dat --config=config/DRS_Na22.config --N_evts=10000``
 
+![Alt text](pulses_imgs/readme_example_pulse.jpg?raw=true "Example of pulse fitting")
+
 ## Command line options
 All the command line option must be passed using the sintax ``--<opt>=<val>``. For all options, ``--<opt>`` is equal to ``--<opt>=true``.
 The following option are common to all the devices.

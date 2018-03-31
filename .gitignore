@@ -3,6 +3,6 @@
 VMEDat2Root
 DRSDat2Root
 ScopeDat2Root
-pulses_imgs
+pulses_imgs/pulse_event*.png
 *.o
 *.dSYM
