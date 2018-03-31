@@ -32,6 +32,8 @@ make -j8
 
 ``./DRSDat2Root --input_file=<your_file>.dat --config=config/DRS_Na22.config --N_evts=10000``
 
+Example plot produced with the flag ``--draw_debug_pulses`` in the FNAL test beam of March 2018.
+
 ![alt text](https://github.com/CaltechPrecisionTiming/TimingDAQ/blob/master/pulses_imgs/readme_example_pulse.png)
 
 ## Command line options
