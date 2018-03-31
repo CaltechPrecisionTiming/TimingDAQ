@@ -10,7 +10,7 @@ Configuration::Configuration(std::string fname) {
         configStream.close();
     }
     else {
-        std::cerr << "[ERROR]: Could not open configuration file " << fname << std::endl;
+        std::cerr << "[ERROR] Could not open configuration file " << fname << std::endl;
         exit(0);
     }
 }
@@ -40,13 +40,13 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       baseline[1] = std::stoi(item);
 
-      cout << "[CONFIG]: Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
+      cout << "[CONFIG] Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
     }
     else if (line.substr(0, 16) == "ConstantFraction") {
       nextConfigurationElement(ss, item);
       constant_fraction.clear();
 
-      cout << "[CONFIG]: ConstantFraction = { " << flush;
+      cout << "[CONFIG] ConstantFraction = { " << flush;
       while(nextConfigurationElement(ss, item)) {
         constant_fraction.push_back(0.01*std::stof(item));
         cout << 0.01*std::stof(item) << " " << flush;
@@ -57,7 +57,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       z_DUT.clear();
 
-      cout << "[CONFIG]: z_DUT = { " << flush;
+      cout << "[CONFIG] z_DUT = { " << flush;
       while(nextConfigurationElement(ss, item)) {
         z_DUT.push_back(std::stof(item));
         cout << std::stof(item) << " " << flush;
@@ -70,7 +70,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       unsigned int chNum = std::stoi(item);
       aux_ch.N = chNum;
-      std::cout << "[CONFIG]: Channel " << chNum << " activated" << std::endl;
+      std::cout << "[CONFIG] Channel " << chNum << " activated" << std::endl;
 
 
       // polarity
@@ -84,7 +84,7 @@ void Configuration::parseConfigurationLine(std::string line) {
           std::cout << "    Positive pulse set (-: inverse)" << std::endl;
       }
       else {
-        std::cerr << "[ERROR]: Invalid polarity for channel " << chNum << std::endl;
+        std::cerr << "[ERROR] Invalid polarity for channel " << chNum << std::endl;
         exit(0);
       }
 
@@ -113,7 +113,7 @@ void Configuration::parseConfigurationLine(std::string line) {
         aux_ch.re_bounds[0] = stof(aux(2,2).Data()) / 100.;
         aux_ch.re_bounds[1] = stof(aux(5,2).Data()) / 100.;
         if( aux_ch.re_bounds[0] > aux_ch.re_bounds[1] ) {
-          cerr << "[ERROR]: Rising edge bounds in Config file wrong (maybe swapped?)" << endl;
+          cerr << "[ERROR] Rising edge bounds in Config file wrong (maybe swapped?)" << endl;
           exit(0);
         }
       }
@@ -133,7 +133,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       aux_ch.weierstrass_filter_width = width;
       if ( width ) {
           std::cout << "    Weierstrass transform with filter width " << width << std::endl;
-          std::cerr << "[ERROR]: Weierstrass transform not implemented yet" << std::endl;
+          std::cerr << "[ERROR] Weierstrass transform not implemented yet" << std::endl;
           exit(0);
       }
 
