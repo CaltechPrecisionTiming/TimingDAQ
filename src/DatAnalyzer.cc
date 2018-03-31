@@ -452,18 +452,19 @@ void DatAnalyzer::Analyze(){
 
       // -------------- Local polinomial fit
       if ( config->constant_fraction.size() ) {
-        float start_level = TMath::Sign(THR_OVER_NOISE * baseline_RMS, amp);
+        float start_level =  - THR_OVER_NOISE * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
         for(auto f : config->constant_fraction) {
           unsigned int j_st = j_start;
-          if ( fabs(amp*f) < fabs(start_level) ) {
-            if ( fabs(amp*f) < fabs(baseline_RMS) ) {
-              N_warnings++;
+          if ( amp*f > start_level ) {
+            if ( amp*f < -baseline_RMS ) {
               if(N_warnings< N_warnings_to_print) {
+                N_warnings++;
                 cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
               }
               else if (N_warnings_to_print == N_warnings) {
+                N_warnings++;
                 cout << "[WARNING] Max number of warnings passed. No more warnings will be printed." << endl;;
               }
             }
