@@ -1,19 +1,17 @@
-- [Timing DAQ repository](#timing-daq-repository)
-  * [Quick start](#quick-start)
-    + [Installation](#installation)
-    + [Examples](#examples)
-  * [Command line options](#command-line-options)
-    + [VME additional options:](#vme-additional-options-)
-    + [DRS additional options:](#drs-additional-options-)
-  * [Configuration file](#configuration-file)
-    + [General settings](#general-settings)
-    + [Channel specific settings](#channel-specific-settings)
-    + [Available fitting algorithms](#available-fitting-algorithms)
-  * [Automation](#automation)
-
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
-
 # Timing DAQ repository
+
+- [Quick start](#quick-start)
+  * [Installation](#installation)
+  * [Examples](#examples)
+- [Command line options](#command-line-options)
+  * [VME additional options:](#vme-additional-options-)
+  * [DRS additional options:](#drs-additional-options-)
+- [Configuration file](#configuration-file)
+  * [General settings](#general-settings)
+  * [Channel specific settings](#channel-specific-settings)
+  * [Available fitting algorithms](#available-fitting-algorithms)
+- [Automation](#automation)
+
 
 The main aim of this code is to convert raw binary data recorded from SiPMs from different devices and analyze them in a coherent and standardised way.
 The main executable applications will be created by the istallation in the main folder. One for each available device is present under the form: ``<device_name>Dat2Root``.
