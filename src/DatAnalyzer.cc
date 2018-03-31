@@ -378,7 +378,7 @@ void DatAnalyzer::Analyze(){
 
     bool fittable = true;
     fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
-    fittable *= fabs(amp) > 2 * THR_OVER_NOISE * baseline_RMS;
+    fittable *= fabs(amp) > 3. * THR_OVER_NOISE * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 2*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 2*baseline_RMS;
 
@@ -459,7 +459,13 @@ void DatAnalyzer::Analyze(){
           unsigned int j_st = j_start;
           if ( fabs(amp*f) < fabs(start_level) ) {
             if ( fabs(amp*f) < fabs(baseline_RMS) ) {
-              cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
+              N_warnings++;
+              if(N_warnings< N_warnings_to_print) {
+                cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
+              }
+              else if (N_warnings_to_print == N_warnings) {
+                cout << "Max number of warnings passed. No more warnings will be printed."
+              }
             }
             j_st =  GetIdxFirstCross( amp*f, channel[i], idx_min, -1);
           }

@@ -70,6 +70,8 @@ class DatAnalyzer {
 
         float scale_minimum = -500; // [mV] Voltage value corresponding to 0 DAC counts
 
+        unsigned long N_warnings = 0;
+        unsigned long N_warnings_to_print = 15;
 
         // Set by command line arguments or default
         Configuration* config = nullptr;
