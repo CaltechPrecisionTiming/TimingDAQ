@@ -8,7 +8,7 @@ config_file=$code_dir/config/VME_FNALTestbeam_180329_v1.config
 
 for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
-  echo "Processing run number " ${runNum}
+  echo "====================== Processing Run ${runNum} ==========================="
   rsync -artvh --progress otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_03_March_CMSTiming/CMSTiming/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat $data_dir/
   nfiles=$(ls ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat | wc -l)
   echo "number of raw DRS files: ${nfiles}"
@@ -31,11 +31,21 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 
   echo "Recostructing VME and merging pixel data"
 
-  pixel_file=$data_dir/Run${runNum}_CMSTiming_converted.root
   output_file=$data_dir/RECO/V2/RawDataSaver0CMSVMETiming_Run${runNum}.root
-  input_file=$data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_${flag}.dat
+  if [ -e $output_file ]
+  then
+    echo "Run$runNum already present in output directory"
+  else
+    pixel_file=$data_dir/Run${runNum}_CMSTiming_converted.root
+    input_file=$data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_${flag}.dat
 
-  $code_dir/VMEDat2Root --input_file=$input_file --pixel_input_file=$pixel_file --output_file=$output_file --config=$config_file --save_meas
+    if [ -e $pixel_file ]
+    then
+      $code_dir/VMEDat2Root --input_file=$input_file --pixel_input_file=$pixel_file --output_file=$output_file --config=$config_file --save_meas
+    else
+      echo "[WARNING]: Pixel file missing. Recostructing them without tracks."
+      $code_dir/VMEDat2Root --input_file=$input_file --output_file=$output_file --config=$config_file --save_meas
+  fi
 
   echo "Finished processing run " ${runNum}
 }
