@@ -70,7 +70,7 @@ All the lines starting with ``#`` are ignored.
 | -------- | :-------: | ---- |
 | ``Baseline <start> <len>`` | ``Baseline 5 150`` | Specify the indexes which delimit the constant fit to determine the baseline. The waveform is then fitted with a constant form the sample number ``<start>`` (included) to the sample number ``<start> + <len>`` (excluded).
 | ``ConstantFraction <f_1> .. <f_n>`` | ``ConstantFraction 15 30 45`` | List of all fraction [%] at which the rising time has to be computed and saved in the tree. |
-| ``z_DUT <f_1> .. <f_n>`` | ``z_DUT -50. 50.`` | List of the z position of the detectors under test where the x-y position has to be computed. Values are in mm. If the ``pixel_input_file = "" ``, this configuration is ignored. |
+| ``z_DUT <z_1> .. <z_n>`` | ``z_DUT -50. 50.`` | List of the z position of the detectors under test where the x-y position has to be computed. Values are in mm. If the ``pixel_input_file = "" ``, this configuration is ignored. |
 
 ### Channel specific settings
 
@@ -105,8 +105,11 @@ The following list include all the algorithms that can be performed. If more tha
 
 ## Automation
 
-This folder collect all the scripts that try to automise the data reconstruction.
+This folder collect all the scripts that try to automise the processing of data.
 
 An example line is:
 
 ``./automation/run_reco.sh 130 132``
+
+
+TODO: Finish this section
