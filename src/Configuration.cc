@@ -53,6 +53,17 @@ void Configuration::parseConfigurationLine(std::string line) {
       }
       cout << "}" << endl;
     }
+    else if (line.substr(0, 5) == "z_DUT") {
+      nextConfigurationElement(ss, item);
+      z_DUT.clear();
+
+      cout << "[CONFIG]: z_DUT = { " << flush;
+      while(nextConfigurationElement(ss, item)) {
+        z_DUT.push_back(std::stof(item));
+        cout << std::stof(item) << " " << flush;
+      }
+      cout << "} [mm]" << endl;
+    }
     else if (line[0] <= '9' && line[0] >= '0') {
       Channel aux_ch;
 
