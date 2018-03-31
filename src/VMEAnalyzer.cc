@@ -90,13 +90,9 @@ void VMEAnalyzer::InitLoop(){
         x_DUT.push_back(0.);
         y_DUT.push_back(0.);
       }
-      tree->Branch("x_DUT", &(x_DUT[0]), Form("x_DUT[%lu]/F", config->z_DUT.size()));
-      tree->Branch("y_DUT", &(y_DUT[0]), Form("y_DUT[%lu]/F", config->z_DUT.size()));
+      tree->Branch("x_dut", &(x_DUT[0]), Form("x_dut[%lu]/F", config->z_DUT.size()));
+      tree->Branch("y_dut", &(y_DUT[0]), Form("y_dut[%lu]/F", config->z_DUT.size()));
     }
-    // tree->Branch("x1", &x1, "x1/F");
-    // tree->Branch("y1", &y1, "y1/F");
-    // tree->Branch("x2", &x2, "x2/F");
-    // tree->Branch("y2", &y2, "y2/F");
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
     cout << "   -->All pixel variables" << endl;
@@ -234,7 +230,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
 void VMEAnalyzer::Analyze(){
   if(pixel_input_file_path != ""){
-    // TODO: Tha for sure is not a smart way of doing it. Should be changed
     xIntercept = -999;
     yIntercept = -999;
     xSlope = -999;
