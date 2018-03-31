@@ -13,6 +13,19 @@
 
 # Timing DAQ repository
 
+- [Quick start](#quick-start)
+  * [Installation](#installation)
+  * [Examples](#examples)
+- [Command line options](#command-line-options)
+  * [VME additional options:](#vme-additional-options-)
+  * [DRS additional options:](#drs-additional-options-)
+- [Configuration file](#configuration-file)
+  * [General settings](#general-settings)
+  * [Channel specific settings](#channel-specific-settings)
+  * [Available fitting algorithms](#available-fitting-algorithms)
+- [Automation](#automation)
+
+
 The main aim of this code is to convert raw binary data recorded from SiPMs from different devices and analyze them in a coherent and standardised way.
 The main executable applications will be created by the istallation in the main folder. One for each available device is present under the form: ``<device_name>Dat2Root``.
 
@@ -23,7 +36,7 @@ If you are not interested in the details just use the following commands
 To install copy paste the following:
 
 ```
-git clone https://github.com/CaltechPrecisionTiming/TimingDAQ``
+git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
 make -j8
 ```
 
@@ -70,6 +83,7 @@ All the lines starting with ``#`` are ignored.
 | -------- | :-------: | ---- |
 | ``Baseline <start> <len>`` | ``Baseline 5 150`` | Specify the indexes which delimit the constant fit to determine the baseline. The waveform is then fitted with a constant form the sample number ``<start>`` (included) to the sample number ``<start> + <len>`` (excluded).
 | ``ConstantFraction <f_1> .. <f_n>`` | ``ConstantFraction 15 30 45`` | List of all fraction [%] at which the rising time has to be computed and saved in the tree. |
+| ``z_DUT <z_1> .. <z_n>`` | ``z_DUT -50. 50.`` | List of the z position of the detectors under test where the x-y position has to be computed. Values are in mm. If the ``pixel_input_file = "" ``, this configuration is ignored. |
 
 ### Channel specific settings
 
@@ -101,3 +115,14 @@ The following list include all the algorithms that can be performed. If more tha
 * ``G<frac>`` : Fit with a gaussian. The range is defined by ``frac``:  takes all the point near the peak that are above ``frac`` of the peak amplitude. If only ``G`` is given, it is interpreted as ``G40``.
 * ``PL<deg>`` : Fit the rising edge with a polynomial of degree ``deg`` in the proximity of the closest point to the constant fraction.
 * ``Re<f_start>-<f_stop>`` : Linear fit from the point closer to the fraction ``f_start``
+
+## Automation
+
+This folder collect all the scripts that try to automise the processing of data.
+
+An example line is:
+
+``./automation/run_reco.sh 130 132``
+
+
+TODO: Finish this section

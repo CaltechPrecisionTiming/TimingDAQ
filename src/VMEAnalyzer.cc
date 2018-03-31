@@ -84,10 +84,15 @@ void VMEAnalyzer::InitLoop(){
     tree->Branch("yIntercept", &yIntercept, "yIntercept/F");
     tree->Branch("xSlope", &xSlope, "xSlope/F");
     tree->Branch("ySlope", &ySlope, "ySlope/F");
-    tree->Branch("x1", &x1, "x1/F");
-    tree->Branch("y1", &y1, "y1/F");
-    tree->Branch("x2", &x2, "x2/F");
-    tree->Branch("y2", &y2, "y2/F");
+
+    if(config->z_DUT.size()) {
+      for(float zz : config->z_DUT) {
+        x_DUT.push_back(0.);
+        y_DUT.push_back(0.);
+      }
+      tree->Branch("x_dut", &(x_DUT[0]), Form("x_dut[%lu]/F", config->z_DUT.size()));
+      tree->Branch("y_dut", &(y_DUT[0]), Form("y_dut[%lu]/F", config->z_DUT.size()));
+    }
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
     cout << "   -->All pixel variables" << endl;
@@ -225,30 +230,28 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
 void VMEAnalyzer::Analyze(){
   if(pixel_input_file_path != ""){
-    // TODO: Tha for sure is not a smart way of doing it. Should be changed
     xIntercept = -999;
     yIntercept = -999;
     xSlope = -999;
     ySlope = -999;
-    x1 = -999;
-    y1 = -999;
-    x2 = -999;
-    y2 = -999;
+    for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
+      x_DUT[i] = -999;
+      y_DUT[i] = -999;
+    }
     chi2 = -999.;
     ntracks = 0;
 
     for( int iPixelEvent = 0; iPixelEvent < pixel_tree->GetEntries(); iPixelEvent++){
       pixel_tree->GetEntry(iPixelEvent);
       if (pixel_event->trigger == i_evt) {
-      	xIntercept = pixel_event->xIntercept;
-      	yIntercept = pixel_event->yIntercept;
+      	xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
+      	yIntercept = 1e-3*pixel_event->yIntercept;
       	xSlope = pixel_event->xSlope;
       	ySlope = pixel_event->ySlope;
-        // DEBUG: Why 50000 is fixed..no error or measurement??
-      	x1 = xIntercept + xSlope*(-50000);
-      	y1 = yIntercept + ySlope*(-50000);
-      	x2 = xIntercept + xSlope*(50000);
-      	y2 = yIntercept + ySlope*(50000);
+        for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
+          x_DUT[i] = xIntercept + xSlope*(config->z_DUT[i]);
+          y_DUT[i] = yIntercept + ySlope*(config->z_DUT[i]);
+        }
       	chi2 = pixel_event->chi2;
       	ntracks++;
       }

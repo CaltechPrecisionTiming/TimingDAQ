@@ -59,10 +59,8 @@ class VMEAnalyzer : public DatAnalyzer {
     float yIntercept;
     float xSlope;
     float ySlope;
-    float x1;
-    float y1;
-    float x2;
-    float y2;
+    vector<float> x_DUT;
+    vector<float> y_DUT;
     float chi2;
     int ntracks;
 

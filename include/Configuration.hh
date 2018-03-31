@@ -62,6 +62,8 @@ class Configuration {
       // must be between 0.1 and 0.9
       vector<float> constant_fraction = {0.15, 0.3, 0.45};
 
+      vector<float> z_DUT = {-50., 50.};
+
     private:
       // process one line of the config file
       void parseConfigurationLine(std::string line);
