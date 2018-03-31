@@ -10,7 +10,7 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
   echo "Processing run number " ${runNum}
   rsync -artvh --progress otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_03_March_CMSTiming/CMSTiming/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat $data_dir/
-  nfiles=$(ls ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*.dat | wc -l)
+  nfiles=$(ls ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat | wc -l)
   echo "number of raw DRS files: ${nfiles}"
   echo
   if [ $nfiles -gt 1 ]

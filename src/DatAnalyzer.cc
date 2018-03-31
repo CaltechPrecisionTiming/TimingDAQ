@@ -103,11 +103,11 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 
   aux = ParseCommandLine( argc, argv, "save_raw" );
   aux.ToLower();
-  if(aux == "true") save_raw =  true;
+  if(aux == "true") save_raw = true;
 
   aux = ParseCommandLine( argc, argv, "save_meas" );
   aux.ToLower();
-  if(aux == "true") save_meas =  true;
+  if(aux == "true") save_meas = true;
 
   aux = ParseCommandLine( argc, argv, "draw_debug_pulses" );
   aux.ToLower();
@@ -175,6 +175,9 @@ void DatAnalyzer::InitLoop() {
 
     // Create the tree beanches an the associated variables
     cout << "Initializing all the tree variables" << endl;
+    if (save_meas) {
+      cout << "   channel\n   time" << endl;
+    }
     for(TString n : var_names){
       var[n] = new float[NUM_CHANNELS];
       tree->Branch(n, &(var[n][0]), n+Form("[%d]/F", NUM_CHANNELS));
