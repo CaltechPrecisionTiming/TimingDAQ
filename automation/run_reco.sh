@@ -45,6 +45,7 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
     else
       echo "[WARNING]: Pixel file missing. Recostructing them without tracks."
       $code_dir/VMEDat2Root --input_file=$input_file --output_file=$output_file --config=$config_file --save_meas
+    fi
   fi
 
   echo "Finished processing run " ${runNum}
