@@ -16,6 +16,7 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
     TString tree_name = pixel_file->GetListOfKeys()->At(0)->GetName(); //Only works if it the tree is the first key
     pixel_tree = (TTree*)pixel_file->Get(tree_name);
     if (!pixel_tree) {cout << "[ERROR]: Pixel Tree not found\n"; exit(0);}
+    entries_px_tree = pixel_tree->GetEntries();
   }
 
   calibration_file_path = ParseCommandLine( argc, argv, "calibration_file" );
@@ -96,6 +97,8 @@ void VMEAnalyzer::InitLoop(){
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
     cout << "   -->All pixel variables" << endl;
+    idx_px_tree = min((unsigned long)start_evt, entries_px_tree-1);
+    pixel_tree->GetEntry( idx_px_tree );
   }
 }
 
@@ -241,24 +244,29 @@ void VMEAnalyzer::Analyze(){
     chi2 = -999.;
     ntracks = 0;
 
-    for( int iPixelEvent = i_evt; iPixelEvent < pixel_tree->GetEntries(); iPixelEvent++){
-      pixel_tree->GetEntry(iPixelEvent);
-      if (pixel_event->trigger > i_evt) {
-        break;
-      }
-      else if (pixel_event->trigger == i_evt) {
-      	xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
-      	yIntercept = 1e-3*pixel_event->yIntercept;
-      	xSlope = pixel_event->xSlope;
-      	ySlope = pixel_event->ySlope;
-        for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
-          x_DUT[i] = xIntercept + xSlope*(config->z_DUT[i]);
-          y_DUT[i] = yIntercept + ySlope*(config->z_DUT[i]);
+    while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
+      pixel_tree->GetEntry(idx_px_tree);
+      if (pixel_event->trigger == i_evt) {
+        if(ntracks == 0) {
+          xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
+          yIntercept = 1e-3*pixel_event->yIntercept;
+          xSlope = pixel_event->xSlope;
+          ySlope = pixel_event->ySlope;
+          for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
+            x_DUT[i] = xIntercept + xSlope*(config->z_DUT[i]);
+            y_DUT[i] = yIntercept + ySlope*(config->z_DUT[i]);
+          }
+          chi2 = pixel_event->chi2;
         }
-      	chi2 = pixel_event->chi2;
       	ntracks++;
+        idx_px_tree++;
+      }
+      else if (i_evt > pixel_event->trigger) {
+        cout << "[ERROR] Pixel tree not ordered" << endl;
+        exit(0);
       }
     }
+
   }
 
   DatAnalyzer::Analyze();

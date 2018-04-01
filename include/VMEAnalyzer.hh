@@ -55,6 +55,9 @@ class VMEAnalyzer : public DatAnalyzer {
     TFile *pixel_file = nullptr;
     TTree *pixel_tree = nullptr;
 
+    unsigned long int idx_px_tree = 0;
+    unsigned long int entries_px_tree = 0;
+
     float xIntercept;
     float yIntercept;
     float xSlope;
