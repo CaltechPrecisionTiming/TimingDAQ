@@ -69,9 +69,9 @@ void VMEAnalyzer::LoadCalibration(){
 
 void VMEAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
-  tree->Branch("tc", tc, "tc[4]/s");
-  cout << "   tc" << endl;
   if(save_raw){
+    tree->Branch("tc", tc, "tc[4]/s");
+    cout << "   tc" << endl;
     tree->Branch("raw", raw, Form("raw[%d][%d]/s", NUM_CHANNELS, NUM_SAMPLES));
     cout << "   raw" << endl;
   }
@@ -241,9 +241,12 @@ void VMEAnalyzer::Analyze(){
     chi2 = -999.;
     ntracks = 0;
 
-    for( int iPixelEvent = 0; iPixelEvent < pixel_tree->GetEntries(); iPixelEvent++){
+    for( int iPixelEvent = i_evt; iPixelEvent < pixel_tree->GetEntries(); iPixelEvent++){
       pixel_tree->GetEntry(iPixelEvent);
-      if (pixel_event->trigger == i_evt) {
+      if (pixel_event->trigger > i_evt) {
+        break;
+      }
+      else if (pixel_event->trigger == i_evt) {
       	xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
       	yIntercept = 1e-3*pixel_event->yIntercept;
       	xSlope = pixel_event->xSlope;
