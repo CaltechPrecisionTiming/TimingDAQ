@@ -58,7 +58,7 @@ class Configuration {
       // returns true if the specified channel is present in the config
       bool hasChannel(unsigned int ch);
 
-      unsigned int baseline[2] = {5, 150};
+      unsigned int baseline[2] = {20, 150};
       // must be between 0.1 and 0.9
       vector<float> constant_fraction = {0.15, 0.3, 0.45};
 
