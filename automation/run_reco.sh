@@ -1,11 +1,43 @@
 #!/bin/bash
+
+pixel=true
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -np|--no_pixel)
+    pixel=false
+    shift # past argument
+    shift # past value
+    ;;
+    --default)
+    DEFAULT=YES
+    shift # past argument
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ "${pixel}" == true ]
+then
+    echo "[INFO] Running reconstruction WITH pixels"
+else
+    echo "[INFO] Running reconstruction WITHOUT pixels"
+fi
+
 numberlo=$1
 numberhi=$2
 
 data_dir=/eos/uscms/store/user/cmstestbeam/BTL/March2018/OTSDAQ/CMSTiming
 output_name=RECO/V3/DataCMSVMETiming
 code_dir=/uscms_data/d2/sxie/releases/CMSSW_9_0_2/src/TimingDAQ
-config_file=$code_dir/config/VME_FNALTestbeam_180329_v3.config
+config_file=$code_dir/config/VME_FNALTestbeam_180329_v3_fast.config
 
 for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
@@ -42,12 +74,27 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 
     if [ -e $pixel_file ]
     then
-      $code_dir/VMEDat2Root --input_file=$input_file --pixel_input_file=$pixel_file --output_file=$output_file --config=$config_file --save_meas
+	if [ "${pixel}" == true ] 
+	then
+	    echo "[INFO] Pixel file found. Running WITH pixels"
+	    echo "${code_dir}/VMEDat2Root --input_file=${input_file} --pixel_input_file=${pixel_file} --output_file=${output_file} --config=${config_file} --save_meas"
+	    $code_dir/VMEDat2Root --input_file=$input_file --pixel_input_file=$pixel_file --output_file=$output_file --config=$config_file --save_meas
+	else
+	    echo "[INFO] Pixel file found. Running WITHOUT pixels"
+	    echo "${code_dir}/VMEDat2Root --input_file=${input_file} --output_file=${output_file} --config=${config_file} --save_meas"
+	    $code_dir/VMEDat2Root --input_file=$input_file --output_file=$output_file --config=$config_file --save_meas
+	fi
     else
-      echo "[WARNING]: Pixel file missing. Recostructing them without tracks."
-      $code_dir/VMEDat2Root --input_file=$input_file --output_file=$output_file --config=$config_file --save_meas
+	if [ "${pixel}" == false ]
+	then
+	    echo "[INFO] Pixel file NOT found. Running without pixels"
+	    echo "${code_dir}/VMEDat2Root --input_file=${input_file} --output_file=${output_file} --config=${config_file} --save_meas"
+	    $code_dir/VMEDat2Root --input_file=$input_file --output_file=$output_file --config=$config_file --save_meas
+	else
+	    echo "[ERROR] Pixel file NOT found. NOT running the Recostructing. If you want to run  without tracks use <--no_pixel>."
+	fi
     fi
   fi
-
+  
   echo "Finished processing run " ${runNum}
 }
