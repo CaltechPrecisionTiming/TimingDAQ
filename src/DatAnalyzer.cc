@@ -458,7 +458,7 @@ void DatAnalyzer::Analyze(){
         for(auto f : config->constant_fraction) {
           unsigned int j_st = j_start;
           if ( amp*f > start_level ) {
-            if ( amp*f < -baseline_RMS ) {
+            if ( amp*f > -baseline_RMS ) {
               if(N_warnings< N_warnings_to_print) {
                 N_warnings++;
                 cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
