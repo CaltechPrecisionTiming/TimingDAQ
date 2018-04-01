@@ -11,7 +11,7 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
   }
   else {
     cout << "Pixel input file: " << pixel_input_file_path.Data() << endl;
-    pixel_file = TFile::Open( pixel_input_file_path.Data(),"READ");
+    pixel_file = new TFile( pixel_input_file_path.Data(),"READ");
     if (!pixel_file) {std::cout << "[ERROR]: Pixel file not found" << std::endl; exit(0);}
     TString tree_name = pixel_file->GetListOfKeys()->At(0)->GetName(); //Only works if it the tree is the first key
     pixel_tree = (TTree*)pixel_file->Get(tree_name);
