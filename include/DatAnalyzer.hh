@@ -109,11 +109,7 @@ class DatAnalyzer {
           "integral",
           "intfull",
           "risetime",
-          "fallingtime"
-          // "sigmoidTime",
-          // "fullFitTime",
-          // "constantThresholdTime",
-          // "isRinging",
+          "decaytime"
         };
 };
 

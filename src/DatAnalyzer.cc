@@ -394,7 +394,7 @@ void DatAnalyzer::Analyze(){
       j_90_pre = GetIdxFirstCross(amp*0.9, channel[i], j_10_pre, +1);
       var["risetime"][i] = time[GetTimeIndex(i)][j_90_pre] - time[GetTimeIndex(i)][j_10_pre];
       j_90_post = GetIdxFirstCross(amp*0.9, channel[i], j_10_post, -1);
-      var["fallingtime"][i] = time[GetTimeIndex(i)][j_10_post] - time[GetTimeIndex(i)][j_10_post];
+      var["decaytime"][i] = time[GetTimeIndex(i)][j_10_post] - time[GetTimeIndex(i)][j_10_post];
 
       // -------------- Do the gaussian fit
       if( config->channels[i].algorithm.Contains("G") ) {
