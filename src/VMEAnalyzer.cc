@@ -124,6 +124,13 @@ int VMEAnalyzer::FixCorruption() {
           //now i'm good.
           foundEventHeader=true;
           cout << Form("Found a new event header after %ld bytes", N_byte) << endl;
+
+	  //**********************************************************
+	  //we need to increment the trigger counter an extra time 
+	  //because we're skipping ahead to the next event
+	  i_evt++;
+	  //**********************************************************
+
           if(pixel_input_file_path != ""){
             cout << "Resetting the pixel tree" << endl;
             while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
