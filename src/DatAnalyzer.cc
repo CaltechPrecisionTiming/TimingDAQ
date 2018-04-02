@@ -578,8 +578,8 @@ void DatAnalyzer::Analyze(){
 
 
         // ---------- Rising edge only inverted!! -----
-        c->cd(2);
-        c->SetGrid();
+        auto pad2 = c->cd(2);
+        pad2->SetGrid();
 
         if( config->channels[i].algorithm.Contains("Re") ) {
           unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
@@ -640,7 +640,6 @@ void DatAnalyzer::Analyze(){
         }
       }
 
-      c->SetGrid();
       c->SaveAs("./pulses_imgs/"+name+img_format);
       delete c;
     }
