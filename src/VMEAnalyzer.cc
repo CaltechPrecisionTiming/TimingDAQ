@@ -102,30 +102,62 @@ void VMEAnalyzer::InitLoop(){
   }
 }
 
-bool VMEAnalyzer::IsCorrupted(FILE* stream, int count){
-  // Not used for the moment; //DEBUG
-  // Look for words of size unsigned int that are "0", indicating that the third word of the header is appearing where it's not supposed to.
-  // if found, return "true" and seek back to beginning of the header
-  if(count < 1)
-    return false;
+int VMEAnalyzer::FixCorruption() {
+  bool foundEventHeader = false;
+  unsigned int long N_byte = 0;
+  while (!foundEventHeader) {
+    if (feof(bin_file)) return -1;
 
-  unsigned int event_header;
+    //Look for the new header in steps of 8 bits
+    N_byte++;
+    char tmp = 0;
+    fread( &tmp, sizeof(char), 1, bin_file);
+    //find the magic word first
+    if (tmp == 0x0C) {
+      if (feof(bin_file)) return -1;
+      fread( &tmp, sizeof(char), 1, bin_file);
+      if (tmp == 0x36) {
+        if (feof(bin_file)) return -1;
+        unsigned short tmp2 = 0;
+        fread( &tmp2, sizeof(unsigned short), 1, bin_file);
+        if (tmp2 == 0xA000) {
+          //now i'm good.
+          foundEventHeader=true;
+          cout << Form("Found a new event header after %ld bytes", N_byte) << endl;
 
-  for(size_t i = 0; i < count; i++){
-    fread( &event_header, sizeof(unsigned int), 1, stream);
-    if(event_header == 0){
-       fseek(stream, -3*sizeof(unsigned int), SEEK_CUR);
-       cout << "[WARNING]: Corruption detected at event " << i_evt << ". Stopping the tree filling." << endl;
-       return true;
+	  //**********************************************************
+	  //we need to increment the trigger counter an extra time 
+	  //because we're skipping ahead to the next event
+	  i_evt++;
+	  //**********************************************************
+
+          if(pixel_input_file_path != ""){
+            cout << "Resetting the pixel tree" << endl;
+            while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
+              pixel_tree->GetEntry(idx_px_tree);
+              idx_px_tree++;
+            }
+          }
+          // Reverse the two bytes read
+          fseek(bin_file, -1*sizeof(unsigned int), SEEK_CUR);
+          return 1;
+        }
+        else {
+          fseek(bin_file, -1*sizeof(unsigned short), SEEK_CUR);
+        }
+      }
+      else {
+        fseek(bin_file, -1*sizeof(char), SEEK_CUR);
+      }
     }
   }
-  // rewind
-  fseek(stream, -count*sizeof(unsigned int), SEEK_CUR);
-  return false;
+  // Should not reach here. In case it does, stop the reading of the file.
+  return -1;
 }
 
 // Fill tc, raw, time and amplitude
 int VMEAnalyzer::GetChannelsMeasurement() {
+    bool is_corrupted = false;
     ResetAnalysisVariables();
     // Initialize the output variables
     for(int j = 0; j < NUM_CHANNELS; j++) {
@@ -165,9 +197,10 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       // Check if all channels were active (if 8 channels active return 3072)
       int nsample = (event_header & 0xfff) / 3;
       if(nsample != 1024) {
+        is_corrupted = true;
         cout << "[WARNING]: Corruption detected at event " << i_evt << ". Stopping the tree filling." << endl;
         cout << "[WARNING]: Corruption supposed by unexpected numeber of events. Events from header " << nsample << endl;
-        return -1;
+        break;
       }
 
       // Define time coordinate
@@ -227,7 +260,33 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       }
 
       fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    } //loop over groups
+
+    // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
+    if (feof(bin_file)) return 0;
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    int magicWord1 = (event_header >> 28) & 0xf;
+    int eventSize =  (event_header) & 0xfffffff;
+    if (feof(bin_file)) return 0;
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    int boardID = (event_header >> 27) & 0x1f;
+    int pattern = (event_header >> 8) & 0xffff;
+    //reverse by 2 lines
+    fseek(bin_file, -2*sizeof(unsigned int), SEEK_CUR);
+
+    if (magicWord1 != 10 || pattern != 0 || eventSize != 13836) {
+      is_corrupted = true;
+      cout << "[WARNING] Following bitys not matching the expected header" << endl;
     }
+
+    if(is_corrupted) {
+      cout << "Found Data Corruption. Trying to skip to next event header...\n";
+      return FixCorruption();
+    }
+
+
+
+
     return 0;
 }
 

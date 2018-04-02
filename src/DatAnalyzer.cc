@@ -655,11 +655,15 @@ void DatAnalyzer::RunEventsLoop() {
     cout << "Events loop started" << endl;
     unsigned int N_written_evts = 0;
     for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
-        int out = GetChannelsMeasurement();
-        if(out == -1) break;
+        int corruption = GetChannelsMeasurement();
+        if(corruption == -1) break;
+        else if (corruption == 1) {	  
+          cout << "Corruption skip SUCCEDED!" << endl;
+          cout << "Not analyzing current loaded evt" << endl;
+        }
 
-        if( i_evt >= start_evt ) {
-          Analyze();
+        if( (i_evt >= start_evt) ) {
+          if (corruption == 0) Analyze();
 
           N_written_evts++;
           tree->Fill();
@@ -670,6 +674,6 @@ void DatAnalyzer::RunEventsLoop() {
 
     fclose(bin_file);
     cout << "\nProcessed total of " << N_written_evts << " events\n";
-
-    file->Write();
+    
+    file->Write();  
 }

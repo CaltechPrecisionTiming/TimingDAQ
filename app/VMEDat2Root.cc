@@ -1,5 +1,6 @@
 // C++ includes
 #include <string>
+#include <assert.h>
 
 // ROOT includes
 #include <TROOT.h>
@@ -16,6 +17,9 @@ int main(int argc, char **argv) {
   analyzer->GetCommandLineArgs(argc, argv);
   analyzer->LoadCalibration();
   analyzer->RunEventsLoop();
+
+  //patch for some lost memory situation
+  assert(false);
 
   return 0;
 }
