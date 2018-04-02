@@ -30,7 +30,7 @@ class VMEAnalyzer : public DatAnalyzer {
 
     void InitLoop();
 
-    bool IsCorrupted(FILE* stream, int count);
+    int FixCorruption();
 
     int GetChannelsMeasurement();
 
