@@ -24,6 +24,23 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
     calibration_file_path = "calibration/v1740";
   }
   cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl;
+
+  TString aux = ParseCommandLine( argc, argv, "Max_corruption" );
+  if(aux != "") {
+    Max_corruption = aux.Atoi();
+  }
+  cout << "[INFO] Max corruption tollerated: " << Max_corruption << endl;
+
+  for(unsigned int i = 0; i<Max_corruption; i++) manual_skip.push_back(-1);
+  for(unsigned int i = 1; i<=Max_corruption; i++) {
+    aux = ParseCommandLine( argc, argv, Form("NSkip%d", i) );
+    if(aux == "") {
+      manual_skip[i] = -1;
+    }
+    else {
+      manual_skip[i] = aux.Atoi();
+    }
+  }
 }
 
 void VMEAnalyzer::LoadCalibration(){
@@ -132,10 +149,18 @@ int VMEAnalyzer::FixCorruption(int corruption_grp) {
       	  //**********************************************************
       	  //we need to increment the trigger counter an extra time
       	  //because we're skipping ahead to the next event
-      	  if (corruption_grp<0) {
-            i_evt++;
-            cout << "Since corruption occured at the end of file, INCREMENTING THE i_evt" << endl;
+          if(manual_skip[N_corr-1] == -1) {
+            if (corruption_grp<0) {
+              i_evt++;
+              cout << "Since corruption occured at the end of file, INCREMENTING THE i_evt" << endl;
+            }
           }
+          else {
+            i_evt += manual_skip[N_corr-1];
+            cout << "Manual skip set: " << manual_skip[N_corr-1] << " event skipped"<< endl;
+          }
+
+
           if(pixel_input_file_path != ""){
             cout << "Resetting the pixel tree" << endl;
             while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
@@ -291,13 +316,17 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     if (magicWord1 != 10 || pattern != 0 || eventSize != 13836) {
       is_corrupted = true;
-      cout << "[WARNING] Following bitys not matching the expected header" << endl;
+      cout << "[WARNING] Following bits not matching the expected header" << endl;
     }
 
     if(is_corrupted) {
       cout << "Found data Corruption at end of event " << i_evt << endl;
       cout << "Trying to skip to next event header...\n";
       return FixCorruption(corruption_grp);
+      if(N_corr > Max_corruption) {
+        cout << "[ERROR] Corruption number over threshold. Stopping acquisition." << endl;
+        assert(false);
+      }
     }
 
 

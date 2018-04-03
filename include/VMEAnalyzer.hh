@@ -5,6 +5,7 @@
 #define VME_SAMPLES 1024
 
 #include "DatAnalyzer.hh"
+#include <assert.h>
 
 // This is the class that should be used for parsing and analyzing
 // VME data files in .dat format.
@@ -48,8 +49,11 @@ class VMEAnalyzer : public DatAnalyzer {
 
     //VME binary
     unsigned short N_corr = 0;
+    unsigned long Max_corruption = 10;
     unsigned int event_time_tag = 0;
     unsigned int group_time_tag = 0;
+
+    vector<int> manual_skip = {0};
 
     // Tree variables
     unsigned short tc[VME_TIMES]; // trigger counter bin

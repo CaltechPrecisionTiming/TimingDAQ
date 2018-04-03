@@ -58,12 +58,15 @@ Compulsory arguments don't have default value
 |``save_raw`` | false | Boolean value indicating whether to save or not the raw ADC counts.|
 |``save_meas``| false | Boolean value indicating whether to save or not the full time and voltage vector for each event.|
 |``draw_debug_pulses`` | false | If true all the pulses are saved as ``.png``. Alternatively, ``--draw_debug_pulses=.<ext>`` will save the TCanvas in the given extension.|
+|``N_evt_expected`` | -1 | If positive, number of event compared to the loaded ones. If positive and not matching, don't write the tree.|
 
 ### VME additional options:
 | Argument | Default | Notes|
 | -------- | :-------: | ---- |
 |``pixel_input_file``| "" | If not empty, the TFile with the tree of the pixel event is opened and the content analysed and added to the output file.|
 |``calibration_file`` | ``calibration/v1740`` | Load the calibration from the locations ``<calibration_file>_bd1_group_[0-3]_[offset-dV].txt``. If ``ZEROS``, put all calibration values to 0.|
+|``Max_corruption`` | 10 | Max number of detected corruption before stopping the acquisition.|
+|``NSkip<N>`` | 0 or 1 | Number of event to skip during the corruption number ``<N>``. By default skip 1 if corruption detected at the end of event header and 0 if detected in the middle.|
 
 ### DRS additional options:
 
