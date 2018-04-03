@@ -87,8 +87,15 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   aux = ParseCommandLine( argc, argv, "start_evt" );
   if(aux != "") {
     start_evt = aux.Atoi();
-    cout << "[INFO]: Starting from event: " << start_evt << endl;
-   }
+    cout << "[INFO] Starting from event: " << start_evt << endl;
+  }
+
+  aux = ParseCommandLine( argc, argv, "N_evt_expected" );
+  N_evt_expected = aux.Atoi();
+  if(N_evt_expected>0) {
+    cout << "[INFO] Number of expected events: " << flush;
+    cout << N_evt_expected << endl;
+  }
 
   aux = ParseCommandLine( argc, argv, "config" );
   if(aux == ""){
@@ -657,23 +664,34 @@ void DatAnalyzer::RunEventsLoop() {
     for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
-        else if (corruption == 1) {	  
+        else if (corruption == 1) {
           cout << "Corruption skip SUCCEDED!" << endl;
           cout << "Not analyzing current loaded evt" << endl;
         }
 
-        if( (i_evt >= start_evt) ) {
+        if( i_evt >= start_evt ) {
           if (corruption == 0) Analyze();
 
           N_written_evts++;
           tree->Fill();
 
-          if(N_written_evts%500 == 0) { cout << N_written_evts << endl; }
+          if(N_written_evts%500 == 0) {
+            cout << N_written_evts << endl;
+          }
         }
     }
 
     fclose(bin_file);
-    cout << "\nProcessed total of " << N_written_evts << " events\n";
-    
-    file->Write();  
+    cout << "\nLoaded total of " << i_evt << " events\n";
+    cout << "\nWritten total of " << N_written_evts << " events\n";
+
+    file->Write();
+
+    if(N_evt_expected>0 && N_evt_expected!=i_evt) {
+      cout << endl;
+      cout << "====================== WARNING =====================" << endl;
+      cout << "|    Number of events not matching expectations    |" << endl;
+      cout << "====================================================" << endl;
+      cout << endl;
+    }
 }
