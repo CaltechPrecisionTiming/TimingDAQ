@@ -86,6 +86,8 @@ class DatAnalyzer {
         bool draw_debug_pulses = false;
         TString img_format = ".png";
 
+        long int N_evt_expected = -1;
+
         // Reader variables
         FILE* bin_file = nullptr;
 

@@ -24,6 +24,23 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
     calibration_file_path = "calibration/v1740";
   }
   cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl;
+
+  TString aux = ParseCommandLine( argc, argv, "Max_corruption" );
+  if(aux != "") {
+    Max_corruption = aux.Atoi();
+  }
+  cout << "[INFO] Max corruption tollerated: " << Max_corruption << endl;
+
+  for(unsigned int i = 0; i<Max_corruption; i++) manual_skip.push_back(-1);
+  for(unsigned int i = 1; i<=Max_corruption; i++) {
+    aux = ParseCommandLine( argc, argv, Form("NSkip%d", i) );
+    if(aux == "") {
+      manual_skip[i] = -1;
+    }
+    else {
+      manual_skip[i] = aux.Atoi();
+    }
+  }
 }
 
 void VMEAnalyzer::LoadCalibration(){
@@ -70,6 +87,9 @@ void VMEAnalyzer::LoadCalibration(){
 
 void VMEAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
+  tree->Branch("corruption", &N_corr, "corruption/s");
+  cout << "   corruption" << endl;
+
   if(save_raw){
     tree->Branch("tc", tc, "tc[4]/s");
     cout << "   tc" << endl;
@@ -102,7 +122,8 @@ void VMEAnalyzer::InitLoop(){
   }
 }
 
-int VMEAnalyzer::FixCorruption() {
+int VMEAnalyzer::FixCorruption(int corruption_grp) {
+  N_corr++;
   bool foundEventHeader = false;
   unsigned int long N_byte = 0;
   while (!foundEventHeader) {
@@ -125,11 +146,20 @@ int VMEAnalyzer::FixCorruption() {
           foundEventHeader=true;
           cout << Form("Found a new event header after %ld bytes", N_byte) << endl;
 
-	  //**********************************************************
-	  //we need to increment the trigger counter an extra time 
-	  //because we're skipping ahead to the next event
-	  i_evt++;
-	  //**********************************************************
+      	  //**********************************************************
+      	  //we need to increment the trigger counter an extra time
+      	  //because we're skipping ahead to the next event
+          if(manual_skip[N_corr-1] == -1) {
+            if (corruption_grp<0) {
+              i_evt++;
+              cout << "Since corruption occured at the end of file, INCREMENTING THE i_evt" << endl;
+            }
+          }
+          else {
+            i_evt += manual_skip[N_corr-1];
+            cout << "Manual skip set: " << manual_skip[N_corr-1] << " event skipped"<< endl;
+          }
+
 
           if(pixel_input_file_path != ""){
             cout << "Resetting the pixel tree" << endl;
@@ -138,6 +168,8 @@ int VMEAnalyzer::FixCorruption() {
               idx_px_tree++;
             }
           }
+      	  //**********************************************************
+
           // Reverse the two bytes read
           fseek(bin_file, -1*sizeof(unsigned int), SEEK_CUR);
           return 1;
@@ -158,6 +190,7 @@ int VMEAnalyzer::FixCorruption() {
 // Fill tc, raw, time and amplitude
 int VMEAnalyzer::GetChannelsMeasurement() {
     bool is_corrupted = false;
+    int corruption_grp = -1;
     ResetAnalysisVariables();
     // Initialize the output variables
     for(int j = 0; j < NUM_CHANNELS; j++) {
@@ -176,7 +209,11 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     unsigned int group_mask = event_header & 0x0f; // 4-bit channel group mask
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    // cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    if(i_evt == start_evt) event_time_tag = event_header;
+    // cout << "Evt Time: " << event_header-event_time_tag << endl;
+
 
     // check again for end of file
     if (feof(bin_file)) return -1;
@@ -198,7 +235,8 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       int nsample = (event_header & 0xfff) / 3;
       if(nsample != 1024) {
         is_corrupted = true;
-        cout << "[WARNING]: Corruption detected at event " << i_evt << ". Stopping the tree filling." << endl;
+        corruption_grp = k;
+        cout << "[WARNING]: Corruption detected at beginning of group " << k << endl;
         cout << "[WARNING]: Corruption supposed by unexpected numeber of events. Events from header " << nsample << endl;
         break;
       }
@@ -260,6 +298,8 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       }
 
       fread( &event_header, sizeof(unsigned int), 1, bin_file);
+      if(i_evt == start_evt) group_time_tag = event_header;
+      // cout << k << ": " << event_header-group_time_tag << endl;
     } //loop over groups
 
     // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
@@ -276,12 +316,17 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     if (magicWord1 != 10 || pattern != 0 || eventSize != 13836) {
       is_corrupted = true;
-      cout << "[WARNING] Following bitys not matching the expected header" << endl;
+      cout << "[WARNING] Following bits not matching the expected header" << endl;
     }
 
     if(is_corrupted) {
-      cout << "Found Data Corruption. Trying to skip to next event header...\n";
-      return FixCorruption();
+      cout << "Found data Corruption at end of event " << i_evt << endl;
+      cout << "Trying to skip to next event header...\n";
+      return FixCorruption(corruption_grp);
+      if(N_corr > Max_corruption) {
+        cout << "[ERROR] Corruption number over threshold. Stopping acquisition." << endl;
+        assert(false);
+      }
     }
 
 
