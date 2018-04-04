@@ -340,7 +340,7 @@ float DatAnalyzer::SolveNewtonTangentsPoly(unsigned int deg, float* coeff, float
   }
 
   float x = start;
-  float out = 0;
+  float out = start;
   unsigned short N = 0;
   do {
     N++;
@@ -348,8 +348,7 @@ float DatAnalyzer::SolveNewtonTangentsPoly(unsigned int deg, float* coeff, float
     aux = x - aux;
     x = out;
     out = aux;
-  } while(fabs(x-out) > epsilon && N<6);
-
+  } while(fabs(x-out) > epsilon && N<100);
   return out;
 }
 
@@ -524,7 +523,7 @@ void DatAnalyzer::Analyze(){
               AnalyticalPolinomialSolver( span_j + 2 , &(time[GetTimeIndex(i)][j_close - 1]), &(channel[i][j_close - 1]), n, coeff);
             }
 
-            float aux = SolveNewtonTangentsPoly(n, coeff, time[GetTimeIndex(i)][j_close], amp*f, 0.005);
+            float aux = SolveNewtonTangentsPoly(n, coeff, time[GetTimeIndex(i)][j_close], amp*f, 0.0001);
             var[Form("LP%d_%d", n, (int)(100*f))][i] = aux;
 
             if(draw_debug_pulses) {
@@ -667,7 +666,6 @@ void DatAnalyzer::Analyze(){
           line_lvs->SetLineColor(frac_colors[kk]);
           line_lvs->DrawLine(time[GetTimeIndex(i)][j_10_pre-3], amp*f, time[GetTimeIndex(i)][j_90_pre + 3], amp*f);
           for(auto n : config->channels[i].PL_deg) {
-            cout << "deg " << n << " - frac " << f << endl;
             vector<float> polyval;
             for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
               float aux = PolyEval(time[GetTimeIndex(i)][j], coeff_poly_fit[count], n);
@@ -682,11 +680,14 @@ void DatAnalyzer::Analyze(){
             g_poly->Draw("C");
 
             TGraph* g_point = new TGraph(1);
-            g_point->SetPoint(0, var[Form("LP%d_%d", n, (int)(100*f))][i], f*amp);
-            g_point->SetName(Form("g_point_%d_%d", kk, n));
+            cout << "point " << var[Form("LP%d_%d", n, (int)(100*f))][i] << "  " << f*amp << endl;
+            float x = var[Form("LP%d_%d", n, (int)(100*f))][i];
+            float y = PolyEval(x, coeff_poly_fit[count], n);
+            g_point->SetPoint(0, x, y);
+            g_point->SetName(Form("g_point_%d_%d", (int)(100*f), n));
             g_point->SetMarkerColor(frac_colors[kk]);
-            g_point->SetMarkerSize(0.6);
-            g_point->SetMarkerStyle(30);
+            // g_point->SetMarkerSize(2);
+            g_point->SetMarkerStyle(45);
             g_point->Draw("P");
 
             count++;
