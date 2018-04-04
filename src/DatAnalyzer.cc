@@ -1,7 +1,6 @@
 #include "DatAnalyzer.hh"
 
 #define DEFAULT_FOR_EMPTY_CH 0
-#define THR_OVER_NOISE 3
 
 using namespace std;
 
@@ -152,13 +151,14 @@ void DatAnalyzer::InitLoop() {
 
     bool at_least_1_gaus_fit = false;
     bool at_least_1_rising_edge = false;
-    int at_least_1_LP[3] = {false};
+    int at_least_1_LP[4] = {false};
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
       if( c.second.algorithm.Contains("Re")) at_least_1_rising_edge = true;
       if( c.second.algorithm.Contains("LP1")) at_least_1_LP[0] = true;
       if( c.second.algorithm.Contains("LP2")) at_least_1_LP[1] = true;
       if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
+      if( c.second.algorithm.Contains("LP4")) at_least_1_LP[3] = true;
     }
 
     if( at_least_1_gaus_fit ) {
@@ -173,7 +173,7 @@ void DatAnalyzer::InitLoop() {
       }
     }
 
-    for(unsigned int i = 0; i< 3; i++) {
+    for(unsigned int i = 0; i< 4; i++) {
       if(at_least_1_LP[i]) {
         for (auto f : config->constant_fraction) {
           var_names.push_back(Form("LP%d_%d", i+1, (int)(100*f)));
@@ -265,9 +265,9 @@ unsigned int DatAnalyzer::GetIdxFirstCross(float value, float* v, unsigned int i
 }
 
 void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err) {
-  if(deg <= 0 || deg>3) { cout << "[ERROR]: You don't need AnalyticalPolinomialSolver for this" << endl; exit(0);}
+  if(deg <= 0 || deg>4) { cout << "[ERROR]: You don't need AnalyticalPolinomialSolver for this" << endl; exit(0);}
 
-  TVectorF x, x2, x3;
+  TVectorF x, x2, x3, x4;
   x.Use(Np, in_x);
 
   TVectorF y;
@@ -281,7 +281,7 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   TMatrixFColumn(A, 0) = 1.;
   TMatrixFColumn(A, 1) = x;
 
-  float *in_x2, *in_x3;
+  float *in_x2, *in_x3, *in_x4;
   if( deg >= 2 ) {
     in_x2 = new float[Np];
     for(unsigned int i = 0; i < Np; i++) in_x2[i] = in_x[i]*in_x[i];
@@ -293,6 +293,12 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
     for(unsigned int i = 0; i < Np; i++) in_x3[i] = in_x2[i] * in_x[i];
     x3.Use(Np, in_x3);
     TMatrixFColumn(A, 3) = x3;
+  }
+  if( deg >= 4 ) {
+    in_x4 = new float[Np];
+    for(unsigned int i = 0; i < Np; i++) in_x4[i] = in_x3[i] * in_x[i];
+    x4.Use(Np, in_x4);
+    TMatrixFColumn(A, 4) = x4;
   }
 
   TMatrixF Aw = A;
@@ -315,6 +321,7 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
 
   if( deg >= 2 ) delete [] in_x2;
   if( deg >= 3 ) delete [] in_x3;
+  if( deg >= 4 ) delete [] in_x4;
   return;
 }
 
@@ -323,6 +330,26 @@ float DatAnalyzer::PolyEval(float x, float* coeff, unsigned int deg) {
   for(unsigned int i=2; i<=deg; i++) {
     out += coeff[i]*pow(x, i);
   }
+  return out;
+}
+
+float DatAnalyzer::SolveNewtonTangentsPoly(unsigned int deg, float* coeff, float start, float y, float epsilon) {
+  float* coeff_deriv = new float[deg];
+  for(unsigned int i=0; i<deg; i++) {
+    coeff_deriv[i] = (i+1)*coeff[i+1];
+  }
+
+  float x = start;
+  float out = 0;
+  unsigned short N = 0;
+  do {
+    N++;
+    float aux = (PolyEval(x, coeff, deg)-y)/PolyEval(x, coeff_deriv, deg-1);
+    aux = x - aux;
+    x = out;
+    out = aux;
+  } while(fabs(x-out) > epsilon && N<6);
+
   return out;
 }
 
@@ -385,7 +412,7 @@ void DatAnalyzer::Analyze(){
 
     bool fittable = true;
     fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
-    fittable *= fabs(amp) > 2. * THR_OVER_NOISE * baseline_RMS;
+    fittable *= fabs(amp) > 6. * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 2*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 2*baseline_RMS;
 
@@ -458,8 +485,8 @@ void DatAnalyzer::Analyze(){
       }
 
       // -------------- Local polinomial fit
-      if ( config->constant_fraction.size() ) {
-        float start_level =  - THR_OVER_NOISE * baseline_RMS;
+      if ( config->constant_fraction.size() && config->channels[i].algorithm.Contains("LP")) {
+        float start_level =  - 2 * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
         for(auto f : config->constant_fraction) {
@@ -490,9 +517,15 @@ void DatAnalyzer::Analyze(){
             }
 
             float* coeff = new float[n];
-            AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+            if( amp*f < start_level ) {
+              AnalyticalPolinomialSolver( 2*(span_j + 1), &(time[GetTimeIndex(i)][j_close - span_j]), &(channel[i][j_close - span_j]), n, coeff);
+            }
+            else {
+              AnalyticalPolinomialSolver( span_j + 2 , &(time[GetTimeIndex(i)][j_close - 1]), &(channel[i][j_close - 1]), n, coeff);
+            }
 
-            var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+            float aux = SolveNewtonTangentsPoly(n, coeff, time[GetTimeIndex(i)][j_close], amp*f, 0.005);
+            var[Form("LP%d_%d", n, (int)(100*f))][i] = aux;
 
             if(draw_debug_pulses) {
               coeff_poly_fit.push_back(coeff);
@@ -586,16 +619,40 @@ void DatAnalyzer::Analyze(){
 
         // ---------- Rising edge only inverted!! -----
         auto pad2 = c->cd(2);
-        pad2->SetGrid();
+        // pad2->SetGrid();
+        int length = j_90_pre - j_10_pre + 9;
+        TGraphErrors* inv_pulse = new TGraphErrors(length, &(time[GetTimeIndex(i)][j_10_pre-6]), &(channel[i][j_10_pre-6]));//, yerr);
+        inv_pulse->SetNameTitle("g_zomm_"+name, "g_zomm_"+name);
+        inv_pulse->SetMarkerStyle(4);
+        inv_pulse->SetMarkerSize(0.5);
+        inv_pulse->GetYaxis()->SetTitle("Amplitude [mV]");
+        inv_pulse->GetXaxis()->SetTitle("Time [ns]");
+        inv_pulse->Draw("APE1");
+
+        line->SetLineStyle(7);
+        line->SetLineColor(47);
+        line->DrawLine(time[GetTimeIndex(i)][j_10_pre-6], -var["baseline_RMS"][i], time[GetTimeIndex(i)][j_10_pre-6+length], -var["baseline_RMS"][i]);
+
+
+        float y[2] = {channel[i][j_10_pre], channel[i][j_90_pre]};
+        float x[2] = {time[GetTimeIndex(i)][j_10_pre], time[GetTimeIndex(i)][j_90_pre]};
+        TGraph* gr_zoom_pre_post = new TGraph(2, x, y);
+        gr_zoom_pre_post->SetMarkerColor(4);
+        gr_zoom_pre_post->Draw("P*");
+
+        // -------------- If exist, draw local polinomial fit
+        unsigned int count = 0;
+        vector<int> frac_colors = {2, 4, 6, 8, 5, 40};
+        while(frac_colors.size() < config->constant_fraction.size()) frac_colors.push_back(2);
 
         if( config->channels[i].algorithm.Contains("Re") ) {
           unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
           unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
           float y[2], x[2];
-          x[0] = channel[i][i_min];
-          x[1] = channel[i][i_max];
-          y[0] = (channel[i][i_min] - Re_b)/Re_slope;
-          y[1] = (channel[i][i_max] - Re_b)/Re_slope;
+          y[0] = channel[i][i_min];
+          y[1] = channel[i][i_max];
+          x[0] = (channel[i][i_min] - Re_b)/Re_slope;
+          x[1] = (channel[i][i_max] - Re_b)/Re_slope;
 
           TGraph* gr_Re = new TGraph(2, x, y);
 
@@ -605,42 +662,32 @@ void DatAnalyzer::Analyze(){
           gr_Re->Draw("CP");
         }
 
-        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre - 4]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
-        inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
-        inv_pulse->SetMarkerStyle(4);
-        inv_pulse->SetMarkerSize(0.5);
-        inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
-        inv_pulse->GetYaxis()->SetTitle("Time [ns]");
-        inv_pulse->Draw("APE1");
-
-        TGraph* gr_inv_pre_post = new TGraph(2);
-        gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
-        gr_inv_pre_post->SetPoint(1, channel[i][j_90_pre], time[GetTimeIndex(i)][j_90_pre]);
-        gr_inv_pre_post->SetMarkerColor(4);
-        gr_inv_pre_post->Draw("P*");
-
-        // -------------- If exist, draw local polinomial fit
-        unsigned int count = 0;
-        vector<int> frac_colors = {2, 6, 8, 5, 40};
-        while(frac_colors.size() < config->constant_fraction.size()) {
-          frac_colors.push_back(2);
-        }
         for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
           float f = config->constant_fraction[kk];
           line_lvs->SetLineColor(frac_colors[kk]);
-          line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_10_pre-4], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
+          line_lvs->DrawLine(time[GetTimeIndex(i)][j_10_pre-3], amp*f, time[GetTimeIndex(i)][j_90_pre + 3], amp*f);
           for(auto n : config->channels[i].PL_deg) {
+            cout << "deg " << n << " - frac " << f << endl;
             vector<float> polyval;
             for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
-              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+              float aux = PolyEval(time[GetTimeIndex(i)][j], coeff_poly_fit[count], n);
+              polyval.push_back(aux);
             }
 
-            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+            TGraph* g_poly = new TGraph(polyval.size(), &(time[GetTimeIndex(i)][poly_bounds[count].first]), &(polyval[0]) );
+            g_poly->SetName(Form("g_poly_%d_%d", kk, n));
             g_poly->SetLineColor(frac_colors[kk]);
             g_poly->SetLineWidth(2);
             g_poly->SetLineStyle(7);
             g_poly->Draw("C");
-            // delete g_poly;
+
+            TGraph* g_point = new TGraph(1);
+            g_point->SetPoint(0, var[Form("LP%d_%d", n, (int)(100*f))][i], f*amp);
+            g_point->SetName(Form("g_point_%d_%d", kk, n));
+            g_point->SetMarkerColor(frac_colors[kk]);
+            g_point->SetMarkerSize(0.6);
+            g_point->SetMarkerStyle(30);
+            g_point->Draw("P");
 
             count++;
           }
