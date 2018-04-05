@@ -31,7 +31,7 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
   }
   cout << "[INFO] Max corruption tollerated: " << Max_corruption << endl;
 
-  for(unsigned int i = 0; i<Max_corruption; i++) manual_skip.push_back(-1);
+  for(unsigned int i = 0; i<=Max_corruption; i++) manual_skip.push_back(-1);
   for(unsigned int i = 1; i<=Max_corruption; i++) {
     aux = ParseCommandLine( argc, argv, Form("NSkip%d", i) );
     if(aux == "") {
@@ -149,15 +149,15 @@ int VMEAnalyzer::FixCorruption(int corruption_grp) {
       	  //**********************************************************
       	  //we need to increment the trigger counter an extra time
       	  //because we're skipping ahead to the next event
-          if(manual_skip[N_corr-1] == -1) {
+          if(manual_skip[N_corr] == -1) {
             if (corruption_grp<0) {
               i_evt++;
               cout << "Since corruption occured at the end of file, INCREMENTING THE i_evt" << endl;
             }
           }
           else {
-            i_evt += manual_skip[N_corr-1];
-            cout << "Manual skip set: " << manual_skip[N_corr-1] << " event skipped"<< endl;
+            i_evt += manual_skip[N_corr];
+            cout << "Manual skip set: " << manual_skip[N_corr] << " event skipped"<< endl;
           }
 
 
