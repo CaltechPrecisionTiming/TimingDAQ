@@ -458,7 +458,7 @@ void DatAnalyzer::Analyze(){
       }
 
       // -------------- Local polinomial fit
-      if ( config->constant_fraction.size() ) {
+      if ( config->constant_fraction.size() && config->channels[i].algorithm.Contains("LP")) {
         float start_level =  - THR_OVER_NOISE * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
@@ -605,7 +605,7 @@ void DatAnalyzer::Analyze(){
           gr_Re->Draw("CP");
         }
 
-        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre - 4]), &(time[GetTimeIndex(i)][j_10_pre-2]), yerr);
+        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre-4]), &(time[GetTimeIndex(i)][j_10_pre-4]), yerr);
         inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
         inv_pulse->SetMarkerStyle(4);
         inv_pulse->SetMarkerSize(0.5);
