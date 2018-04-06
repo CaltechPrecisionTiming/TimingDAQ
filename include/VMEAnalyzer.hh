@@ -53,6 +53,8 @@ class VMEAnalyzer : public DatAnalyzer {
     unsigned int event_time_tag = 0;
     unsigned int group_time_tag = 0;
 
+    unsigned int ref_event_size = 0;
+
     vector<int> manual_skip = {0};
 
     // Tree variables

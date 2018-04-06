@@ -134,14 +134,14 @@ int VMEAnalyzer::FixCorruption(int corruption_grp) {
     char tmp = 0;
     fread( &tmp, sizeof(char), 1, bin_file);
     //find the magic word first
-    if (tmp == 0x0C) {
+    if (tmp == (ref_event_size & 0xff)) {
       if (feof(bin_file)) return -1;
       fread( &tmp, sizeof(char), 1, bin_file);
-      if (tmp == 0x36) {
+      if (tmp == ((ref_event_size >> 8) & 0xff)) {
         if (feof(bin_file)) return -1;
         unsigned short tmp2 = 0;
         fread( &tmp2, sizeof(unsigned short), 1, bin_file);
-        if (tmp2 == 0xA000) {
+        if ( tmp2 == (0xA000 + ((ref_event_size >> 16) & 0xfff)) ) {
           //now i'm good.
           foundEventHeader=true;
           cout << Form("Found a new event header after %ld bytes", N_byte) << endl;
@@ -204,6 +204,10 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    if(i_evt == 0) {
+      ref_event_size = event_header & 0xfffffff;
+      cout << "[INFO] Setting the event size to " << ref_event_size << endl;
+    }
     // second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     unsigned int group_mask = event_header & 0x0f; // 4-bit channel group mask
@@ -314,7 +318,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     //reverse by 2 lines
     fseek(bin_file, -2*sizeof(unsigned int), SEEK_CUR);
 
-    if (magicWord1 != 10 || pattern != 0 || eventSize != 13836) {
+    if (magicWord1 != 10 || pattern != 0 || eventSize != ref_event_size) {
       is_corrupted = true;
       cout << "[WARNING] Following bits not matching the expected header" << endl;
     }
