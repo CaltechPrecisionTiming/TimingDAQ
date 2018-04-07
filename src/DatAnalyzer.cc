@@ -385,7 +385,7 @@ void DatAnalyzer::Analyze(){
 
     bool fittable = true;
     fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
-    fittable *= fabs(amp) > 10 * baseline_RMS;
+    fittable *= fabs(amp) > 8 * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min+2]) > 3*baseline_RMS;
