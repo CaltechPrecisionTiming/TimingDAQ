@@ -6,8 +6,7 @@ CPPFLAGS := $(shell root-config --cflags) -I$(INC)/include
 LDFLAGS := $(shell root-config --glibs)
 CPPFLAGS += -g -std=c++14
 
-TARGETS = VMEDat2Root DRSDat2Root
-#ScopeDat2Root
+TARGETS = VMEDat2Root DRSDat2Root NetScopeDat2Root
 SRC = src/Configuration.cc src/DatAnalyzer.cc
 
 all : $(TARGETS)
