@@ -411,8 +411,8 @@ void DatAnalyzer::Analyze(){
         unsigned int j_down = GetIdxFirstCross(amp*frac, channel[i], idx_min, -1);
         unsigned int j_up = GetIdxFirstCross(amp*frac, channel[i], idx_min, +1);
         if( j_up - j_down < 4 ) {
-          j_up = idx_min + 2;
-          j_down = idx_min - 2;
+          j_up = idx_min + 1;
+          j_down = idx_min - 1;
         }
 
         TF1* fpeak = new TF1("fpeak"+name, "gaus", time[GetTimeIndex(i)][j_down], time[GetTimeIndex(i)][j_up]);
