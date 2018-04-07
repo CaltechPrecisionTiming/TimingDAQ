@@ -41,12 +41,12 @@ fi
 numberlo=$1
 numberhi=$2
 
-data_dir=/eos/uscms/store/user/cmstestbeam/BTL/March2018/OTSDAQ/CMSTiming
+data_dir=/eos/uscms/store/user/cmstestbeam/ETL/2018_04/OTSDAQ/CMSTiming/VME/RAW
 #data_dir=/uscms_data/d1/sxie/data/CMSTiming/
 #data_dir=/tmp/zhicai/
-output_name=RECO/V3/DataCMSVMETiming
+output_name=../RECO/v1/DataCMSVMETiming
 code_dir=/uscms_data/d2/sxie/releases/CMSSW_9_0_2/src/TimingDAQ
-config_file=$code_dir/config/VME_FNALTestbeam_180329_v4_fast.config
+config_file=$code_dir/config/VME_FNALTestbeam_180406_LGAD_v1.config
 
 for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
