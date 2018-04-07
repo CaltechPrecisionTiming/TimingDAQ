@@ -354,7 +354,7 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(( j>0 && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == 1) {
+      if(( j>5 && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == 5) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -385,9 +385,11 @@ void DatAnalyzer::Analyze(){
 
     bool fittable = true;
     fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
-    fittable *= fabs(amp) > 2. * THR_OVER_NOISE * baseline_RMS;
-    fittable *= fabs(channel[i][idx_min+1]) > 2*baseline_RMS;
-    fittable *= fabs(channel[i][idx_min-1]) > 2*baseline_RMS;
+    fittable *= fabs(amp) > 10 * baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+2]) > 3*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
 
     if( fittable ) {
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
@@ -459,7 +461,7 @@ void DatAnalyzer::Analyze(){
 
       // -------------- Local polinomial fit
       if ( config->constant_fraction.size() && config->channels[i].algorithm.Contains("LP")) {
-        float start_level =  - THR_OVER_NOISE * baseline_RMS;
+        float start_level =  - 3 * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
         for(auto f : config->constant_fraction) {
