@@ -45,6 +45,7 @@ data_dir=/eos/uscms/store/user/cmstestbeam/ETL/2018_04/OTSDAQ/CMSTiming/VME/RAW
 #data_dir=/uscms_data/d1/sxie/data/CMSTiming/
 #data_dir=/tmp/zhicai/
 output_name=../RECO/v1/DataCMSVMETiming
+output_dir=$data_dir
 code_dir=/uscms_data/d2/sxie/releases/CMSSW_9_0_2/src/TimingDAQ
 config_file=$code_dir/config/VME_FNALTestbeam_180406_LGAD_v1.config
 
@@ -73,7 +74,7 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 
   echo "Recostructing VME and merging pixel data"
 
-  output_file=$data_dir/${output_name}_Run${runNum}.root
+  output_file=$output_dir/${output_name}_Run${runNum}.root
   #if [ -e $output_file ]
   if [ -e $output_file ] && [ "${Force}" == false ]
   then
@@ -84,7 +85,7 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 
     if [ -e $pixel_file ]
     then
-	if [ "${pixel}" == true ] 
+	if [ "${pixel}" == true ]
 	then
 	    echo "[INFO] Pixel file found. Running WITH pixels"
 	    echo "${code_dir}/VMEDat2Root --input_file=${input_file} --pixel_input_file=${pixel_file} --output_file=${output_file} --config=${config_file} --save_meas"
@@ -105,6 +106,6 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 	fi
     fi
   fi
-  
+
   echo "Finished processing run " ${runNum}
 }
