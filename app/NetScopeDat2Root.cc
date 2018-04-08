@@ -17,5 +17,8 @@ int main(int argc, char **argv) {
   analyzer->GetCommandLineArgs(argc, argv);
   analyzer->RunEventsLoop();
 
+  //patch for some lost memory situation
+  assert(false);
+
   return 0;
 }
