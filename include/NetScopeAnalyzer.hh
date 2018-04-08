@@ -2,7 +2,8 @@
 #define NetScopeAnalyzer_HH
 #define NetScope_CHANNELS 4
 #define NetScope_TIMES 1
-#define NetScope_SAMPLES 1024
+#define NetScope_SAMPLES 1000
+#define SCOPE_MEM_LENGTH_MAX 12500000
 
 #include "DatAnalyzer.hh"
 #include <assert.h>
@@ -12,60 +13,37 @@
 
 class NetScopeAnalyzer : public DatAnalyzer {
   public:
+    struct WaveformAttribute
+    {
+        unsigned int chMask;
+        size_t nPt; // number of points in each event
+        size_t nFrames; // number of Fast Frames in each event, 0 means off
+        float dt;
+        float t0;
+        float ymult[NetScope_CHANNELS];
+        float yoff[NetScope_CHANNELS];
+        float yzero[NetScope_CHANNELS];
+    };
+
     NetScopeAnalyzer() : DatAnalyzer(NetScope_CHANNELS, NetScope_TIMES, NetScope_SAMPLES, 4096, 1.) {}
 
     void GetCommandLineArgs(int argc, char **argv);
 
-    void LoadCalibration();
-
     void InitLoop();
-
-    int FixCorruption(int);
 
     int GetChannelsMeasurement();
 
-    unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch/9; }
+    unsigned int GetTimeIndex(unsigned int n_ch) { return 0; }
 
-    void Analyze();
+    // void Analyze();
   protected:
-    // Set by command line arguments or default
-    TString pixel_input_file_path;
-    TString calibration_file_path = "";
-
-    // Calibration vars
-    double off_mean[4][9][1024];
-    double tcal[NetScope_TIMES][1024];
-
     //NetScope binary
-    unsigned short N_corr = 0;
-    unsigned long Max_corruption = 10;
-    unsigned int event_time_tag = 0;
-    unsigned int group_time_tag = 0;
-
-    unsigned int ref_event_size = 0;
-
-    vector<int> manual_skip = {0};
+    WaveformAttribute wave_attr;
+    vector<int> active_ch = {};
 
     // Tree variables
-    unsigned short tc[NetScope_TIMES]; // trigger counter bin
-    unsigned short raw[NetScope_CHANNELS][NetScope_SAMPLES]; // ADC counts
 
     // Pixel events variables
-    FTBFPixelEvent* pixel_event;
-    TFile *pixel_file = nullptr;
-    TTree *pixel_tree = nullptr;
-
-    unsigned long int idx_px_tree = 0;
-    unsigned long int entries_px_tree = 0;
-
-    float xIntercept;
-    float yIntercept;
-    float xSlope;
-    float ySlope;
-    vector<float> x_DUT;
-    vector<float> y_DUT;
-    float chi2;
-    int ntracks;
 
 };
 

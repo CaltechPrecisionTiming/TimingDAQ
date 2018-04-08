@@ -417,8 +417,9 @@ void DatAnalyzer::Analyze(){
 
         TF1* fpeak = new TF1("fpeak"+name, "gaus", time[GetTimeIndex(i)][j_down], time[GetTimeIndex(i)][j_up]);
 
-        float ext_sigma = 0.2*(time[GetTimeIndex(i)][j_up] - time[GetTimeIndex(i)][j_down]);
-        fpeak->SetParameter(0, amp*(sqrt(2*3.14))*ext_sigma);
+        float ext_sigma = time[GetTimeIndex(i)][j_up] - time[GetTimeIndex(i)][j_down];
+        if (amp*frac < -baseline_RMS) ext_sigma *= 0.25;
+        fpeak->SetParameter(0, amp * sqrt(2*3.14) * ext_sigma );
         fpeak->SetParameter(1, time[GetTimeIndex(i)][idx_min]);
         fpeak->SetParameter(2, ext_sigma);
 
