@@ -89,9 +89,11 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
       char* wf_length = new char[N_bytes_wf_length];
       fread(wf_length, sizeof(char), N_bytes_wf_length, bin_file);
       int N_bytes_to_transfer = atol(wf_length);
+      delete [] wf_length;
 
       char* buffer = new char[N_bytes_to_transfer];
       fread(buffer, sizeof(char), N_bytes_to_transfer, bin_file);
+      delete [] buffer;
 
       for(unsigned int i = 0; i < N_bytes_to_transfer; i++) {
         channel[k][i] = (buffer[i] - wave_attr.yoff[k]) * wave_attr.ymult[k] + wave_attr.yzero[k];
