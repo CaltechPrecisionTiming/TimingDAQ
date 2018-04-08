@@ -325,12 +325,12 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     if(is_corrupted) {
       cout << "Found data Corruption at end of event " << i_evt << endl;
+      if(N_corr >= Max_corruption) {
+        cout << "[ERROR] Corruption number over threshold. Stopping acquisition." << endl;
+        return -1;
+      }
       cout << "Trying to skip to next event header...\n";
       return FixCorruption(corruption_grp);
-      if(N_corr > Max_corruption) {
-        cout << "[ERROR] Corruption number over threshold. Stopping acquisition." << endl;
-        assert(false);
-      }
     }
 
 

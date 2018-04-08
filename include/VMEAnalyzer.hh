@@ -49,7 +49,7 @@ class VMEAnalyzer : public DatAnalyzer {
 
     //VME binary
     unsigned short N_corr = 0;
-    unsigned long Max_corruption = 10;
+    unsigned long Max_corruption = 15;
     unsigned int event_time_tag = 0;
     unsigned int group_time_tag = 0;
 
