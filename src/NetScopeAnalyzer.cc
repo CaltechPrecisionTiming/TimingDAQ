@@ -48,17 +48,36 @@ void NetScopeAnalyzer::InitLoop(){
   (wave_attr.yoff[0]), (wave_attr.yoff[1]), (wave_attr.yoff[2]), (wave_attr.yoff[3]),
   (wave_attr.yzero[0]), (wave_attr.yzero[1]), (wave_attr.yzero[2]), (wave_attr.yzero[3]));
 
+  // Setting the time value
+  for(int i = 0; i < NUM_SAMPLES; i++){
+    time[0][i] = i* wave_attr.dt;
+  }
+
+  exit(0);
 }
 
 // Fill tc, raw, time and amplitude
 int NetScopeAnalyzer::GetChannelsMeasurement() {
 
-    char buf[16*BUFSIZ];
+    //Resetting the time value
+    for(int i = 0; i < NUM_CHANNELS; i++){
+      for(int j = 0; j < NUM_SAMPLES; j++){
+        channel[i][j] = 0;
+      }
+    }
+    float ADC = (1.0 / 4096.0);
 
-    unsigned int nr;
-    nr = fread(buf, sizeof(char), BUFSIZ, bin_file);
+    char sample[16*BUFSIZE];
+
+    fread(buf, sizeof(char), BUFSIZE, bin_file);
+
+    channel[iCh][i] = ((waveformBuf[j * wave_attr.nPt + i]
+           - wave_attr.yoff[iCh])
+      * wave_attr.ymult[iCh]
+      + wave_attr.yzero[iCh]) / ADC;
 
 
+    exit(0);
     return 0;
 }
 
