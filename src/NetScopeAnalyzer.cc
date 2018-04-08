@@ -55,7 +55,7 @@ void NetScopeAnalyzer::InitLoop(){
   //TODO: TO be precise should fill the time and channel arrays there
   //deleting the pre-existing ones
   for(int i = 0; i < NUM_SAMPLES; i++){
-    time[0][i] = i* wave_attr.dt;
+    time[0][i] = i* wave_attr.dt*1E9;
   }
 }
 
@@ -109,44 +109,3 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
 
     return 0;
 }
-
-// void NetScopeAnalyzer::Analyze(){
-//   if(pixel_input_file_path != ""){
-//     xIntercept = -999;
-//     yIntercept = -999;
-//     xSlope = -999;
-//     ySlope = -999;
-//     for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
-//       x_DUT[i] = -999;
-//       y_DUT[i] = -999;
-//     }
-//     chi2 = -999.;
-//     ntracks = 0;
-//
-//     while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
-//       pixel_tree->GetEntry(idx_px_tree);
-//       if (pixel_event->trigger == i_evt) {
-//         if(ntracks == 0) {
-//           xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
-//           yIntercept = 1e-3*pixel_event->yIntercept;
-//           xSlope = pixel_event->xSlope;
-//           ySlope = pixel_event->ySlope;
-//           for(unsigned int i = 0; i < config->z_DUT.size(); i++) {
-//             x_DUT[i] = xIntercept + xSlope*(config->z_DUT[i]);
-//             y_DUT[i] = yIntercept + ySlope*(config->z_DUT[i]);
-//           }
-//           chi2 = pixel_event->chi2;
-//         }
-//       	ntracks++;
-//         idx_px_tree++;
-//       }
-//       else if (i_evt > pixel_event->trigger) {
-//         cout << "[ERROR] Pixel tree not ordered" << endl;
-//         exit(0);
-//       }
-//     }
-//
-//   }
-//
-//   DatAnalyzer::Analyze();
-// }
