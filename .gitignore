@@ -2,7 +2,7 @@
 *.dat
 VMEDat2Root
 DRSDat2Root
-ScopeDat2Root
+NetScopeDat2Root
 pulses_imgs/pulse_event*.png
 *.o
 *.dSYM

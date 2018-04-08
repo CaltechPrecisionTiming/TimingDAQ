@@ -31,7 +31,10 @@ void NetScopeAnalyzer::InitLoop(){
   &(wave_attr.yzero[0]), &(wave_attr.yzero[1]), &(wave_attr.yzero[2]), &(wave_attr.yzero[3]));
 
   for( unsigned int i = 0; i < 4; i++ ) {
-    if ( (wave_attr.chMask >> i) & 0x1 ) active_ch.push_back(i);
+    if ( (wave_attr.chMask >> i) & 0x1 ) {
+      active_ch.push_back(i);
+      cout << "Channel: " << i << " active" << endl;
+    }
   }
 
   printf("Waveform Attribute:\n"
@@ -49,11 +52,11 @@ void NetScopeAnalyzer::InitLoop(){
   (wave_attr.yzero[0]), (wave_attr.yzero[1]), (wave_attr.yzero[2]), (wave_attr.yzero[3]));
 
   // Setting the time value
+  //TODO: TO be precise should fill the time and channel arrays there
+  //deleting the pre-existing ones
   for(int i = 0; i < NUM_SAMPLES; i++){
     time[0][i] = i* wave_attr.dt;
   }
-
-  exit(0);
 }
 
 // Fill tc, raw, time and amplitude
@@ -65,19 +68,45 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
         channel[i][j] = 0;
       }
     }
-    float ADC = (1.0 / 4096.0);
 
-    char sample[16*BUFSIZE];
+    // Loop over channels
+    for(auto k : active_ch) {
+      char event_header;
+      fread(&event_header, sizeof(char), 1, bin_file);
+      if (feof(bin_file)) {
+        return -1;
+      }
+      else if (event_header != '#') {
+        cout << Form("Channel header: %X (%c)", event_header, event_header) << endl;
+        cout << "Not matching the expected character #" << endl;
+        return -1;
+      }
 
-    fread(buf, sizeof(char), BUFSIZE, bin_file);
+      char aux_N_bytes_wf_length[1];
+      fread(aux_N_bytes_wf_length, sizeof(char), 1, bin_file);
+      int N_bytes_wf_length = atoi(aux_N_bytes_wf_length);
 
-    channel[iCh][i] = ((waveformBuf[j * wave_attr.nPt + i]
-           - wave_attr.yoff[iCh])
-      * wave_attr.ymult[iCh]
-      + wave_attr.yzero[iCh]) / ADC;
+      char* wf_length = new char[N_bytes_wf_length];
+      fread(wf_length, sizeof(char), N_bytes_wf_length, bin_file);
+      int N_bytes_to_transfer = atol(wf_length);
 
+      char* buffer = new char[N_bytes_to_transfer];
+      fread(buffer, sizeof(char), N_bytes_to_transfer, bin_file);
 
-    exit(0);
+      for(unsigned int i = 0; i < N_bytes_to_transfer; i++) {
+        channel[k][i] = (buffer[i] - wave_attr.yoff[k]) * wave_attr.ymult[k] + wave_attr.yzero[k];
+      }
+
+    }
+
+    char event_tail;
+    fread(&event_tail, sizeof(char), 1, bin_file);
+    if (event_tail != '\n') {
+      cout << Form("Event tail: %X", event_tail) << endl;
+      cout << "Not matching the expected event tail 0xA" << endl; //New line character '\n'=0xA
+      return -1;
+    }
+
     return 0;
 }
 
