@@ -18,8 +18,5 @@ int main(int argc, char **argv) {
   analyzer->LoadCalibration();
   analyzer->RunEventsLoop();
 
-  //patch for some lost memory situation
-  assert(false);
-
   return 0;
 }
