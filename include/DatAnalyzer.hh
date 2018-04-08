@@ -92,6 +92,9 @@ class DatAnalyzer {
         FILE* bin_file = nullptr;
 
         // Analysis variables
+        float* AUX_time;
+        float* AUX_channel;
+        
         float** time;
         float** channel;
 

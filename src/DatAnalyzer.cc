@@ -10,8 +10,8 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
         DAC_RESOLUTION(res), DAC_SCALE(scale),
         file(0), tree(0) {
 
-    float* AUX_time = new float[numTimes*numSamples];
-    float* AUX_channel = new float[numChannels*numSamples];
+    AUX_time = new float[numTimes*numSamples];
+    AUX_channel = new float[numChannels*numSamples];
 
     time = new float*[numTimes];
     channel = new float*[numChannels];
