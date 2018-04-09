@@ -24,8 +24,8 @@ class NetScopeAnalyzer : public DatAnalyzer {
         float yoff[NetScope_CHANNELS];
         float yzero[NetScope_CHANNELS];
     };
-
-    NetScopeAnalyzer() : DatAnalyzer(NetScope_CHANNELS, NetScope_TIMES, NetScope_SAMPLES, 4096, 1.) {}
+    //Scope Tektronix DPO7254 ADC already in account in the binary conversion
+    NetScopeAnalyzer() : DatAnalyzer(NetScope_CHANNELS, NetScope_TIMES, NetScope_SAMPLES, 1, 1.) {}
 
     void GetCommandLineArgs(int argc, char **argv);
 
@@ -34,17 +34,10 @@ class NetScopeAnalyzer : public DatAnalyzer {
     int GetChannelsMeasurement();
 
     unsigned int GetTimeIndex(unsigned int n_ch) { return 0; }
-
-    // void Analyze();
   protected:
     //NetScope binary
     WaveformAttribute wave_attr;
     vector<int> active_ch = {};
-
-    // Tree variables
-
-    // Pixel events variables
-
 };
 
 #endif
