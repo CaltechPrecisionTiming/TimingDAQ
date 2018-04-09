@@ -77,7 +77,7 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
         return -1;
       }
       else if (event_header != '#') {
-        cout << Form("Channel header: %X (%c)", event_header, event_header) << endl;
+        cout << Form("Event %d channel header: %X (%c)", i_evt, event_header, event_header) << endl;
         cout << "Not matching the expected character #" << endl;
         return -1;
       }
@@ -94,18 +94,41 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
 
       char* buffer = new char[N_bytes_to_transfer];
       fread(buffer, sizeof(char), N_bytes_to_transfer, bin_file);
-      delete [] buffer;
-
       for(unsigned int i = 0; i < N_bytes_to_transfer; i++) {
         channel[k][i] = (buffer[i] - wave_attr.yoff[k]) * wave_attr.ymult[k] + wave_attr.yzero[k];
       }
+      delete [] buffer;
 
     }
-
     char event_tail;
     fread(&event_tail, sizeof(char), 1, bin_file);
-    if (event_tail != '\n') {
-      cout << Form("Event tail: %X", event_tail) << endl;
+
+    if (event_tail == ':') {
+      char aux_buf;
+      while(!feof(bin_file) ) {
+        fread(&aux_buf, sizeof(char), 1, bin_file);
+        cout << aux_buf << flush;
+        if(aux_buf == '#') {
+          cout << endl << aux_buf << flush;
+          fread(&aux_buf, sizeof(char), 1, bin_file);
+          cout << aux_buf << flush;
+          if(aux_buf-'0' == 4) {
+            char buff[4+1];
+            fread(buff, sizeof(char), 4, bin_file);
+            buff[4] = '\0';
+            cout << buff << endl;
+            if(stoi(buff) == wave_attr.nPt) {
+              fseek(bin_file, -(2+4)*sizeof(char), SEEK_CUR);
+              return 0;
+            }
+          }
+
+        }
+      }
+
+    }
+    else if (event_tail != '\n') {
+      cout << Form("Event %d tail: %X (%c)", i_evt, event_tail, event_tail) << endl;
       cout << "Not matching the expected event tail 0xA" << endl; //New line character '\n'=0xA
       return -1;
     }
