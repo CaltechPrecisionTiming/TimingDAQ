@@ -84,11 +84,12 @@ int NetScopeAnalyzer::GetChannelsMeasurement() {
 
       char aux_N_bytes_wf_length[1];
       fread(aux_N_bytes_wf_length, sizeof(char), 1, bin_file);
-      int N_bytes_wf_length = atoi(aux_N_bytes_wf_length);
+      int N_bytes_wf_length = (int)(aux_N_bytes_wf_length[0] - '0');
 
-      char* wf_length = new char[N_bytes_wf_length];
+      char* wf_length = new char[N_bytes_wf_length+1];
       fread(wf_length, sizeof(char), N_bytes_wf_length, bin_file);
-      int N_bytes_to_transfer = atol(wf_length);
+      wf_length[N_bytes_wf_length] = '\0';
+      int N_bytes_to_transfer = stoi(wf_length);
       delete [] wf_length;
 
       char* buffer = new char[N_bytes_to_transfer];

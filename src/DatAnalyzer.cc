@@ -354,7 +354,7 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(( j>5 && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == 5) {
+      if(( j>bl_st_idx && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == bl_st_idx) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -493,7 +493,7 @@ void DatAnalyzer::Analyze(){
             }
 
             float* coeff = new float[n];
-            AnalyticalPolinomialSolver( 2*(span_j + 1) , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+            AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
 
@@ -610,8 +610,7 @@ void DatAnalyzer::Analyze(){
 
         TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre-4]), &(time[GetTimeIndex(i)][j_10_pre-4]), yerr);
         inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
-        inv_pulse->SetMarkerStyle(4);
-        inv_pulse->SetMarkerSize(0.5);
+        inv_pulse->SetMarkerStyle(5);
         inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
         inv_pulse->GetYaxis()->SetTitle("Time [ns]");
         inv_pulse->Draw("APE1");
