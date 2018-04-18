@@ -188,6 +188,9 @@ void DatAnalyzer::InitLoop() {
         for (auto f : config->constant_fraction) {
           var_names.push_back(Form("LP%d_%d", i+1, (int)(100*f)));
         }
+        for (auto thr : config->constant_threshold) {
+          var_names.push_back(Form("LP%d_%dmV", i+1, (int)(fabs(thr))));
+        }
       }
     }
 
@@ -495,7 +498,15 @@ void DatAnalyzer::Analyze(){
           if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
 
           for(auto n : config->channels[i].PL_deg) {
-            unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_st)/1.5));
+            unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
+
+            if (j_90_pre - j_10_pre <= 3*n) {
+              span_j = max((unsigned int)(n*0.5), span_j);
+              span_j = max((unsigned int)1, span_j);
+            }
+            else {
+              span_j = max((unsigned int) n, span_j);
+            }
 
             if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
               cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
@@ -506,6 +517,61 @@ void DatAnalyzer::Analyze(){
             AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+
+            if(draw_debug_pulses) {
+              coeff_poly_fit.push_back(coeff);
+              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+            }
+            else delete [] coeff;
+          }
+        }
+      }
+
+      if ( config->constant_threshold.size() && config->channels[i].algorithm.Contains("LP")) {
+        float start_level =  - 3 * baseline_RMS;
+        unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
+
+        for(auto thr : config->constant_threshold) {
+          if (thr < amp ) continue;
+          unsigned int j_st = j_start;
+          if ( thr > start_level ) {
+            if (thr > -baseline_RMS && verbose) {
+              if(N_warnings< N_warnings_to_print) {
+                N_warnings++;
+                cout << Form("[WARNING] ev:%d ch:%d - thr %.2f mV below noise RMS", i_evt, i, thr) << endl;
+              }
+              else if (N_warnings_to_print == N_warnings) {
+                N_warnings++;
+                cout << "[WARNING] Max number of warnings passed. No more warnings will be printed." << endl;;
+              }
+            }
+            j_st =  GetIdxFirstCross( thr, channel[i], idx_min, -1);
+          }
+
+          unsigned int j_close = GetIdxFirstCross(thr, channel[i], j_st, +1);
+          if ( fabs(channel[i][j_close-1] - thr) < fabs(channel[i][j_close] - thr) ) j_close--;
+
+          for(auto n : config->channels[i].PL_deg) {
+            unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
+
+            if (j_90_pre - j_10_pre <= 3*n) {
+              span_j = max((unsigned int)(n*0.5), span_j);
+              span_j = max((unsigned int)1, span_j);
+            }
+            else {
+              span_j = max((unsigned int) n, span_j);
+            }
+
+            if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
+              cout << j_close << "  " << span_j << "  " << thr << endl;
+              cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+              continue;
+            }
+
+            float* coeff = new float[n];
+            AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+
+            var[Form("LP%d_%dmV", n, (int)(fabs(thr)))][i] = PolyEval(thr, coeff, n);
 
             if(draw_debug_pulses) {
               coeff_poly_fit.push_back(coeff);
@@ -565,6 +631,11 @@ void DatAnalyzer::Analyze(){
       line_lvs->SetLineStyle(10);
       for(auto f : config->constant_fraction) {
         line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*amp, time[GetTimeIndex(i)][NUM_SAMPLES-1], f*amp);
+      }
+      // Draw constant threshold lines
+      line_lvs->SetLineColor(28);
+      for(auto thr : config->constant_fraction) {
+        line_lvs->DrawLine(time[GetTimeIndex(i)][0], thr, time[GetTimeIndex(i)][NUM_SAMPLES-1], thr);
       }
 
 
@@ -633,10 +704,11 @@ void DatAnalyzer::Analyze(){
 
         // -------------- If exist, draw local polinomial fit
         unsigned int count = 0;
-        vector<int> frac_colors = {2, 6, 8, 5, 40};
-        while(frac_colors.size() < config->constant_fraction.size()) {
+        vector<int> frac_colors = {2, 6, 8, 5, 40, 46, 4, 9, 12};
+        while(frac_colors.size() < config->constant_fraction.size() + config->constant_threshold.size()) {
           frac_colors.push_back(2);
         }
+
         for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
           float f = config->constant_fraction[kk];
           line_lvs->SetLineColor(frac_colors[kk]);
@@ -652,11 +724,32 @@ void DatAnalyzer::Analyze(){
             g_poly->SetLineWidth(2);
             g_poly->SetLineStyle(7);
             g_poly->Draw("C");
-            // delete g_poly;
 
             count++;
           }
         }
+
+        for( unsigned int kk = 0; kk < config->constant_threshold.size(); kk++) {
+          float thr = config->constant_threshold[kk];
+          if (thr < amp ) continue;
+          line_lvs->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+          line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_10_pre-4], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
+          for(auto n : config->channels[i].PL_deg) {
+            vector<float> polyval;
+            for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
+              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+            }
+
+            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+            g_poly->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+            g_poly->SetLineWidth(2);
+            g_poly->SetLineStyle(7);
+            g_poly->Draw("C");
+
+            count++;
+          }
+        }
+
       }
 
       c->SetGrid();

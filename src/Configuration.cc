@@ -61,10 +61,10 @@ void Configuration::parseConfigurationLine(std::string line) {
 
       if( verbose ) { cout << "[CONFIG] ConstantThreshold = { " << flush;}
       while(nextConfigurationElement(ss, item)) {
-        constant_threshold.push_back(0.01*std::stof(item));
-        if( verbose ) { cout << 0.01*std::stof(item) << " " << flush;}
+        constant_threshold.push_back(std::stof(item));
+        if( verbose ) { cout << std::stof(item) << " " << flush;}
       }
-      if( verbose ) { cout << "}" << endl;}
+      if( verbose ) { cout << "} [mV]" << endl;}
     }
     else if (line.substr(0, 5) == "z_DUT") {
       nextConfigurationElement(ss, item);
