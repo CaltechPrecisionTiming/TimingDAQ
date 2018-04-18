@@ -20,9 +20,11 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       channel[i] = &(AUX_channel[i*numSamples]);
       if(i<numTimes) time[i] = &(AUX_time[i*numSamples]);
     }
-    cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
-    cout << "NUM_TIMES: " << NUM_TIMES << endl;
-    cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
+    if ( verbose ) {
+      cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
+      cout << "NUM_TIMES: " << NUM_TIMES << endl;
+      cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
+    }
 }
 
 DatAnalyzer::~DatAnalyzer() {
@@ -50,6 +52,7 @@ TString DatAnalyzer::ParseCommandLine( int argc, char* argv[], TString opt )
 }
 
 void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
+  cout << endl << "-------------- TimingDAQ (Dat2Root) --------------" << endl;
 
   input_file_path = ParseCommandLine( argc, argv, "input_file" );
   ifstream in_file(input_file_path.Data());
@@ -62,6 +65,25 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     cout << "Input file: " << input_file_path.Data() << endl;
   }
 
+  TString aux;
+  aux = ParseCommandLine( argc, argv, "verbose" );
+  aux.ToLower();
+  if(aux == "true") verbose = true;
+
+  aux = ParseCommandLine( argc, argv, "config" );
+  if(aux == ""){
+    cerr << "[ERROR]: Missing config file" << endl;
+    exit(0);
+  }
+  cout << "Config file: " << aux.Data() << endl;
+  config = new Configuration(aux.Data(), verbose);
+  if ( !config->isValid() ) {
+    cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
+    exit(0);
+  }
+
+  // -------- Non compulsory command line arguments
+
   output_file_path = ParseCommandLine( argc, argv, "output_file" );
   if ( output_file_path == "" ){
     output_file_path = input_file_path;
@@ -70,8 +92,6 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   else if (!output_file_path.EndsWith(".root")) output_file_path += ".root";
   cout << "Output file: " << output_file_path.Data() << endl;
 
-  // -------- Non compulsory command line arguments
-  TString aux;
 
   aux = ParseCommandLine( argc, argv, "N_evts" );
   long int N_tmp = aux.Atoi();
@@ -80,9 +100,11 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     exit(0);
   }
   N_evts = N_tmp;
-  cout << "Number of events: " << flush;
-  if(N_evts == 0){ cout << "Not specified." << endl;}
-  else{ cout << N_evts << endl;}
+  if ( verbose ) {
+    cout << "Number of events: " << flush;
+    if(N_evts == 0){ cout << "Not specified." << endl;}
+    else{ cout << N_evts << endl;}
+  }
 
   aux = ParseCommandLine( argc, argv, "start_evt" );
   if(aux != "") {
@@ -95,18 +117,6 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   if(N_evt_expected>0) {
     cout << "[INFO] Number of expected events: " << flush;
     cout << N_evt_expected << endl;
-  }
-
-  aux = ParseCommandLine( argc, argv, "config" );
-  if(aux == ""){
-    cerr << "[ERROR]: Missing config file" << endl;
-    exit(0);
-  }
-  cout << "Config file: " << aux.Data() << endl;
-  config = new Configuration(aux.Data());
-  if ( !config->isValid() ) {
-    cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
-    exit(0);
   }
 
   aux = ParseCommandLine( argc, argv, "save_raw" );
@@ -134,7 +144,7 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 }
 
 void DatAnalyzer::InitLoop() {
-    cout << "Initializing infut file reader and output tree" << endl;
+    cout << "Initializing input file reader and output tree" << endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
     ifstream out_file(output_file_path.Data());
     if (!out_file){
@@ -182,14 +192,14 @@ void DatAnalyzer::InitLoop() {
     }
 
     // Create the tree beanches an the associated variables
-    cout << "Initializing all the tree variables" << endl;
-    if (save_meas) {
+    if ( verbose ) { cout << "Initializing all tree variables" << endl; }
+    if (save_meas && verbose) {
       cout << "   channel\n   time" << endl;
     }
     for(TString n : var_names){
       var[n] = new float[NUM_CHANNELS];
       tree->Branch(n, &(var[n][0]), n+Form("[%d]/F", NUM_CHANNELS));
-      cout << "   " << n.Data() << endl;
+      if( verbose ) { cout << "   " << n.Data() << endl; }
     }
 
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
@@ -468,7 +478,7 @@ void DatAnalyzer::Analyze(){
         for(auto f : config->constant_fraction) {
           unsigned int j_st = j_start;
           if ( amp*f > start_level ) {
-            if ( amp*f > -baseline_RMS ) {
+            if ( amp*f > -baseline_RMS && verbose) {
               if(N_warnings< N_warnings_to_print) {
                 N_warnings++;
                 cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
@@ -662,6 +672,8 @@ void DatAnalyzer::Analyze(){
 void DatAnalyzer::RunEventsLoop() {
     InitLoop();
 
+    unsigned int evt_progress_print_rate = verbose ? 100 : 1000;
+
     cout << "Events loop started" << endl;
     unsigned int N_written_evts = 0;
     for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
@@ -678,7 +690,7 @@ void DatAnalyzer::RunEventsLoop() {
           N_written_evts++;
           tree->Fill();
 
-          if(N_written_evts%500 == 0) {
+          if(N_written_evts%evt_progress_print_rate == 0) {
             cout << N_written_evts << endl;
           }
         }

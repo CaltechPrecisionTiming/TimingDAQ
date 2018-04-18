@@ -52,6 +52,7 @@ Compulsory arguments don't have default value
 | -------- | :-------: | ---- |
 |``input_file``|    |Binary input file with the data. Must end in ``.dat``.|
 |``config`` |      |Configuration file (see below).|
+|``verbose`` |  false |Activate verbosity.|
 |``output_file``| ``<input>.root`` | Output root file containing a singe tree called ``pulse``. If not provided, the default option is to have the same name of the input file with the ``.root`` extension.|
 |``N_evts`` | 0 | Event number at which stop reading the  input file. If 0, continue until ``eof`` is reached.|
 |``start_evt`` | 0 | Event at which start analysing and writing in the TTree.|

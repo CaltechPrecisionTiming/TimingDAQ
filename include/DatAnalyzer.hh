@@ -81,6 +81,7 @@ class DatAnalyzer {
         unsigned long int N_evts = 0;
         unsigned int start_evt = 0;
 
+        bool verbose = false;
         bool save_raw = false;
         bool save_meas = false;
         bool draw_debug_pulses = false;
@@ -94,7 +95,7 @@ class DatAnalyzer {
         // Analysis variables
         float* AUX_time;
         float* AUX_channel;
-        
+
         float** time;
         float** channel;
 

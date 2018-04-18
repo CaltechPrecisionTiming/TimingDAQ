@@ -7,10 +7,10 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
 
   pixel_input_file_path = ParseCommandLine( argc, argv, "pixel_input_file" );
   if (pixel_input_file_path == ""){
-    cout << "Pixel input file not provided" << endl;
+    if (verbose) { cout << "Pixel input file not provided" << endl; }
   }
   else {
-    cout << "Pixel input file: " << pixel_input_file_path.Data() << endl;
+    if (verbose) { cout << "Pixel input file: " << pixel_input_file_path.Data() << endl; }
     pixel_file = new TFile( pixel_input_file_path.Data(),"READ");
     if (!pixel_file) {std::cout << "[ERROR]: Pixel file not found" << std::endl; exit(0);}
     TString tree_name = pixel_file->GetListOfKeys()->At(0)->GetName(); //Only works if it the tree is the first key
@@ -23,13 +23,13 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
   if(calibration_file_path == ""){
     calibration_file_path = "calibration/v1740";
   }
-  cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl;
+  if (verbose) { cout << "Calibration file: " << calibration_file_path.Data() << "_bd1_group_[0-3]_[offset-dV].txt" << endl; }
 
   TString aux = ParseCommandLine( argc, argv, "Max_corruption" );
   if(aux != "") {
     Max_corruption = aux.Atoi();
   }
-  cout << "[INFO] Max corruption tollerated: " << Max_corruption << endl;
+  if (verbose) { cout << "[INFO] Max corruption tollerated: " << Max_corruption << endl; }
 
   for(unsigned int i = 0; i<=Max_corruption; i++) manual_skip.push_back(-1);
   for(unsigned int i = 1; i<=Max_corruption; i++) {
@@ -44,7 +44,7 @@ void VMEAnalyzer::GetCommandLineArgs(int argc, char **argv){
 }
 
 void VMEAnalyzer::LoadCalibration(){
-  cout << "---------- Loading calibrations -------------" << endl;
+  if (verbose) { cout << "---------- Loading calibrations -------------" << endl; }
   for(unsigned int ig = 0; ig < 4; ig++) {
     for(unsigned int is = 0; is < 4; is++) {
       tcal[ig][is] = 0;
@@ -88,13 +88,13 @@ void VMEAnalyzer::LoadCalibration(){
 void VMEAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
   tree->Branch("corruption", &N_corr, "corruption/s");
-  cout << "   corruption" << endl;
+  if (verbose) { cout << "   corruption" << endl; }
 
   if(save_raw){
     tree->Branch("tc", tc, "tc[4]/s");
-    cout << "   tc" << endl;
+    if (verbose) { cout << "   tc" << endl; }
     tree->Branch("raw", raw, Form("raw[%d][%d]/s", NUM_CHANNELS, NUM_SAMPLES));
-    cout << "   raw" << endl;
+    if (verbose) { cout << "   raw" << endl; }
   }
 
   if(pixel_input_file_path != ""){
@@ -116,7 +116,7 @@ void VMEAnalyzer::InitLoop(){
     }
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
-    cout << "   -->All pixel variables" << endl;
+    if (verbose) { cout << "   -->All pixel variables" << endl; }
     idx_px_tree = min((unsigned long)start_evt, entries_px_tree-1);
     pixel_tree->GetEntry( idx_px_tree );
   }
@@ -206,7 +206,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     if(i_evt == 0) {
       ref_event_size = event_header & 0xfffffff;
-      cout << "[INFO] Setting the event size to " << ref_event_size << endl;
+      if ( verbose ) { cout << "[INFO] Setting the event size to " << ref_event_size << endl; }
     }
     // second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
