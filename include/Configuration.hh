@@ -34,7 +34,10 @@ class Configuration {
     public:
       struct Channel {
         unsigned int N = 0;
+
         int polarity = +1;
+        unsigned int counter_auto_pol_switch = 0;
+
         float amplification = 0;
         float attenuation = 0;
         TString algorithm = "";

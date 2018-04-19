@@ -286,9 +286,6 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   TVectorF y;
   y.Use(Np, in_y);
 
-  TVectorF e;
-  if (err != 0) e.Use(Np, err);
-
   TMatrixF A(Np, deg+1);
 
   TMatrixFColumn(A, 0) = 1.;
@@ -308,23 +305,21 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
     TMatrixFColumn(A, 3) = x3;
   }
 
-  TMatrixF Aw = A;
-  TVectorF yw = y;
-  if( err != 0 ) {
-    for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
-      TMatrixFRow(Aw,irow) *= 1/e(irow);
-      yw(irow) /= e(irow);
-    }
-  }
+  const TVectorD c_norm = NormalEqn(A,y);
+  // // When/if error will be implemented
+  // if (err != 0) {
+  //   TVectorF e;
+  //   e.Use(Np, err);
+  //   c_norm = NormalEqn(A,y,e);
+  // }
+  // else c_norm = NormalEqn(A,y);
 
-  TDecompSVD svd(Aw);
-  Bool_t ok;
-  const TVectorF c_svd = svd.Solve(yw,ok);
 
   out_coeff = new float[deg+1];
   for(unsigned int i = 0; i<= deg; i++) {
-    out_coeff[i] = c_svd[i];
+    out_coeff[i] = c_norm[i];
   }
+
 
   if( deg >= 2 ) delete [] in_x2;
   if( deg >= 3 ) delete [] in_x3;
@@ -360,6 +355,7 @@ void DatAnalyzer::Analyze(){
       baseline += channel[i][j];
     }
     baseline /= (float) bl_lenght;
+    var["baseline"][i] = scale_factor * baseline;
 
 
     // ------------- Get minimum position, max amplitude and scale the signal
@@ -367,14 +363,13 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(( j>bl_st_idx && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == bl_st_idx) {
+      if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
         idx_min = j;
         amp = channel[i][j];
       }
     }
-    var["baseline"][i] = scale_factor * baseline;
-    var["amp"][i] = -amp;
     var["t_peak"][i] = time[GetTimeIndex(i)][idx_min];
+    var["amp"][i] = -amp;
 
     float baseline_RMS = 0;
     for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
@@ -397,14 +392,39 @@ void DatAnalyzer::Analyze(){
     float Re_b, Re_slope;
 
     bool fittable = true;
-    fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
     fittable *= fabs(amp) > 8 * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min+2]) > 3*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
 
     if( fittable ) {
+      // Correct the polarity if wrong
+      if(amp > 0) {
+        // if ( config->channels[i].counter_auto_pol_switch <= 5 ) {
+        //   cout << "[WARNING] Automatic polarity inversion for channel " << i <<endl;
+        // }
+        config->channels[i].polarity *= -1;
+        amp = -amp;
+        var["amp"][i] = -amp;
+        scale_factor = -scale_factor;
+        var["baseline"][i] = scale_factor * baseline;
+        for(unsigned int j=0; j<NUM_SAMPLES; j++) {
+          channel[i][j] = -channel[i][j];
+        }
+        delete pulse;
+        pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
+        pulse->SetNameTitle("g_"+name, "g_"+name);
+
+        if ( config->channels[i].counter_auto_pol_switch == 10 ) {
+          cout << "[WARNING] Channel " << i << " automatic polarity switched more than 10 times" << endl;
+          // cout << "[WARNING] Very likely this channel has no real signals" << endl;
+        }
+        config->channels[i].counter_auto_pol_switch ++;
+      }
+
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
@@ -513,7 +533,7 @@ void DatAnalyzer::Analyze(){
               continue;
             }
 
-            float* coeff = new float[n];
+            float* coeff;
             AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
@@ -568,7 +588,7 @@ void DatAnalyzer::Analyze(){
               continue;
             }
 
-            float* coeff = new float[n];
+            float* coeff;
             AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%dmV", n, (int)(fabs(thr)))][i] = PolyEval(thr, coeff, n);
@@ -634,7 +654,7 @@ void DatAnalyzer::Analyze(){
       }
       // Draw constant threshold lines
       line_lvs->SetLineColor(28);
-      for(auto thr : config->constant_fraction) {
+      for(auto thr : config->constant_threshold) {
         line_lvs->DrawLine(time[GetTimeIndex(i)][0], thr, time[GetTimeIndex(i)][NUM_SAMPLES-1], thr);
       }
 

@@ -21,7 +21,9 @@
 #include "TLine.h"
 #include "TVectorF.h"
 #include "TMatrixF.h"
-#include "TDecompSVD.h"
+// #include "TDecompSVD.h"
+#include "TDecompChol.h"
+// #include "TMatrixDSym.h"
 #include "TF1.h"
 
 // LOCAL INCLUDES
