@@ -810,8 +810,6 @@ void DatAnalyzer::RunEventsLoop() {
 
     fclose(bin_file);
     cout << "\nLoaded total of " << i_evt << " events\n";
-    cout << "\nWritten total of " << N_written_evts << " events\n";
-
 
     if(N_evt_expected>0 && N_evt_expected!=i_evt) {
       cout << endl;
@@ -823,4 +821,5 @@ void DatAnalyzer::RunEventsLoop() {
       exit(0);
     }
     file->Write();
+    cout << "\nWritten total of " << N_written_evts << " events\n";
 }
