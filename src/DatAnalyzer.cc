@@ -392,6 +392,7 @@ void DatAnalyzer::Analyze(){
     float Re_b, Re_slope;
 
     bool fittable = true;
+    fittable *= idx_min < (int)(NUM_SAMPLES*0.8);
     fittable *= fabs(amp) > 8 * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
@@ -403,9 +404,6 @@ void DatAnalyzer::Analyze(){
     if( fittable ) {
       // Correct the polarity if wrong
       if(amp > 0) {
-        // if ( config->channels[i].counter_auto_pol_switch <= 5 ) {
-        //   cout << "[WARNING] Automatic polarity inversion for channel " << i <<endl;
-        // }
         config->channels[i].polarity *= -1;
         amp = -amp;
         var["amp"][i] = -amp;
@@ -418,9 +416,8 @@ void DatAnalyzer::Analyze(){
         pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
         pulse->SetNameTitle("g_"+name, "g_"+name);
 
-        if ( config->channels[i].counter_auto_pol_switch == 10 ) {
+        if ( config->channels[i].counter_auto_pol_switch == 10 && verbose) {
           cout << "[WARNING] Channel " << i << " automatic polarity switched more than 10 times" << endl;
-          // cout << "[WARNING] Very likely this channel has no real signals" << endl;
         }
         config->channels[i].counter_auto_pol_switch ++;
       }
@@ -529,7 +526,7 @@ void DatAnalyzer::Analyze(){
             }
 
             if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
-              cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+              cout << Form("[WARNING] evt %d ch %d:  Short span around the closest point. Analytical fit not performed.", i_evt, i) << endl;
               continue;
             }
 
@@ -583,8 +580,10 @@ void DatAnalyzer::Analyze(){
             }
 
             if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
-              cout << j_close << "  " << span_j << "  " << thr << endl;
-              cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+              if (verbose) {
+                cout << Form("[WARNING] evt %d ch %d:  Short span around the closest point. Analytical fit not performed.", i_evt, i) << endl;
+                cout << j_close << "  " << span_j << "  " << thr << endl;
+              }
               continue;
             }
 

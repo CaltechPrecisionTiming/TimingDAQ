@@ -40,23 +40,29 @@ for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
   echo "    Number of raw files: ${nfiles}"
   if [ $nfiles -gt 1 ]
   then
-    if [ -e $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat ]
+    if [ -e $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat ]
     then
     	echo "    Combined .dat file already exists."
       if [ "${force}" == true ]
       then
-        echo "    Creating $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat"
-        rm ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat
-        cat $(ls -v $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat) > $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat
+        echo "    Creating $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat"
+        rm ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}.dat
+        cat $(ls -v $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat) > $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat
       fi
     else
-      echo "    Creating $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat"
-    	cat $(ls -v $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat) > $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_Raw.dat
+      echo "    Creating $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat"
+    	cat $(ls -v $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat) > $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat
+    fi
+    
+    if [ "${delete}" == true ]
+    then
+      rm ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat
+    fi
+  else
+    if [ $nfiles -gt 0 ]
+    then
+      mv $(ls -v $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat) $data_dir/RawDataSaver0CMSVMETiming_Run${runNum}.dat
     fi
   fi
 
-  if [ "${delete}" == true ]
-  then
-    rm ${data_dir}/RawDataSaver0CMSVMETiming_Run${runNum}_*_Raw.dat
-  fi
 }

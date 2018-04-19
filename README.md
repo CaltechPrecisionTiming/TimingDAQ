@@ -28,19 +28,37 @@ git clone https://github.com/CaltechPrecisionTiming/TimingDAQ
 make -j8
 ```
 
-If willing to run on cmslpc cluster, all the requirements to run are satisfied running:
+If willing to run on CMSLPC cluster, all the requirements to run are satisfied running:
 ```
 source /cvmfs/sft.cern.ch/lcg/views/LCG_89/x86_64-slc6-gcc62-opt/setup.sh
 source  /cvmfs/sft.cern.ch/lcg/releases/ROOT/6.10.02-19565/x86_64-slc6-gcc62-opt/bin/thisroot.sh
 ```
 
-### Examples
+If willing to run on LXPLUS cluster, all the requirements to run are satisfied running:
+```
+source TimingDAQ/setup_lxplus.sh
+```
+
+### DRS Example
 
 ``./DRSDat2Root --input_file=<your_file>.dat --config=config/DRS_Na22.config --N_evts=10000``
 
 Example plot produced with the flag ``--draw_debug_pulses`` in the FNAL test beam of March 2018.
 
 ![alt text](https://github.com/CaltechPrecisionTiming/TimingDAQ/blob/master/pulses_imgs/readme_example_pulse.png)
+
+### Run VME reRECO
+
+First of all be sure to copy all the files you need (Track, VME binary and NimPlus) in the correct folder.
+
+```
+./VMEDat2Root --input_file=/eos/cms/store/group/phys_susy/razor/Timing/Mar2018FNAL/OTSDAQ/CMSTiming/RAW/VMEbin/RawDataSaver0CMSVMETiming_Run485.dat --pixel_input_file=/eos/cms/store/group/phys_susy/razor/Timing/Mar2018FNAL/OTSDAQ/CMSTiming/RAW/Tracks/Run485_CMSTiming_converted.root --output_file=/eos/cms/store/group/phys_susy/razor/Timing/Mar2018FNAL/OTSDAQ/CMSTiming/reRECO_180419/DataCMSVMETiming_Run485.root --config=./config/FNALTestbeam_1803/VME_BTLreRECO_180419.config --N_evt_expected=6859
+```
+
+Or you can use the automated version
+```
+./automation/run_reRECO.sh 482 485 -F -f -np
+```
 
 ## Command line options
 All the command line option must be passed using the sintax ``--<opt>=<val>``. For all options, ``--<opt>`` is equal to ``--<opt>=true``.
