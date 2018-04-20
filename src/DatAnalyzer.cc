@@ -60,7 +60,7 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     cerr << "[ERROR]: please provide a valid input file. Use: --input_file=<your_input_file_path>.dat " << endl;
     exit(0);
   }
-  else
+  else if (verbose)
   {
     cout << "Input file: " << input_file_path.Data() << endl;
   }
@@ -75,7 +75,7 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     cerr << "[ERROR]: Missing config file" << endl;
     exit(0);
   }
-  cout << "Config file: " << aux.Data() << endl;
+  if(verbose) {cout << "Config file: " << aux.Data() << endl;}
   config = new Configuration(aux.Data(), verbose);
   if ( !config->isValid() ) {
     cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
@@ -90,7 +90,7 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     output_file_path.ReplaceAll(".dat", ".root");
   }
   else if (!output_file_path.EndsWith(".root")) output_file_path += ".root";
-  cout << "Output file: " << output_file_path.Data() << endl;
+  if (verbose) {cout << "Output file: " << output_file_path.Data() << endl;}
 
 
   aux = ParseCommandLine( argc, argv, "N_evts" );
@@ -815,9 +815,10 @@ void DatAnalyzer::RunEventsLoop() {
       cout << endl;
       cout << "====================== WARNING =====================" << endl;
       cout << "|    Number of events not matching expectations    |" << endl;
+      cout << "          " << N_evt_expected << "  !=  " << i_evt << endl;
       cout << "====================================================" << endl;
       cout << endl;
-      cout << "No tree wrote.";
+      cout << "No tree wrote." << endl;
       exit(0);
     }
     file->Write();
