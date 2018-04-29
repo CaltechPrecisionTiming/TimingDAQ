@@ -20,9 +20,11 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       channel[i] = &(AUX_channel[i*numSamples]);
       if(i<numTimes) time[i] = &(AUX_time[i*numSamples]);
     }
-    cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
-    cout << "NUM_TIMES: " << NUM_TIMES << endl;
-    cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
+    if ( verbose ) {
+      cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
+      cout << "NUM_TIMES: " << NUM_TIMES << endl;
+      cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
+    }
 }
 
 DatAnalyzer::~DatAnalyzer() {
@@ -50,6 +52,7 @@ TString DatAnalyzer::ParseCommandLine( int argc, char* argv[], TString opt )
 }
 
 void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
+  cout << endl << "-------------- TimingDAQ (Dat2Root) --------------" << endl;
 
   input_file_path = ParseCommandLine( argc, argv, "input_file" );
   ifstream in_file(input_file_path.Data());
@@ -57,10 +60,29 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     cerr << "[ERROR]: please provide a valid input file. Use: --input_file=<your_input_file_path>.dat " << endl;
     exit(0);
   }
-  else
+  else if (verbose)
   {
     cout << "Input file: " << input_file_path.Data() << endl;
   }
+
+  TString aux;
+  aux = ParseCommandLine( argc, argv, "verbose" );
+  aux.ToLower();
+  if(aux == "true") verbose = true;
+
+  aux = ParseCommandLine( argc, argv, "config" );
+  if(aux == ""){
+    cerr << "[ERROR]: Missing config file" << endl;
+    exit(0);
+  }
+  if(verbose) {cout << "Config file: " << aux.Data() << endl;}
+  config = new Configuration(aux.Data(), verbose);
+  if ( !config->isValid() ) {
+    cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
+    exit(0);
+  }
+
+  // -------- Non compulsory command line arguments
 
   output_file_path = ParseCommandLine( argc, argv, "output_file" );
   if ( output_file_path == "" ){
@@ -68,10 +90,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     output_file_path.ReplaceAll(".dat", ".root");
   }
   else if (!output_file_path.EndsWith(".root")) output_file_path += ".root";
-  cout << "Output file: " << output_file_path.Data() << endl;
+  if (verbose) {cout << "Output file: " << output_file_path.Data() << endl;}
 
-  // -------- Non compulsory command line arguments
-  TString aux;
 
   aux = ParseCommandLine( argc, argv, "N_evts" );
   long int N_tmp = aux.Atoi();
@@ -80,9 +100,11 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
     exit(0);
   }
   N_evts = N_tmp;
-  cout << "Number of events: " << flush;
-  if(N_evts == 0){ cout << "Not specified." << endl;}
-  else{ cout << N_evts << endl;}
+  if ( verbose ) {
+    cout << "Number of events: " << flush;
+    if(N_evts == 0){ cout << "Not specified." << endl;}
+    else{ cout << N_evts << endl;}
+  }
 
   aux = ParseCommandLine( argc, argv, "start_evt" );
   if(aux != "") {
@@ -95,18 +117,6 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   if(N_evt_expected>0) {
     cout << "[INFO] Number of expected events: " << flush;
     cout << N_evt_expected << endl;
-  }
-
-  aux = ParseCommandLine( argc, argv, "config" );
-  if(aux == ""){
-    cerr << "[ERROR]: Missing config file" << endl;
-    exit(0);
-  }
-  cout << "Config file: " << aux.Data() << endl;
-  config = new Configuration(aux.Data());
-  if ( !config->isValid() ) {
-    cerr << "\nFailed to load channel information from config " << aux.Data() << endl;
-    exit(0);
   }
 
   aux = ParseCommandLine( argc, argv, "save_raw" );
@@ -134,7 +144,7 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 }
 
 void DatAnalyzer::InitLoop() {
-    cout << "Initializing infut file reader and output tree" << endl;
+    cout << "Initializing input file reader and output tree" << endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
     ifstream out_file(output_file_path.Data());
     if (!out_file){
@@ -178,18 +188,21 @@ void DatAnalyzer::InitLoop() {
         for (auto f : config->constant_fraction) {
           var_names.push_back(Form("LP%d_%d", i+1, (int)(100*f)));
         }
+        for (auto thr : config->constant_threshold) {
+          var_names.push_back(Form("LP%d_%dmV", i+1, (int)(fabs(thr))));
+        }
       }
     }
 
     // Create the tree beanches an the associated variables
-    cout << "Initializing all the tree variables" << endl;
-    if (save_meas) {
+    if ( verbose ) { cout << "Initializing all tree variables" << endl; }
+    if (save_meas && verbose) {
       cout << "   channel\n   time" << endl;
     }
     for(TString n : var_names){
       var[n] = new float[NUM_CHANNELS];
       tree->Branch(n, &(var[n][0]), n+Form("[%d]/F", NUM_CHANNELS));
-      cout << "   " << n.Data() << endl;
+      if( verbose ) { cout << "   " << n.Data() << endl; }
     }
 
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
@@ -273,9 +286,6 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   TVectorF y;
   y.Use(Np, in_y);
 
-  TVectorF e;
-  if (err != 0) e.Use(Np, err);
-
   TMatrixF A(Np, deg+1);
 
   TMatrixFColumn(A, 0) = 1.;
@@ -295,23 +305,21 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
     TMatrixFColumn(A, 3) = x3;
   }
 
-  TMatrixF Aw = A;
-  TVectorF yw = y;
-  if( err != 0 ) {
-    for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
-      TMatrixFRow(Aw,irow) *= 1/e(irow);
-      yw(irow) /= e(irow);
-    }
-  }
+  const TVectorD c_norm = NormalEqn(A,y);
+  // // When/if error will be implemented
+  // if (err != 0) {
+  //   TVectorF e;
+  //   e.Use(Np, err);
+  //   c_norm = NormalEqn(A,y,e);
+  // }
+  // else c_norm = NormalEqn(A,y);
 
-  TDecompSVD svd(Aw);
-  Bool_t ok;
-  const TVectorF c_svd = svd.Solve(yw,ok);
 
   out_coeff = new float[deg+1];
   for(unsigned int i = 0; i<= deg; i++) {
-    out_coeff[i] = c_svd[i];
+    out_coeff[i] = c_norm[i];
   }
+
 
   if( deg >= 2 ) delete [] in_x2;
   if( deg >= 3 ) delete [] in_x3;
@@ -347,6 +355,7 @@ void DatAnalyzer::Analyze(){
       baseline += channel[i][j];
     }
     baseline /= (float) bl_lenght;
+    var["baseline"][i] = scale_factor * baseline;
 
 
     // ------------- Get minimum position, max amplitude and scale the signal
@@ -354,14 +363,13 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(( j>bl_st_idx && j<NUM_SAMPLES-1 && channel[i][j] < amp) || j == bl_st_idx) {
+      if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
         idx_min = j;
         amp = channel[i][j];
       }
     }
-    var["baseline"][i] = scale_factor * baseline;
-    var["amp"][i] = -amp;
     var["t_peak"][i] = time[GetTimeIndex(i)][idx_min];
+    var["amp"][i] = -amp;
 
     float baseline_RMS = 0;
     for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
@@ -384,14 +392,36 @@ void DatAnalyzer::Analyze(){
     float Re_b, Re_slope;
 
     bool fittable = true;
-    fittable *= idx_min > bl_st_idx + bl_lenght + 3; // peak at least 3 samples after the baseline
+    fittable *= idx_min < (int)(NUM_SAMPLES*0.8);
     fittable *= fabs(amp) > 8 * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
     fittable *= fabs(channel[i][idx_min+2]) > 3*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
 
     if( fittable ) {
+      // Correct the polarity if wrong
+      if(amp > 0) {
+        config->channels[i].polarity *= -1;
+        amp = -amp;
+        var["amp"][i] = -amp;
+        scale_factor = -scale_factor;
+        var["baseline"][i] = scale_factor * baseline;
+        for(unsigned int j=0; j<NUM_SAMPLES; j++) {
+          channel[i][j] = -channel[i][j];
+        }
+        delete pulse;
+        pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
+        pulse->SetNameTitle("g_"+name, "g_"+name);
+
+        if ( config->channels[i].counter_auto_pol_switch == 10 && verbose) {
+          cout << "[WARNING] Channel " << i << " automatic polarity switched more than 10 times" << endl;
+        }
+        config->channels[i].counter_auto_pol_switch ++;
+      }
+
       j_10_pre = GetIdxFirstCross(amp*0.1, channel[i], idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
@@ -468,7 +498,7 @@ void DatAnalyzer::Analyze(){
         for(auto f : config->constant_fraction) {
           unsigned int j_st = j_start;
           if ( amp*f > start_level ) {
-            if ( amp*f > -baseline_RMS ) {
+            if ( amp*f > -baseline_RMS && verbose) {
               if(N_warnings< N_warnings_to_print) {
                 N_warnings++;
                 cout << Form("[WARNING] ev:%d ch:%d - fraction %.2f below noise RMS", i_evt, i, f) << endl;
@@ -485,17 +515,82 @@ void DatAnalyzer::Analyze(){
           if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
 
           for(auto n : config->channels[i].PL_deg) {
-            unsigned int span_j = max(n, int(min( j_90_pre-j_close , j_close-j_st)/1.5));
+            unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
+
+            if (j_90_pre - j_10_pre <= 3*n) {
+              span_j = max((unsigned int)(n*0.5), span_j);
+              span_j = max((unsigned int)1, span_j);
+            }
+            else {
+              span_j = max((unsigned int) n, span_j);
+            }
 
             if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
-              cout << "[WARNING]: Short span around the closest point. Analytical fit not performed." << endl;
+              cout << Form("[WARNING] evt %d ch %d:  Short span around the closest point. Analytical fit not performed.", i_evt, i) << endl;
               continue;
             }
 
-            float* coeff = new float[n];
+            float* coeff;
             AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
+
+            if(draw_debug_pulses) {
+              coeff_poly_fit.push_back(coeff);
+              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+            }
+            else delete [] coeff;
+          }
+        }
+      }
+
+      if ( config->constant_threshold.size() && config->channels[i].algorithm.Contains("LP")) {
+        float start_level =  - 3 * baseline_RMS;
+        unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
+
+        for(auto thr : config->constant_threshold) {
+          if (thr < amp ) continue;
+          unsigned int j_st = j_start;
+          if ( thr > start_level ) {
+            if (thr > -baseline_RMS && verbose) {
+              if(N_warnings< N_warnings_to_print) {
+                N_warnings++;
+                cout << Form("[WARNING] ev:%d ch:%d - thr %.2f mV below noise RMS", i_evt, i, thr) << endl;
+              }
+              else if (N_warnings_to_print == N_warnings) {
+                N_warnings++;
+                cout << "[WARNING] Max number of warnings passed. No more warnings will be printed." << endl;;
+              }
+            }
+            j_st =  GetIdxFirstCross( thr, channel[i], idx_min, -1);
+          }
+
+          unsigned int j_close = GetIdxFirstCross(thr, channel[i], j_st, +1);
+          if ( fabs(channel[i][j_close-1] - thr) < fabs(channel[i][j_close] - thr) ) j_close--;
+
+          for(auto n : config->channels[i].PL_deg) {
+            unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
+
+            if (j_90_pre - j_10_pre <= 3*n) {
+              span_j = max((unsigned int)(n*0.5), span_j);
+              span_j = max((unsigned int)1, span_j);
+            }
+            else {
+              span_j = max((unsigned int) n, span_j);
+            }
+
+            if( j_close < span_j || j_close + span_j >= NUM_SAMPLES ) {
+              if (verbose) {
+                cout << Form("[WARNING] evt %d ch %d:  Short span around the closest point. Analytical fit not performed.", i_evt, i) << endl;
+                cout << j_close << "  " << span_j << "  " << thr << endl;
+              }
+              continue;
+            }
+
+            float* coeff;
+            AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+
+            var[Form("LP%d_%dmV", n, (int)(fabs(thr)))][i] = PolyEval(thr, coeff, n);
 
             if(draw_debug_pulses) {
               coeff_poly_fit.push_back(coeff);
@@ -555,6 +650,11 @@ void DatAnalyzer::Analyze(){
       line_lvs->SetLineStyle(10);
       for(auto f : config->constant_fraction) {
         line_lvs->DrawLine(time[GetTimeIndex(i)][0], f*amp, time[GetTimeIndex(i)][NUM_SAMPLES-1], f*amp);
+      }
+      // Draw constant threshold lines
+      line_lvs->SetLineColor(28);
+      for(auto thr : config->constant_threshold) {
+        line_lvs->DrawLine(time[GetTimeIndex(i)][0], thr, time[GetTimeIndex(i)][NUM_SAMPLES-1], thr);
       }
 
 
@@ -623,10 +723,11 @@ void DatAnalyzer::Analyze(){
 
         // -------------- If exist, draw local polinomial fit
         unsigned int count = 0;
-        vector<int> frac_colors = {2, 6, 8, 5, 40};
-        while(frac_colors.size() < config->constant_fraction.size()) {
+        vector<int> frac_colors = {2, 6, 8, 5, 40, 46, 4, 9, 12};
+        while(frac_colors.size() < config->constant_fraction.size() + config->constant_threshold.size()) {
           frac_colors.push_back(2);
         }
+
         for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
           float f = config->constant_fraction[kk];
           line_lvs->SetLineColor(frac_colors[kk]);
@@ -642,11 +743,32 @@ void DatAnalyzer::Analyze(){
             g_poly->SetLineWidth(2);
             g_poly->SetLineStyle(7);
             g_poly->Draw("C");
-            // delete g_poly;
 
             count++;
           }
         }
+
+        for( unsigned int kk = 0; kk < config->constant_threshold.size(); kk++) {
+          float thr = config->constant_threshold[kk];
+          if (thr < amp ) continue;
+          line_lvs->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+          line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_10_pre-4], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
+          for(auto n : config->channels[i].PL_deg) {
+            vector<float> polyval;
+            for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
+              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+            }
+
+            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+            g_poly->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+            g_poly->SetLineWidth(2);
+            g_poly->SetLineStyle(7);
+            g_poly->Draw("C");
+
+            count++;
+          }
+        }
+
       }
 
       c->SetGrid();
@@ -661,6 +783,8 @@ void DatAnalyzer::Analyze(){
 
 void DatAnalyzer::RunEventsLoop() {
     InitLoop();
+
+    unsigned int evt_progress_print_rate = verbose ? 100 : 1000;
 
     cout << "Events loop started" << endl;
     unsigned int N_written_evts = 0;
@@ -678,7 +802,7 @@ void DatAnalyzer::RunEventsLoop() {
           N_written_evts++;
           tree->Fill();
 
-          if(N_written_evts%500 == 0) {
+          if(N_written_evts%evt_progress_print_rate == 0) {
             cout << N_written_evts << endl;
           }
         }
@@ -686,17 +810,17 @@ void DatAnalyzer::RunEventsLoop() {
 
     fclose(bin_file);
     cout << "\nLoaded total of " << i_evt << " events\n";
-    cout << "\nWritten total of " << N_written_evts << " events\n";
-
 
     if(N_evt_expected>0 && N_evt_expected!=i_evt) {
       cout << endl;
       cout << "====================== WARNING =====================" << endl;
       cout << "|    Number of events not matching expectations    |" << endl;
+      cout << "          " << N_evt_expected << "  !=  " << i_evt << endl;
       cout << "====================================================" << endl;
       cout << endl;
-      cout << "No tree wrote.";
+      cout << "No tree wrote." << endl;
       exit(0);
     }
     file->Write();
+    cout << "\nWritten total of " << N_written_evts << " events\n";
 }

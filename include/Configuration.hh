@@ -34,7 +34,10 @@ class Configuration {
     public:
       struct Channel {
         unsigned int N = 0;
+
         int polarity = +1;
+        unsigned int counter_auto_pol_switch = 0;
+
         float amplification = 0;
         float attenuation = 0;
         TString algorithm = "";
@@ -46,11 +49,12 @@ class Configuration {
       };
 
       // Read and initilize from the configuration file
-      Configuration(string config_file);
+      Configuration(string config_file, bool verb);
 
       map<unsigned int,Channel> channels;
 
       bool isValid();
+      bool verbose = false;
 
       // get overall multiplier including polarity, amplification, and attenuation
       float getChannelMultiplicationFactor(unsigned int ch);
@@ -61,6 +65,7 @@ class Configuration {
       unsigned int baseline[2] = {20, 150};
       // must be between 0.1 and 0.9
       vector<float> constant_fraction = {0.15, 0.3, 0.45};
+      vector<float> constant_threshold = {};
 
       vector<float> z_DUT = {-50., 50.};
 

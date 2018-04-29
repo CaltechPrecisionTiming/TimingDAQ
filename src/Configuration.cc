@@ -1,6 +1,8 @@
 #include "Configuration.hh"
 
-Configuration::Configuration(std::string fname) {
+Configuration::Configuration(std::string fname, bool verb) {
+    verbose = verb;
+
     std::string configLine;
     std::ifstream configStream(fname);
     if ( configStream.is_open() ) {
@@ -22,7 +24,7 @@ int Configuration::nextConfigurationElement(std::stringstream &ss, std::string &
         }
     }
     return 0;
-    // std::cout << "Warning in Configuration::nextConfigurationElement: next config element not found" << std::endl;
+    // cout << "Warning in Configuration::nextConfigurationElement: next config element not found" << std::endl;
 }
 
 void Configuration::parseConfigurationLine(std::string line) {
@@ -40,29 +42,40 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       baseline[1] = std::stoi(item);
 
-      cout << "[CONFIG] Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;
+      if( verbose ) { cout << "[CONFIG] Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;}
     }
     else if (line.substr(0, 16) == "ConstantFraction") {
       nextConfigurationElement(ss, item);
       constant_fraction.clear();
 
-      cout << "[CONFIG] ConstantFraction = { " << flush;
+      if( verbose ) { cout << "[CONFIG] ConstantFraction = { " << flush;}
       while(nextConfigurationElement(ss, item)) {
         constant_fraction.push_back(0.01*std::stof(item));
-        cout << 0.01*std::stof(item) << " " << flush;
+        if( verbose ) { cout << 0.01*std::stof(item) << " " << flush;}
       }
-      cout << "}" << endl;
+      if( verbose ) { cout << "}" << endl;}
+    }
+    else if (line.substr(0, 17) == "ConstantThreshold") {
+      nextConfigurationElement(ss, item);
+      constant_threshold.clear();
+
+      if( verbose ) { cout << "[CONFIG] ConstantThreshold = { " << flush;}
+      while(nextConfigurationElement(ss, item)) {
+        constant_threshold.push_back(std::stof(item));
+        if( verbose ) { cout << std::stof(item) << " " << flush;}
+      }
+      if( verbose ) { cout << "} [mV]" << endl;}
     }
     else if (line.substr(0, 5) == "z_DUT") {
       nextConfigurationElement(ss, item);
       z_DUT.clear();
 
-      cout << "[CONFIG] z_DUT = { " << flush;
+      if( verbose ) { cout << "[CONFIG] z_DUT = { " << flush;}
       while(nextConfigurationElement(ss, item)) {
         z_DUT.push_back(std::stof(item));
-        cout << std::stof(item) << " " << flush;
+        if( verbose ) { cout << std::stof(item) << " " << flush;}
       }
-      cout << "} [mm]" << endl;
+      if( verbose ) { cout << "} [mm]" << endl;}
     }
     else if (line[0] <= '9' && line[0] >= '0') {
       Channel aux_ch;
@@ -70,18 +83,18 @@ void Configuration::parseConfigurationLine(std::string line) {
       nextConfigurationElement(ss, item);
       unsigned int chNum = std::stoi(item);
       aux_ch.N = chNum;
-      std::cout << "[CONFIG] Channel " << chNum << " activated" << std::endl;
+      if( verbose ) { cout << "[CONFIG] Channel " << chNum << " activated" << std::endl;}
 
 
       // polarity
       nextConfigurationElement(ss, item);
       if ( item == "+" ) {
           aux_ch.polarity = 1;
-          std::cout << "    Negative pulse set (+: straight)" << std::endl;
+          if( verbose ) { cout << "    Negative pulse set (+: straight)" << std::endl;}
       }
       else if ( item == "-" ) {
           aux_ch.polarity = -1;
-          std::cout << "    Positive pulse set (-: inverse)" << std::endl;
+          if( verbose ) { cout << "    Positive pulse set (-: inverse)" << std::endl;}
       }
       else {
         std::cerr << "[ERROR] Invalid polarity for channel " << chNum << std::endl;
@@ -93,7 +106,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       float amp = std::stof(item);
       aux_ch.amplification = amp;
       if ( amp ) {
-          std::cout << "    Amplification of " << amp << " dB" << std::endl;
+          if( verbose ) { cout << "    Amplification of " << amp << " dB" << std::endl;}
       }
 
       // attenuation [dB]
@@ -101,13 +114,13 @@ void Configuration::parseConfigurationLine(std::string line) {
       float att = std::stof(item);
       aux_ch.attenuation = amp;
       if ( att ) {
-          std::cout << "    Attenuation of " << att << " dB" << std::endl;
+          if( verbose ) { cout << "    Attenuation of " << att << " dB" << std::endl;}
       }
 
       // algorithm
       nextConfigurationElement(ss, item);
       aux_ch.algorithm = item;
-      cout << "    Algorithm: " << aux_ch.algorithm.Data() << endl;
+      if( verbose ) { cout << "    Algorithm: " << aux_ch.algorithm.Data() << endl;}
       TString aux = aux_ch.algorithm(TRegexp("Re[0-9][0-9]-[0-9][0-9]"));
       if ( aux.Length() == 7 ) {
         aux_ch.re_bounds[0] = stof(aux(2,2).Data()) / 100.;
@@ -132,7 +145,7 @@ void Configuration::parseConfigurationLine(std::string line) {
       float width = std::stof(item);
       aux_ch.weierstrass_filter_width = width;
       if ( width ) {
-          std::cout << "    Weierstrass transform with filter width " << width << std::endl;
+          if( verbose ) { cout << "    Weierstrass transform with filter width " << width << std::endl;}
           std::cerr << "[ERROR] Weierstrass transform not implemented yet" << std::endl;
           exit(0);
       }
