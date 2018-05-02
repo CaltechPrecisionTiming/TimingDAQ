@@ -66,15 +66,15 @@ fi
 numberlo=$1
 numberhi=$2
 
-data_dir=../data/ETL_march_testbeam/RAW/
-# data_dir=/eos/uscms/store/user/cmstestbeam/ETL/2018_04/OTSDAQ/CMSTiming/VME/RAW
+#data_dir=../data/ETL_march_testbeam/RAW/
+data_dir=/eos/uscms/store/user/cmstestbeam/ETL/2018_04/OTSDAQ/CMSTiming/VME/RAW
 #data_dir=/uscms_data/d1/sxie/data/CMSTiming/
 #data_dir=/tmp/zhicai/
 output_name=DataCMSVMETiming
-output_dir=../data/ETL_march_testbeam/RECO_v1
-# output_dir=$data_dir/../RECO/v1
+#output_dir=../data/ETL_march_testbeam/RECO_v1
+output_dir=$data_dir/../RECO/v2
 code_dir=.
-config_file=$code_dir/config/VME_FNALTestbeam_180406_LGAD_v1.config
+config_file=$code_dir/config/VME_FNALTestbeam_180409_LGAD_v1.config
 
 for((runNum=${numberlo}; runNum<=${numberhi}; runNum++))
 {
