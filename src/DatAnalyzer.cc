@@ -811,7 +811,7 @@ void DatAnalyzer::RunEventsLoop() {
     fclose(bin_file);
     cout << "\nLoaded total of " << i_evt << " events\n";
 
-    if(N_evt_expected>0 && N_evt_expected!=i_evt) {
+    if(N_evt_expected>0 && N_evt_expected!=i_evt && N_evts == 0) {
       cout << endl;
       cout << "====================== WARNING =====================" << endl;
       cout << "|    Number of events not matching expectations    |" << endl;

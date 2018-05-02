@@ -99,7 +99,7 @@ int DRSAnalyzer::GetChannelsMeasurement() {
     //   }
     // }
 
-    return 1;
+    return 0;
 }
 
 void DRSAnalyzer::Analyze(){
