@@ -163,12 +163,20 @@ void DatAnalyzer::InitLoop() {
     bool at_least_1_gaus_fit = false;
     bool at_least_1_rising_edge = false;
     int at_least_1_LP[3] = {false};
+    bool at_least_1_IL = false;
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
       if( c.second.algorithm.Contains("Re")) at_least_1_rising_edge = true;
       if( c.second.algorithm.Contains("LP1")) at_least_1_LP[0] = true;
       if( c.second.algorithm.Contains("LP2")) at_least_1_LP[1] = true;
       if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
+      if( c.second.algorithm.Contains("IL")) at_least_1_IL = true;
+    }
+
+    if( at_least_1_IL) {
+      for (auto f : config->constant_fraction) {
+        var_names.push_back(Form("IL_%d", (int)(100*f)));
+      }
     }
 
     if( at_least_1_gaus_fit ) {
@@ -394,12 +402,12 @@ void DatAnalyzer::Analyze(){
     bool fittable = true;
     fittable *= idx_min < (int)(NUM_SAMPLES*0.8);
     fittable *= fabs(amp) > 8 * baseline_RMS;
-    fittable *= fabs(channel[i][idx_min+1]) > 5*baseline_RMS;
-    fittable *= fabs(channel[i][idx_min-1]) > 5*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min+1]) > 4*baseline_RMS;
+    fittable *= fabs(channel[i][idx_min-1]) > 4*baseline_RMS;
     fittable *= fabs(channel[i][idx_min+2]) > 3*baseline_RMS;
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
-    fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
-    fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
+    // fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
+    // fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
 
     if( fittable ) {
       // Correct the polarity if wrong
@@ -491,7 +499,7 @@ void DatAnalyzer::Analyze(){
       }
 
       // -------------- Local polinomial fit
-      if ( config->constant_fraction.size() && config->channels[i].algorithm.Contains("LP")) {
+      if ( config->constant_fraction.size() ) {
         float start_level =  - 3 * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
@@ -513,6 +521,27 @@ void DatAnalyzer::Analyze(){
 
           unsigned int j_close = GetIdxFirstCross(amp*f, channel[i], j_st, +1);
           if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close] - f*amp) ) j_close--;
+
+          if( config->channels[i].algorithm.Contains("IL")) {
+            unsigned int j_aux = j_close + 1;
+
+            float t1 = time[GetTimeIndex(i)][j_close];
+            float v1 = channel[i][j_close];
+            float t2 = time[GetTimeIndex(i)][j_aux];
+            float v2 = channel[i][j_aux];
+
+
+            float out = 0;
+            if (v1 == v2) {
+              out = TMath::Max(t1, t2);
+            }
+            else {
+              out = t1 + (t2 - t1) * (amp*f - v1)/(v2 - v1);
+            }
+
+            // cout << Form("%g: %g %g %g %g %g %g", f, t1, v1, t2, v2, amp*f, out) << endl;
+            var[Form("IL_%d", (int)(100*f))][i] = out;
+          }
 
           for(auto n : config->channels[i].PL_deg) {
             unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);

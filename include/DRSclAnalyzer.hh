@@ -17,7 +17,7 @@
 
 class DRSclAnalyzer : public DatAnalyzer {
   public:
-    DRSclAnalyzer() : DatAnalyzer(DRS_CHANNELS, DRS_TIMES, DRS_SAMPLES, 65536, 1.) {}
+    DRSclAnalyzer() : DatAnalyzer(DRS_CHANNELS, DRS_TIMES, DRS_SAMPLES, 1, 1.e-3) {}
 
     // void GetCommandLineArgs(int argc, char **argv);
 

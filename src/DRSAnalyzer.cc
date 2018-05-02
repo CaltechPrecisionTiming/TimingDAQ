@@ -56,7 +56,7 @@ int DRSAnalyzer::GetChannelsMeasurement() {
 
     bool event_end = false;
     vector<unsigned int> channel_detected;
-    while(!event_end) {
+    while(!event_end && !feof(bin_file)) {
       char channel_header[4];
       fread( channel_header, sizeof(char), 4, bin_file);
       if( strncmp("C00", channel_header, 3) != 0 ) {
