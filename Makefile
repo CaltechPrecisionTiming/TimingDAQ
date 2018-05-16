@@ -18,9 +18,9 @@ BTL_PulseShapeSimulation: $(SRC:.cc=.o) src/SiPM_SimAnalyzer.o src/PulseShape.o 
 	@echo Building $@
 	$(LD) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(TARGETS) : %Dat2Root : $(SRC:.cc=.o) src/%Analyzer.o app/%Dat2Root.cc
-	@echo Building $@
-	$(LD) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
+#$(TARGETS) : %Dat2Root : $(SRC:.cc=.o) src/%Analyzer.o app/%Dat2Root.cc
+#	@echo Building $@
+#	$(LD) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o : %.cc
 	@echo $@

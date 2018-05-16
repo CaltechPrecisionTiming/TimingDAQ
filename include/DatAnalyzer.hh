@@ -83,7 +83,7 @@ class DatAnalyzer {
         unsigned long int N_evts = 0;
         unsigned int start_evt = 0;
 
-        bool verbose = false;
+        bool verbose = true;
         bool save_raw = false;
         bool save_meas = false;
         bool draw_debug_pulses = false;
@@ -95,11 +95,15 @@ class DatAnalyzer {
         FILE* bin_file = nullptr;
 
         // Analysis variables
-        float* AUX_time;
-        float* AUX_channel;
+        //float* AUX_time;
+        //float* AUX_channel;
+        std::vector<float> AUX_time;
+        std::vector<float> AUX_channel;
 
-        float** time;
-        float** channel;
+        //float** time;
+        //float** channel;
+        std::vector < std::vector<float> > time;
+        std::vector < std::vector<float> > channel;
 
         // Output tree vars
         unsigned int i_evt = 0;

@@ -68,6 +68,15 @@ class Configuration {
       vector<float> constant_threshold = {};
 
       vector<float> z_DUT = {-50., 50.};
+      //simulation specifics
+      int Npe = 0;// Number of photo-electrons (dE/dx*thickness*LightCollectionEfficiency*SiPM_PDE), about 4500 in LYSO
+      int n_threshold = 0;// Number of photo-electrons (dE/dx*thickness*LightCollectionEfficiency*SiPM_PDE), about 4500 in LYSO
+      double scintillation_decay_constant = 0;//decay constant of the scintillator (LYSO is 40 ns )
+      double scintillation_risetime = 0;//rise time of the scintillator (LYSO is 60 ps)
+      double single_photon_risetime_response = 0;//tau1 in of A*t/tau1*exp(-t/tau1) - B*t/tau2*exp(-t/tau2) used to model the single photon response
+      double single_photon_decaytime_response = 0;//tau2 in of A*t/tau1*exp(-t/tau1) - B*t/tau2*exp(-t/tau2) used to model the single photon response
+      double high_pass_filter_RC;//tau of the RC HighPassFilter (R*C) in ns
+      double DCR  = 0;//dark count rate in GHz
 
     private:
       // process one line of the config file

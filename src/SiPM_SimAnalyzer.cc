@@ -34,6 +34,7 @@ void SiPM_SimAnalyzer::InitLoop(){
 // Fill tc, raw, time and amplitude
 int SiPM_SimAnalyzer::GetChannelsMeasurement() {
     // Initialize the output variables
+    std::cout << "channel measurement" << std::endl;
     ResetAnalysisVariables();
 
     const double n_threshold = 10;
@@ -41,6 +42,7 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
     const double DCR = 0;
     const double Npe = 4000;
     const double scintillation_decay_constant = 40;
+    const double scintillation_risetime = .0;
     const double single_photon_risetime_response = 0.5;
     const double single_photon_decaytime_response = 0.5;
     const double high_pass_filter_RC = 10000;
@@ -49,7 +51,7 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
     std::cout << "Npe: " << Npe << std::endl;
     std::cout << "n_threshold: " << n_threshold << std::endl;
     std::cout << "scintillation decay constant: " << scintillation_decay_constant << " [ns]" << std::endl;
-    std::cout << "scintillation_risetime: " << scintillation_decay_constant << " [ns]" << std::endl;
+    std::cout << "scintillation_risetime: " << scintillation_risetime << " [ns]" << std::endl;
     std::cout << "single_photon_risetime_response: " << single_photon_risetime_response << " [ns]" << std::endl;
     std::cout << "single_photon_decaytime_response:" << single_photon_decaytime_response << " [ns]" << std::endl;
     std::cout << "high_pass_filter_RC: " << high_pass_filter_RC << std::endl;
@@ -62,15 +64,16 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
     TGraph* dark_noise;
 
 
-    double step = 0.01;
+    //double step = 0.01;
     double x_low  = -1e1;
     double x_high = 6e1;
+    double step = (x_high-x_low)/SIM_SAMPLES;
 
-    const int npoints  = (x_high-x_low)/step;
-    std::cout << "[INFO] number of points per pulse: " << npoints << std::endl;
+    //const int npoints  = (x_high-x_low)/step;
+    std::cout << "[INFO] number of points per pulse: " << SIM_SAMPLES << std::endl;
     std::cout << "[INFO] sampling rate is: " << step  << " ns" << std::endl;
-    double x[npoints];
-    double y[npoints], y_sc[npoints], y_dc[npoints];
+    double x[SIM_SAMPLES];
+    double y[SIM_SAMPLES], y_sc[SIM_SAMPLES], y_dc[SIM_SAMPLES];
     int i_evt;
     for ( int j = 0; j < n_experiments; j++ )
     {
@@ -88,9 +91,9 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
       //std::cout << ps->GetSinglePhotonResponseNormalization() << std::endl;
       ps->NormalizeSinglePhotonResponseHighPassFilter();
       //std::cout << ps->GetSinglePhotonResponseNormalization() << std::endl;
-      for( int i = 0; i < npoints; i++ ) y[i] = x[i] = 0.0;
+      for( int i = 0; i < SIM_SAMPLES; i++ ) y[i] = x[i] = 0.0;
       double y_max = 0;
-      for( int i = 0; i < npoints; i++ )
+      for( int i = 0; i < SIM_SAMPLES; i++ )
       {
         x[i] = x_low + double(i)*step;
         //if ( i % 1000 == 0 ) std::cout << "iteration #" << i << std::endl;
@@ -98,12 +101,14 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
         y_sc[i]  = ps->ScintillationPulse(x[i]);
         y_dc[i]  = ps->DarkNoise(x[i], x_low, x_high);
         y[i]     = y_sc[i] + y_dc[i];
+        channel[0][i] = y[i];
+        time[0][i] = x[i];
         if( y[i] > y_max ) y_max = y[i];
       }
       delete ps;//release memory of pulseshape object.
 
       double t_stamp = -999;
-      for( int i = 0; i < npoints; i++ )
+      for( int i = 0; i < SIM_SAMPLES; i++ )
       {
         if ( y[i] > n_threshold )
         {
@@ -113,6 +118,7 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
       }
     }
 
+    std::cout << "[INFO] out of simulation loop" << std::endl;
 /*
     int event_number;
     fread(&event_number, sizeof(int), 1, bin_file);

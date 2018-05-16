@@ -1,8 +1,8 @@
 #ifndef SiPM_SimAnalyzer_HH
 #define SiPM_SimAnalyzer_HH
-#define DRS_CHANNELS 1
-#define DRS_TIMES 1
-#define DRS_SAMPLES 70000
+#define SIM_CHANNELS 1
+#define SIM_TIMES 1
+#define SIM_SAMPLES 70000
 
 #include <fstream>
 #include <stdio.h>
@@ -17,7 +17,7 @@
 
 class SiPM_SimAnalyzer : public DatAnalyzer {
   public:
-    SiPM_SimAnalyzer() : DatAnalyzer(DRS_CHANNELS, DRS_TIMES, DRS_SAMPLES, 65536, 1.) {}
+    SiPM_SimAnalyzer() : DatAnalyzer(SIM_CHANNELS, SIM_TIMES, SIM_SAMPLES, 1000., 1.) {}
 
     // void GetCommandLineArgs(int argc, char **argv);
 

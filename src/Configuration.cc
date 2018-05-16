@@ -152,6 +152,62 @@ void Configuration::parseConfigurationLine(std::string line) {
 
       channels[chNum] = aux_ch;
     }
+    else if (line.substr(0, 3) == "Npe")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      Npe = std::stoi(item);
+      if( verbose ){ std::cout << "[VERBOSE] Npe = " << Npe << std::endl;}
+    }
+    else if (line.substr(0, 26) == "ScintillationDecayConstant")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      scintillation_decay_constant = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE]  scintillation_decay_constant = " << scintillation_decay_constant << std::endl;}
+    }
+    else if (line.substr(0, 21) == "ScintillationRisetime")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      scintillation_risetime = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE] scintillation_risetime = " << scintillation_risetime << std::endl;}
+    }
+    else if (line.substr(0, 28) == "SinglePhotonRisetimeResponse")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      single_photon_risetime_response = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE] single_photon_risetime_response = " << single_photon_risetime_response << std::endl;}
+    }
+    else if (line.substr(0, 29) == "SinglePhotonDecaytimeResponse")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      single_photon_decaytime_response = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE] single_photon_decaytime_response = " << single_photon_decaytime_response << std::endl;}
+    }
+    else if (line.substr(0, 16) == "HighPassFilterRC")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      high_pass_filter_RC = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE] high_pass_filter_RC = " << high_pass_filter_RC << std::endl;}
+    }
+    else if (line.substr(0, 13) == "DarkCountRate")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      DCR = std::stof(item);
+      if( verbose ){ std::cout << "[VERBOSE] DCR = " << DCR << std::endl;}
+    }
+    else if (line.substr(0, 10) == "nThreshold")
+    {
+      nextConfigurationElement(ss, item);
+      nextConfigurationElement(ss, item);
+      n_threshold = std::stoi(item);
+      if( verbose ){ std::cout << "[VERBOSE] n_threshold = " << n_threshold << std::endl;}
+    }
 
 }
 
