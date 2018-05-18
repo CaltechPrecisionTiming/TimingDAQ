@@ -37,9 +37,9 @@ int SiPM_SimAnalyzer::GetChannelsMeasurement() {
     std::cout << "channel measurement" << std::endl;
     ResetAnalysisVariables();
 
-    const double n_threshold = 10;
-    const int n_experiments = 10;
-    const double DCR = 0;
+    const double n_threshold = 1;
+    const int n_experiments = 1;
+    const double DCR = 30;
     const double Npe = 4000;
     const double scintillation_decay_constant = 40;
     const double scintillation_risetime = .0;

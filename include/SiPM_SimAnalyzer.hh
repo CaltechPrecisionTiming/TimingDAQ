@@ -2,7 +2,7 @@
 #define SiPM_SimAnalyzer_HH
 #define SIM_CHANNELS 1
 #define SIM_TIMES 1
-#define SIM_SAMPLES 70000
+#define SIM_SAMPLES 7000
 
 #include <fstream>
 #include <stdio.h>

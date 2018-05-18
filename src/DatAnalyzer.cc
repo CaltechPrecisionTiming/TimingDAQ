@@ -283,9 +283,7 @@ unsigned int DatAnalyzer::GetIdxClosest(float value, float* v, unsigned int i_st
 
 unsigned int DatAnalyzer::GetIdxFirstCross(float value, float* v, unsigned int i_st, int direction) {
   unsigned int idx_end = direction>0 ? NUM_SAMPLES-1 : 0;
-
   bool rising = value > v[i_st]? true : false;
-
   unsigned int i = i_st;
 
   while( i != idx_end ) {
@@ -390,7 +388,6 @@ void DatAnalyzer::Analyze(){
     }
     var["t_peak"][i] = time[GetTimeIndex(i)][idx_min];
     var["amp"][i] = -amp;
-
     float baseline_RMS = 0;
     for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
       baseline_RMS += channel[i][j]*channel[i][j];
@@ -418,7 +415,9 @@ void DatAnalyzer::Analyze(){
     vector<pair<int, int>> poly_bounds;
     float Re_b, Re_slope;
 
+
     bool fittable = true;
+    /*
     fittable *= idx_min < (int)(NUM_SAMPLES*0.8);
     fittable *= fabs(amp) > 8 * baseline_RMS;
     fittable *= fabs(channel[i][idx_min+1]) > 4*baseline_RMS;
@@ -427,7 +426,7 @@ void DatAnalyzer::Analyze(){
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
-
+*/
     if( fittable ) {
       // Correct the polarity if wrong
       if(amp > 0) {
@@ -436,8 +435,8 @@ void DatAnalyzer::Analyze(){
         var["amp"][i] = -amp;
         scale_factor = -scale_factor;
         var["baseline"][i] = scale_factor * baseline;
-        float tmp_channel[NUM_SAMPLES];
-        float tmp_time[NUM_SAMPLES];
+        //float tmp_channel[NUM_SAMPLES];
+        //float tmp_time[NUM_SAMPLES];
         for(unsigned j = 0; j < NUM_SAMPLES; j++)
         {
           tmp_channel[j] = channel[i][j];
@@ -463,7 +462,7 @@ void DatAnalyzer::Analyze(){
 
       j_10_pre = GetIdxFirstCross(amp*0.1, tmp_channel, idx_min, -1);
       j_10_post = GetIdxFirstCross(amp*0.1, tmp_channel, idx_min, +1);
-
+      std::cout << "idx_min: " << idx_min << std::endl;
       // -------------- Integrate the pulse
       var["integral"][i] = GetPulseIntegral(tmp_channel, tmp_time, j_10_pre, j_10_post);
       var["intfull"][i] = GetPulseIntegral(tmp_channel, tmp_time, 5, NUM_SAMPLES-5);
