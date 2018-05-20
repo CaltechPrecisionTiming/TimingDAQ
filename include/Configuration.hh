@@ -42,7 +42,7 @@ class Configuration {
         float attenuation = 0;
         TString algorithm = "";
         float gaus_fraction = 0.4;
-        float re_bounds[2] = {0.15, 0.75};
+        float re_bounds[2] = {0.005, 0.10};
         vector<int> PL_deg;
 
         float weierstrass_filter_width = 0;
