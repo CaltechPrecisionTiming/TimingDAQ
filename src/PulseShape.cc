@@ -3,6 +3,7 @@
 
 PulseShape::PulseShape()
 {
+  gRandom->SetSeed();
   //t_sc_random = NULL;
   //t_dc_random = NULL;
 };
@@ -51,8 +52,7 @@ double PulseShape::Exp( double x, double exponent )
 
 double PulseShape::RandomExp( double x, double exponent )
 {
-  TRandom3 r(0);
-  return r.Poisson( 4.5e3*Exp( x, exponent ) );
+  return gRandom->Poisson( 4.5e3*Exp( x, exponent ) );
 };
 
 double PulseShape::Convolution( double x, std::string function_name1, std::string function_name2 )
@@ -83,110 +83,53 @@ bool SetSinglePhotonResponse( std::string function_name )
   return true;
 };
 
-bool SetIntegrationMethod(std::string integration_method )
-{
-  //this->integration_method = integration_method
-  return true;
-};
-
-double PulseShape::ScintillationPulse( double x )
-{
-  if ( Npe <= 0 )
-  {
-    std::cerr << "[Error] Npe is zero or negative, Npe = " << Npe << std::endl;
-    exit(0);
-  }
-  if ( scintillation_decay_constant <= 0 )
-  {
-    std::cerr << "[Error] scintillation_decay_constant is zero or negative, scintillation_decay_constant = "
-              << scintillation_decay_constant << std::endl;
-    exit(0);
-  }
-  if ( single_photon_risetime_response <= 0 )
-  {
-    std::cerr << "[Error] single_photon_risetime_response is zero or negative, single_photon_risetime_response = "
-              << single_photon_risetime_response << std::endl;
-    exit(0);
-  }
-  if ( single_photon_decaytime_response <= 0 )
-  {
-    std::cerr << "[Error] single_photon_decaytime_response is zero or negative, single_photon_decaytime_response = "
-              << single_photon_decaytime_response << std::endl;
-    exit(0);
-  }
-  //if scintillation times are not yet been drawn then we draw them
-  if ( t_sc_random.size() == 0 )
-  {
+void PulseShape::GenerateScintillationPhotonArrivalTime() {
     t_sc_random.clear();
-    TRandom3 r(0);//define random variable
+    // TRandom3 r(0);//define random variable
     if ( _debug ) std::cout << "[DEBUG] filling vector with containing random times for SC" << std::endl;
     for ( int i = 0; i < Npe; i++ )
     {
-      t_sc_random.push_back( r.Exp(scintillation_decay_constant) );
+      t_sc_random.push_back( gRandom->Exp(scintillation_decay_constant) );
     }
-  }
-  double eval = 0;
-  //t_sc_random.at(0) = 2;
-  for ( int i = 0; i < Npe; i++ )
-  {
-    //eval += TMath::Gaus( x-t_sc_random.at(i), 0, single_photon_response_sigma);
-    //eval += 0.5*(x-t_sc_random.at(i))/1.5*exp( -(x-t_sc_random.at(i))/1.5 ) - 0.5*(x-t_sc_random.at(i))/3.*exp( -(x-t_sc_random.at(i))/3.0 );
-    if ( x-t_sc_random.at(i) >= 0 )
-    {
-      /*eval += A*((x-t_sc_random.at(i))/single_photon_risetime_response)*exp( -(x-t_sc_random.at(i))/single_photon_risetime_response )
-              - B*(x-t_sc_random.at(i))/single_photon_decaytime_response*exp( -(x-t_sc_random.at(i))/single_photon_decaytime_response );*/
-      eval += HighPassFilterResponse(x-t_sc_random.at(i));
-    }
-  }
+}
 
-  //return eval/single_photon_response_normalization;
-  return eval;
-};
+void PulseShape::GenerateDarkNoisePhotonArrivalTime( double x_low, double x_high ) {
+  t_dc_random.clear();
+  // TRandom3 r(0);//define random variable
+  if ( _debug ) std::cout << "[DEBUG] filling vector with random times for DC" << std::endl;
 
-double PulseShape::DarkNoise( double x, double x_low, double x_high )//Dark Noise in the [x_low, x_high] region, units in ns
-{
-  int DC = int( DCR*(x_high-x_low) );//number of dark counts in the time window
-  //if scintillation times are not yet been drawn then we draw them
+  int DC = gRandom->Poisson( DCR * (x_high - x_low));//number of dark counts in the time window
+
   if ( _warning && DC == 0 )
   {
     std::cerr << "[WARNING] DC is zero, are you sure about this? DCR =  " << DCR << std::endl;
   }
-  if ( single_photon_risetime_response <= 0 )
-  {
-    std::cerr << "[Error] single_photon_risetime_response is zero or negative, single_photon_risetime_response = "
-              << single_photon_risetime_response << std::endl;
-    exit(0);
-  }
-  if ( single_photon_decaytime_response <= 0 )
-  {
-    std::cerr << "[Error] single_photon_decaytime_response is zero or negative, single_photon_decaytime_response = "
-              << single_photon_decaytime_response << std::endl;
-    exit(0);
-  }
-  if ( t_dc_random.size() == 0 )
-  {
-    t_dc_random.clear();
-    TRandom3 r(0);//define random variable
-    if ( _debug ) std::cout << "[DEBUG] filling vector with random times for DC" << std::endl;
-    for ( int i = 0; i < DC; i++ )
-    {
-      t_dc_random.push_back( r.Uniform(x_low,x_high) );
-    }
-  }
-  double eval = 0;
+
   for ( int i = 0; i < DC; i++ )
   {
-    if ( x-t_dc_random.at(i) >= 0 )
-    {
-      /*eval += A*((x-t_dc_random.at(i))/single_photon_risetime_response)*exp( -(x-t_dc_random.at(i))/single_photon_risetime_response )
-            - B*((x-t_dc_random.at(i))/single_photon_decaytime_response)*exp( -(x-t_dc_random.at(i))/single_photon_decaytime_response );*/
-
-      eval += HighPassFilterResponse(x-t_dc_random.at(i));
-    }
+    t_dc_random.push_back( gRandom->Uniform( x_low, x_high ) );
   }
-  return eval/single_photon_response_normalization;
+}
 
+double PulseShape::ScintillationPulse( double x )
+{
+  double eval = 0;
+  for ( auto t : t_sc_random )
+  {
+    if ( x-t >= 0 ) eval += HighPassFilterResponse(x-t);
+  }
+  return eval;
 };
+
+double PulseShape::DarkNoise( double x)//Dark Noise in the [x_low, x_high] region, units in ns
+{
+  double eval = 0;
+  for ( auto t : t_dc_random )
+  {
+    if ( x-t >= 0 ) eval += HighPassFilterResponse(x-t);
+  }
+  return eval;
+}
 
 void PulseShape::NormalizeSinglePhotonResponse()
 {

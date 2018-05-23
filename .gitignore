@@ -4,6 +4,7 @@ VMEDat2Root
 DRSDat2Root
 DRSclDat2Root
 NetScopeDat2Root
+BTL_PulseShapeSimulation
 pulses_imgs/pulse_event*.png
 *.o
 *.dSYM
