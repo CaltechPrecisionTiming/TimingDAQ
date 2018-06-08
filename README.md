@@ -143,7 +143,7 @@ This folder collect all the scripts that try to automise the processing of data.
 
 An example line is:
 
-``./automation/run_reco.sh 130 132``
+``python automation/DecodeVME.py 130 132``
 
 
 TODO: Finish this section
