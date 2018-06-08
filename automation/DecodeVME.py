@@ -20,11 +20,8 @@ def GetCommandLineArgs():
 if __name__ == '__main__':
     args = GetCommandLineArgs()
 
-    print args
-    print args.runs
-
     runs_list = []
-    if len(runs) == 2:
+    if len(args.runs) == 2:
         runs_list = range(runs[0], runs[1]+1)
     else:
         runs_list = runs
