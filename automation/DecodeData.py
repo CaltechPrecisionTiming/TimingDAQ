@@ -5,19 +5,25 @@ def GetCommandLineArgs():
     p.add_argument('runs', type=int, nargs='+')
     p.add_argument('--no_tracks', action='store_true', default=False)
     p.add_argument('--no_Dat2Root', action='store_true')
+    p.add_argument('--no_VME', action='store_true')
+    p.add_argument('--no_NetScope', action='store_true')
     p.add_argument('-f','--force', action='store_true')
 
     p.add_argument('--daq_dir', default='/data/TestBeam/2018_06_June_CMSTiming')
     p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NimPlus')
     p.add_argument('--raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RAW')
+    p.add_argument('--NetScope_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RAW')
+
     p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/Tracks')
     p.add_argument('--root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RECO/v1')
+    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RECO')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
 
     p.add_argument('--out_name', default='DataVMETiming')
 
     p.add_argument('--config', default='FNAL_TestBeam_1806/VME_180608.config')
+    p.add_argument('--config_NetScope', default='FNAL_TestBeam_1806/NetScope_180608.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
     p.add_argument('-N', '--N_evts', type=str, default='0')
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
@@ -33,7 +39,9 @@ if __name__ == '__main__':
     else:
         runs_list = args.runs
 
+    print 'Processing VME'
     for run in runs_list:
+        if args.no_VME: continue
         print '========================== Processing Run {} =========================='.format(run)
 
         print 'Getting NimPlus triggers'
@@ -104,6 +112,43 @@ if __name__ == '__main__':
                 print '[ERROR] Tracks file not found in', tracks_filename
                 print 'If you want to run  without tracks use <--no_tracks>.'
                 continue
+
+        print '\n'+cmd_Dat2Root
+
+        subprocess.call(cmd_Dat2Root, shell=True)
+
+        print 'Finished processing run ', run
+
+    print 'Processing NetScope'
+    for run in runs_list:
+        if args.no_NetScope: continue
+        print '========================== Processing Run {} =========================='.format(run)
+
+        raw_filename = args.NetScope_dir + '/RawDataNetScope_Run{}.dat'.format(run)
+        if not os.path.exists(raw_filename) or args.force:
+            print '\nCreating the NetScope file: ', raw_filename
+            cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/NetScopeTiming/RawDataSaver0NetScope_Run{}_*_Raw.dat {}'.format(args.daq_dir, run, raw_filename)
+            subprocess.call(cmd, shell=True)
+        else:
+            print '\nNetScope file found: ', raw_filename
+
+        root_filename = args.NetScope_root_dir + '/DataNetScope_Run{}.root'.format(run)
+        if args.no_Dat2Root:
+            print '[INFO] No Dat2Root flag active'
+            continue
+        if os.path.exists(root_filename) and not args.force:
+            print root_filename, 'already present'
+            continue
+
+        cmd_Dat2Root = args.code_dir + '/NetScopeDat2Root'
+        cmd_Dat2Root += ' --input_file=' + raw_filename
+        cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config_NetScope
+        cmd_Dat2Root += ' --output_file=' + root_filename
+        cmd_Dat2Root += ' --N_evts=' + args.N_evts
+        if args.draw_debug_pulses:
+            cmd_Dat2Root += ' --draw_debug_pulses'
+        if not args.NO_save_meas:
+            cmd_Dat2Root += ' --save_meas'
 
         print '\n'+cmd_Dat2Root
 
