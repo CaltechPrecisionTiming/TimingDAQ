@@ -299,15 +299,14 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   TMatrixFColumn(A, 0) = 1.;
   TMatrixFColumn(A, 1) = x;
 
-  float *in_x2, *in_x3;
+  float *in_x2 = new float[Np];
+  float *in_x3 = new float[Np];
   if( deg >= 2 ) {
-    in_x2 = new float[Np];
     for(unsigned int i = 0; i < Np; i++) in_x2[i] = in_x[i]*in_x[i];
     x2.Use(Np, in_x2);
     TMatrixFColumn(A, 2) = x2;
   }
   if( deg >= 3 ) {
-    in_x3 = new float[Np];
     for(unsigned int i = 0; i < Np; i++) in_x3[i] = in_x2[i] * in_x[i];
     x3.Use(Np, in_x3);
     TMatrixFColumn(A, 3) = x3;
@@ -329,8 +328,8 @@ void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float
   }
 
 
-  if( deg >= 2 ) delete [] in_x2;
-  if( deg >= 3 ) delete [] in_x3;
+  delete [] in_x2;
+  delete [] in_x3;
   return;
 }
 

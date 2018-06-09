@@ -28,6 +28,8 @@ def GetCommandLineArgs():
     p.add_argument('-N', '--N_evts', type=str, default='0')
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
 
+    p.add_argument('-v', '--verbose', default=False, action='store_true')
+
     return p.parse_args()
 
 if __name__ == '__main__':
@@ -101,6 +103,8 @@ if __name__ == '__main__':
             cmd_Dat2Root += ' --N_evts=' + args.N_evts
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
+            if args.verbose:
+                cmd_Dat2Root += ' --verbose'
             if not args.NO_save_meas:
                 cmd_Dat2Root += ' --save_meas'
             if not args.no_tracks:
