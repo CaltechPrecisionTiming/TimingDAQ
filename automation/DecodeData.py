@@ -1,4 +1,5 @@
 import os, sys, argparse, subprocess, glob
+import root as rt
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
@@ -29,6 +30,7 @@ def GetCommandLineArgs():
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
 
     p.add_argument('-v', '--verbose', default=False, action='store_true')
+    p.add_argument('--N_max_job', type=int, default=3000)
 
     return p.parse_args()
 
@@ -98,9 +100,7 @@ if __name__ == '__main__':
             cmd_Dat2Root = args.code_dir + '/VMEDat2Root'
             cmd_Dat2Root += ' --input_file=' + raw_filename
             cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config
-            cmd_Dat2Root += ' --output_file=' + root_filename
             cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
-            cmd_Dat2Root += ' --N_evts=' + args.N_evts
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
             if args.verbose:
@@ -117,9 +117,53 @@ if __name__ == '__main__':
                     print 'If you want to run  without tracks use <--no_tracks>.'
                     continue
 
-            print '\n'+cmd_Dat2Root
+            N_tot = max(int(args.N_evts), N_expected_evts)
+            evt_start_list = np.arange(0, N_tot, N_tot/(1 + N_tot/args.N_max_job))
 
-            subprocess.call(cmd_Dat2Root, shell=True)
+            if evt_start_list.shape[0] == 1:
+                cmd_Dat2Root += ' --output_file=' + root_filename
+                cmd_Dat2Root += ' --N_evts=' + args.N_evts
+                print '\n'+cmd_Dat2Root
+                subprocess.call(cmd_Dat2Root, shell=True)
+            else:
+                outfile_list = []
+                for i in range(evt_start_list.shape[0]-1):
+                    aux_name = root_filename.replace('.root', '_{}.root'.format(i))
+                    out_file.append(aux_name)
+
+                    aux_cmd = cmd_Dat2Root + ' --output_file=' + aux_name
+                    aux_cmd += ' --start_evt=' + str(evt_start_list[i])
+
+                    N_stop = 0
+                    if i == evt_start_list.shape[0]-1:
+                            N_stop = int(args.N_evts)
+                    else:
+                        N_stop = evt_start_list[i+1]
+                    aux_cmd += ' --N_evts=' + str(N_stop)
+
+                    print aux_cmd
+                    subprocess.call(aux_cmd, shell=True)
+
+                cmd = 'hadd ' + root_filename + ' ' + ' '.join(outfile_list)
+                print cmd
+                subprocess.call(cmd, shell=True)
+                subprocess.call('rm '+' '.join(outfile_list), shell=True)
+
+                f = rt.TFile.Open(root_filename, 'READ')
+                t = f.Get('pulse')
+                N_evts_tree =  t.GetEntries()
+                f.Close()
+
+                if N_expected_evts != -1 and N_evts_tree != N_expected_evts:
+                    print '\n\n[ERROR] Number of evts not matching the expected number'
+                    print '============= ', N_evts_tree, '!=', N_expected_evts, ' ============'
+                    print 'Deleting the output tree'
+                    os.remove(root_filename)
+                elif N_expected_evts == -1:
+                    print '[WARNING] Event number matching between trigger and pulse tree not performed'
+                else:
+                    print '[INFO] Number of events matching!!'
+
 
             print 'Finished processing run ', run
 
