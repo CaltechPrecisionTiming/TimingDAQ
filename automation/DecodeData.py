@@ -119,7 +119,9 @@ if __name__ == '__main__':
                     continue
 
             N_tot = max(int(args.N_evts), N_expected_evts)
-            evt_start_list = np.arange(0, N_tot, N_tot/(1 + N_tot/args.N_max_job))
+            nj = 1 + N_tot/args.N_max_job
+            evt_start_list = np.arange(0, N_tot, N_tot/float(nj))
+            evt_start_list = np.uint32(np.ceil(evt_start_list))
 
             if evt_start_list.shape[0] == 1:
                 cmd_Dat2Root += ' --output_file=' + root_filename
@@ -127,8 +129,9 @@ if __name__ == '__main__':
                 print '\n'+cmd_Dat2Root
                 subprocess.call(cmd_Dat2Root, shell=True)
             else:
+                print 'Dividing the run into',
                 outfile_list = []
-                for i in range(evt_start_list.shape[0]-1):
+                for i in range(evt_start_list.shape[0]):
                     aux_name = root_filename.replace('.root', '_{}.root'.format(i))
                     outfile_list.append(aux_name)
 
@@ -142,7 +145,6 @@ if __name__ == '__main__':
                         N_stop = evt_start_list[i+1]
                     aux_cmd += ' --N_evts=' + str(N_stop)
 
-                    print aux_cmd
                     subprocess.call(aux_cmd, shell=True)
 
                 cmd = 'hadd ' + root_filename + ' ' + ' '.join(outfile_list)
@@ -158,8 +160,9 @@ if __name__ == '__main__':
                 if N_expected_evts != -1 and N_evts_tree != N_expected_evts:
                     print '\n\n[ERROR] Number of evts not matching the expected number'
                     print '============= ', N_evts_tree, '!=', N_expected_evts, ' ============'
-                    print 'Deleting the output tree'
-                    os.remove(root_filename)
+                    print 'Moving to the currupted directory'
+                    corrupted_name = os.path.dirname(root_filename) + '/corrupted/' + os.path.basename(root_filename)
+                    subprocess.call('mv ' + root_filename + ' ' + corrupted_name, shell=True)
                 elif N_expected_evts == -1:
                     print '[WARNING] Event number matching between trigger and pulse tree not performed'
                 else:
