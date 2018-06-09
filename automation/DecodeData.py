@@ -22,7 +22,7 @@ def GetCommandLineArgs():
 
     p.add_argument('--out_name', default='DataVMETiming')
 
-    p.add_argument('--config', default='FNAL_TestBeam_1806/VME_180608.config')
+    p.add_argument('--config', default='FNAL_TestBeam_1806/VME_180609.config')
     p.add_argument('--config_NetScope', default='FNAL_TestBeam_1806/NetScope_180608.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
     p.add_argument('-N', '--N_evts', type=str, default='0')
