@@ -130,7 +130,7 @@ if __name__ == '__main__':
                 outfile_list = []
                 for i in range(evt_start_list.shape[0]-1):
                     aux_name = root_filename.replace('.root', '_{}.root'.format(i))
-                    out_file.append(aux_name)
+                    outfile_list.append(aux_name)
 
                     aux_cmd = cmd_Dat2Root + ' --output_file=' + aux_name
                     aux_cmd += ' --start_evt=' + str(evt_start_list[i])
