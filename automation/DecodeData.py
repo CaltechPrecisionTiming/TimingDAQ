@@ -31,7 +31,7 @@ def GetCommandLineArgs():
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
 
     p.add_argument('-v', '--verbose', default=False, action='store_true')
-    p.add_argument('--N_max_job', type=int, default=3000)
+    p.add_argument('--N_max_job', type=int, default=2500)
 
     return p.parse_args()
 
@@ -158,9 +158,9 @@ if __name__ == '__main__':
                 f.Close()
 
                 if N_expected_evts != -1 and N_evts_tree != N_expected_evts:
-                    print '\n\n[ERROR] Number of evts not matching the expected number'
+                    print '\n\n\n[ERROR] Number of evts not matching the expected number'
                     print '============= ', N_evts_tree, '!=', N_expected_evts, ' ============'
-                    print 'Moving to the currupted directory'
+                    print 'Moving to the currupted directory\n\n\n'
                     corrupted_name = os.path.dirname(root_filename) + '/corrupted/' + os.path.basename(root_filename)
                     subprocess.call('mv ' + root_filename + ' ' + corrupted_name, shell=True)
                 elif N_expected_evts == -1:
