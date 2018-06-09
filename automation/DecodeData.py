@@ -132,7 +132,7 @@ if __name__ == '__main__':
                 print 'Dividing the run into', evt_start_list.shape[0], 'jobs'
                 outfile_list = []
                 for i in range(evt_start_list.shape[0]):
-                    print '\n\n ----------> Job {}/{}\n'.format(i, evt_start_list.shape[0])
+                    print '\n\n ----------> Job {}/{}\n'.format(i+1, evt_start_list.shape[0])
                     aux_name = root_filename.replace('.root', '_{}.root'.format(i))
                     outfile_list.append(aux_name)
 
