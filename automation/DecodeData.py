@@ -1,5 +1,6 @@
 import os, sys, argparse, subprocess, glob
 import ROOT as rt
+import numpy as np
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
