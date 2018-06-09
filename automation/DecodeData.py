@@ -101,7 +101,6 @@ if __name__ == '__main__':
             cmd_Dat2Root = args.code_dir + '/VMEDat2Root'
             cmd_Dat2Root += ' --input_file=' + raw_filename
             cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config
-            cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
             if args.verbose:
@@ -124,14 +123,16 @@ if __name__ == '__main__':
             evt_start_list = np.uint32(np.ceil(evt_start_list))
 
             if evt_start_list.shape[0] == 1:
+                cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
                 cmd_Dat2Root += ' --output_file=' + root_filename
                 cmd_Dat2Root += ' --N_evts=' + args.N_evts
                 print '\n'+cmd_Dat2Root
                 subprocess.call(cmd_Dat2Root, shell=True)
             else:
-                print 'Dividing the run into',
+                print 'Dividing the run into', evt_start_list.shape[0], 'jobs'
                 outfile_list = []
                 for i in range(evt_start_list.shape[0]):
+                    print '\n\n ----------> Job {}/{}\n'.format(i, evt_start_list.shape[0])
                     aux_name = root_filename.replace('.root', '_{}.root'.format(i))
                     outfile_list.append(aux_name)
 
@@ -148,7 +149,6 @@ if __name__ == '__main__':
                     subprocess.call(aux_cmd, shell=True)
 
                 cmd = 'hadd ' + root_filename + ' ' + ' '.join(outfile_list)
-                print cmd
                 subprocess.call(cmd, shell=True)
                 subprocess.call('rm '+' '.join(outfile_list), shell=True)
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
                 elif N_expected_evts == -1:
                     print '[WARNING] Event number matching between trigger and pulse tree not performed'
                 else:
-                    print '[INFO] Number of events matching!!'
+                    print '\n\n[INFO] !!!!!! Number of events matching !!!!!\n\n'
 
 
             print 'Finished processing run ', run
