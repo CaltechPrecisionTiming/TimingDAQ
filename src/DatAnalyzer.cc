@@ -343,12 +343,12 @@ float DatAnalyzer::PolyEval(float x, float* coeff, unsigned int deg) {
 
 float DatAnalyzer::WSInterp(float t, int N, float* tn, float* cn) {
   float out = 0;
-  float dt = (tn[1] - tn[50])/50.;
+  float dt = (tn[0] - tn[N-1])/N;
   for(unsigned i = 0; i < N; i++) {
-    x = (t - tn[i])/dt;
+    float x = (t - tn[i])/dt;
     out += cn[i] * sin(TMath::Pi()*x) / (TMath::Pi() * x);
   }
-  return out
+  return out;
 }
 
 void DatAnalyzer::Analyze(){
@@ -445,7 +445,7 @@ void DatAnalyzer::Analyze(){
 
       // -------------- Integrate the pulse
       j_area_pre = GetIdxFirstCross(amp*0.05, channel[i], idx_min, -1);
-      j_area_post = GetIdxFirstCross(amp*0.05, channel[i], idx_min, +1);
+      j_area_post = GetIdxFirstCross(0. , channel[i], idx_min, +1);
       var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], j_area_pre, j_area_post);
       var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
 
@@ -749,12 +749,31 @@ void DatAnalyzer::Analyze(){
           gr_Re->Draw("CP");
         }
 
-        TGraphErrors* inv_pulse = new TGraphErrors(j_90_pre - j_10_pre + 7, &(channel[i][j_10_pre-4]), &(time[GetTimeIndex(i)][j_10_pre-4]), yerr);
+        unsigned int j_begin = j_10_pre - 6;
+        unsigned int j_span = j_90_pre - j_10_pre + 10;
+        TGraphErrors* inv_pulse = new TGraphErrors(j_span, &(channel[i][j_begin]), &(time[GetTimeIndex(i)][j_begin]), yerr);
         inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
         inv_pulse->SetMarkerStyle(5);
         inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
         inv_pulse->GetYaxis()->SetTitle("Time [ns]");
         inv_pulse->Draw("APE1");
+
+        vector<float> t_WS;
+        vector<float> c_WS;
+        float overstep = 6;
+        for(unsigned int jj = j_begin; jj < j_begin + j_span; jj++) {
+          for(unsigned int kk = 0; kk < overstep; kk++) {
+            float tt = time[GetTimeIndex(i)][jj] + (time[GetTimeIndex(i)][jj+1] - time[GetTimeIndex(i)][jj]) * kk/overstep;
+            float cc = WSInterp(tt, NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
+
+            t_WS.push_back(tt);
+            c_WS.push_back(cc);
+          }
+        }
+        TGraph* inv_pulse_WS = new TGraph(t_WS.size(), &(c_WS[0]), &(t_WS[0]));
+        inv_pulse_WS->SetMarkerStyle(7);
+        inv_pulse_WS->SetMarkerColor(2);
+        // inv_pulse_WS->Draw("P");
 
         TGraph* gr_inv_pre_post = new TGraph(2);
         gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
@@ -772,7 +791,7 @@ void DatAnalyzer::Analyze(){
         for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
           float f = config->constant_fraction[kk];
           line_lvs->SetLineColor(frac_colors[kk]);
-          line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_10_pre-4], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
+          line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_begin], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
           for(auto n : config->channels[i].PL_deg) {
             vector<float> polyval;
             for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
@@ -793,7 +812,7 @@ void DatAnalyzer::Analyze(){
           float thr = config->constant_threshold[kk];
           if (thr < amp ) continue;
           line_lvs->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
-          line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_10_pre-4], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
+          line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_begin], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
           for(auto n : config->channels[i].PL_deg) {
             vector<float> polyval;
             for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
