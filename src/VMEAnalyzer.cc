@@ -117,8 +117,12 @@ void VMEAnalyzer::InitLoop(){
     tree->Branch("chi2", &chi2, "chi2/F");
     tree->Branch("ntracks", &ntracks, "ntracks/I");
     if (verbose) { cout << "   -->All pixel variables" << endl; }
-    idx_px_tree = min((unsigned long)start_evt, entries_px_tree-1);
-    pixel_tree->GetEntry( idx_px_tree );
+
+    pixel_tree->GetEntry(0);
+    while(pixel_event->trigger <  start_evt && idx_px_tree < entries_px_tree-1) {
+      idx_px_tree++;
+      pixel_tree->GetEntry( idx_px_tree );
+    }
   }
 }
 
