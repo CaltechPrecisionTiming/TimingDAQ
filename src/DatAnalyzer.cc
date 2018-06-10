@@ -341,6 +341,16 @@ float DatAnalyzer::PolyEval(float x, float* coeff, unsigned int deg) {
   return out;
 }
 
+float DatAnalyzer::WSInterp(float t, int N, float* tn, float* cn) {
+  float out = 0;
+  float dt = (tn[1] - tn[50])/50.;
+  for(unsigned i = 0; i < N; i++) {
+    x = (t - tn[i])/dt;
+    out += cn[i] * sin(TMath::Pi()*x) / (TMath::Pi() * x);
+  }
+  return out
+}
+
 void DatAnalyzer::Analyze(){
   for(unsigned int i=0; i<NUM_CHANNELS; i++) {
     ResetVar(i);
@@ -394,6 +404,7 @@ void DatAnalyzer::Analyze(){
     // Variables used both by analysis and pulse drawer
     unsigned int j_90_pre = 0, j_10_pre = 0;
     unsigned int j_90_post = 0, j_10_post = 0;
+    unsigned int j_area_pre = 0, j_area_post = 0;
     vector<float*> coeff_poly_fit;
     vector<pair<int, int>> poly_bounds;
     float Re_b, Re_slope;
@@ -433,7 +444,9 @@ void DatAnalyzer::Analyze(){
       j_10_post = GetIdxFirstCross(amp*0.1, channel[i], idx_min, +1);
 
       // -------------- Integrate the pulse
-      var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], j_10_pre, j_10_post);
+      j_area_pre = GetIdxFirstCross(amp*0.05, channel[i], idx_min, -1);
+      j_area_post = GetIdxFirstCross(amp*0.05, channel[i], idx_min, +1);
+      var["integral"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], j_area_pre, j_area_post);
       var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
 
       // -------------- Compute rise and falling time
@@ -687,15 +700,15 @@ void DatAnalyzer::Analyze(){
 
 
       // Draw integral area
-      int N_tot_integral = j_10_post-j_10_pre;
+      int N_tot_integral = j_area_post-j_area_pre;
       if( N_tot_integral > 0 ) {
-        vector<float> aux_time = {time[GetTimeIndex(i)][j_10_pre]};
+        vector<float> aux_time = {time[GetTimeIndex(i)][j_area_pre]};
         vector<float> aux_volt = {0};
-        for(unsigned int j = j_10_pre; j <= j_10_post; j++) {
+        for(unsigned int j = j_area_pre; j <= j_area_post; j++) {
           aux_time.push_back(time[GetTimeIndex(i)][j]);
           aux_volt.push_back(channel[i][j]);
         }
-        aux_time.push_back(time[GetTimeIndex(i)][j_10_post]);
+        aux_time.push_back(time[GetTimeIndex(i)][j_area_post]);
         aux_volt.push_back(0);
         TGraph * integral_pulse = new TGraph(aux_time.size(), &(aux_time[0]), &(aux_volt[0]));
         integral_pulse->SetFillColor(40);
