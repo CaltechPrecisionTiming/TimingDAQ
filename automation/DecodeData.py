@@ -13,11 +13,11 @@ def GetCommandLineArgs():
 
     p.add_argument('--daq_dir', default='/data/TestBeam/2018_06_June_CMSTiming')
     p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NimPlus')
-    p.add_argument('--raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RAW')
-    p.add_argument('--NetScope_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RAW')
-
+    p.add_argument('--VME_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RAW')
+    p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RAW')
     p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/Tracks')
-    p.add_argument('--root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RECO/v4')
+
+    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RECO/v4')
     p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RECO/v4')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
@@ -68,16 +68,16 @@ if __name__ == '__main__':
             else:
                 print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
-            raw_filename = args.raw_dir + '/Raw' + args.out_name + '_Run{}.dat'.format(run)
+            raw_filename = args.VME_raw_dir + '/Raw' + args.out_name + '_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the VME file: ', raw_filename
-                cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.raw_dir)
+                cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.VME_raw_dir)
                 subprocess.call(cmd, shell=True)
 
-                copied_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.raw_dir, run))
+                copied_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.VME_raw_dir, run))
 
                 if len(copied_files) == 0:
-                    sys.exit('[ERROR] Unable to find files like: ' +  '{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.raw_dir, run))
+                    sys.exit('[ERROR] Unable to find files like: ' +  '{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.VME_raw_dir, run))
                 elif len(copied_files) > 1:
                     cmd = 'cat ' + ' '.join(copied_files) + ' > ' +raw_filename
                     # print cmd
@@ -90,7 +90,7 @@ if __name__ == '__main__':
             else:
                 print '\nVME file found: ', raw_filename
 
-            root_filename = args.root_dir + '/' + args.out_name + '_Run{}.root'.format(run)
+            root_filename = args.VME_root_dir + '/' + args.out_name + '_Run{}.root'.format(run)
             if args.no_Dat2Root:
                 print '[INFO] No Dat2Root flag active'
                 continue

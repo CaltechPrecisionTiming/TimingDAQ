@@ -164,6 +164,7 @@ void DatAnalyzer::InitLoop() {
     bool at_least_1_rising_edge = false;
     int at_least_1_LP[3] = {false};
     bool at_least_1_IL = false;
+    bool at_least_1_SPL = false;
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
       if( c.second.algorithm.Contains("Re")) at_least_1_rising_edge = true;
@@ -171,11 +172,24 @@ void DatAnalyzer::InitLoop() {
       if( c.second.algorithm.Contains("LP2")) at_least_1_LP[1] = true;
       if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
       if( c.second.algorithm.Contains("IL")) at_least_1_IL = true;
+      if( c.second.algorithm.Contains("SPL")) at_least_1_SPL = true;
     }
 
     if( at_least_1_IL) {
       for (auto f : config->constant_fraction) {
         var_names.push_back(Form("IL_%d", (int)(100*f)));
+      }
+      for (auto thr : config->constant_threshold) {
+        var_names.push_back(Form("IL_%dmV", (int)(fabs(thr))));
+      }
+    }
+
+    if( at_least_1_SPL) {
+      for (auto f : config->constant_fraction) {
+        var_names.push_back(Form("SPL_%d", (int)(100*f)));
+      }
+      for (auto thr : config->constant_threshold) {
+        var_names.push_back(Form("SPL_%dmV", (int)(fabs(thr))));
       }
     }
 
@@ -555,6 +569,12 @@ void DatAnalyzer::Analyze(){
             var[Form("IL_%d", (int)(100*f))][i] = out;
           }
 
+          if (config->channels[i].algorithm.Contains("SPL")) {
+            TGraph* inv_pulse = new TGraph(6, &(channel[i][j_close-2]), &(time[GetTimeIndex(i)][j_close-2]));
+            var[Form("SPL_%d", (int)(100*f))][i] = inv_pulse->Eval(amp*f, 0, "S");
+            delete inv_pulse;
+          }
+
           for(auto n : config->channels[i].PL_deg) {
             unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
 
@@ -572,13 +592,17 @@ void DatAnalyzer::Analyze(){
             }
 
             float* coeff;
-            AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+            int N_add = 1;
+            if (span_j + N_add + j_close < j_90_pre) {
+              N_add++;
+            }
+            AnalyticalPolinomialSolver( 2*span_j + N_add , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%d", n, (int)(100*f))][i] = PolyEval(f*amp, coeff, n);
 
             if(draw_debug_pulses) {
               coeff_poly_fit.push_back(coeff);
-              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j+N_add-1));
             }
             else delete [] coeff;
           }
@@ -609,6 +633,32 @@ void DatAnalyzer::Analyze(){
           unsigned int j_close = GetIdxFirstCross(thr, channel[i], j_st, +1);
           if ( fabs(channel[i][j_close-1] - thr) < fabs(channel[i][j_close] - thr) ) j_close--;
 
+          if( config->channels[i].algorithm.Contains("IL")) {
+            unsigned int j_aux = j_close + 1;
+
+            float t1 = time[GetTimeIndex(i)][j_close];
+            float v1 = channel[i][j_close];
+            float t2 = time[GetTimeIndex(i)][j_aux];
+            float v2 = channel[i][j_aux];
+
+
+            float out = 0;
+            if (v1 == v2) {
+              out = TMath::Max(t1, t2);
+            }
+            else {
+              out = t1 + (t2 - t1) * (thr - v1)/(v2 - v1);
+            }
+
+            var[Form("IL_%dmV", (int)(fabs(thr)))][i] = out;
+          }
+
+          if (config->channels[i].algorithm.Contains("SPL")) {
+            TGraph* inv_pulse = new TGraph(6, &(channel[i][j_close-2]), &(time[GetTimeIndex(i)][j_close-2]));
+            var[Form("SPL_%dmV", (int)(fabs(thr)))][i] = inv_pulse->Eval(thr, 0, "S");
+            delete inv_pulse;
+          }
+
           for(auto n : config->channels[i].PL_deg) {
             unsigned int span_j = (int) (min( j_90_pre-j_close , j_close-j_st)/1.5);
 
@@ -629,13 +679,17 @@ void DatAnalyzer::Analyze(){
             }
 
             float* coeff;
-            AnalyticalPolinomialSolver( 2*span_j + 1 , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
+            int N_add = 1;
+            if (span_j + N_add + j_close < j_90_pre) {
+              N_add++;
+            }
+            AnalyticalPolinomialSolver( 2*span_j + N_add , &(channel[i][j_close - span_j]), &(time[GetTimeIndex(i)][j_close - span_j]), n, coeff);
 
             var[Form("LP%d_%dmV", n, (int)(fabs(thr)))][i] = PolyEval(thr, coeff, n);
 
             if(draw_debug_pulses) {
               coeff_poly_fit.push_back(coeff);
-              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j));
+              poly_bounds.push_back(pair<int,int>(j_close-span_j, j_close+span_j+N_add-1));
             }
             else delete [] coeff;
           }
