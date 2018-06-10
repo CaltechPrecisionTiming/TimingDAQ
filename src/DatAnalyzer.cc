@@ -346,7 +346,7 @@ float DatAnalyzer::WSInterp(float t, int N, float* tn, float* cn) {
   float dt = (tn[0] - tn[N-1])/N;
   for(unsigned i = 0; i < N; i++) {
     float x = (t - tn[i])/dt;
-    out += cn[i] * sin(TMath::Pi()*x) / (TMath::Pi() * x);
+    out += cn[i] * sin(3.14159265358 * x) / (3.14159265358 * x);
   }
   return out;
 }
