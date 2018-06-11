@@ -33,6 +33,8 @@ def GetCommandLineArgs():
     p.add_argument('-v', '--verbose', default=False, action='store_true')
     p.add_argument('--N_max_job', type=int, default=2500)
 
+    p.add_argument('--N_skip', type=int, nargs='+')
+
     return p.parse_args()
 
 if __name__ == '__main__':
@@ -116,6 +118,8 @@ if __name__ == '__main__':
                     print '[ERROR] Tracks file not found in', tracks_filename
                     print 'If you want to run  without tracks use <--no_tracks>.'
                     continue
+            for i,n in enumerate(args.N_skip):
+                cmd_Dat2Root += ' --NSkip{}={}'.format(i,n)
 
             N_tot = max(int(args.N_evts), N_expected_evts)
             nj = 1 + N_tot/args.N_max_job
