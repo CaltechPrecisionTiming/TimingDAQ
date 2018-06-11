@@ -118,7 +118,7 @@ if __name__ == '__main__':
                     print '[ERROR] Tracks file not found in', tracks_filename
                     print 'If you want to run  without tracks use <--no_tracks>.'
                     continue
-            if args.N_skip is not None:
+            if not args.N_skip is None:
                 for i,n in enumerate(args.N_skip):
                     cmd_Dat2Root += ' --NSkip{}={}'.format(i,n)
 
