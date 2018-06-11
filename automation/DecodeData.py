@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
                 f = rt.TFile.Open(root_filename, 'READ')
                 t = f.Get('pulse')
-                t.GetEntry(t.GetEntries())
+                t.GetEntry(t.GetEntries()-1)
                 N_evts_tree =  t.i_evt
                 f.Close()
 
