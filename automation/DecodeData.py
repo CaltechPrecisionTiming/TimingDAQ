@@ -24,7 +24,7 @@ def GetCommandLineArgs():
 
     p.add_argument('--out_name', default='DataVMETiming')
 
-    p.add_argument('--config', default='FNAL_TestBeam_1806/VME_180610_v4.config')
+    p.add_argument('--config_VME', default='FNAL_TestBeam_1806/VME_180610_v4.config')
     p.add_argument('--config_NetScope', default='FNAL_TestBeam_1806/NetScope_180610.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
     p.add_argument('-N', '--N_evts', type=str, default='0')
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
             cmd_Dat2Root = args.code_dir + '/VMEDat2Root'
             cmd_Dat2Root += ' --input_file=' + raw_filename
-            cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config
+            cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config_VME
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
             if args.verbose:
@@ -176,7 +176,7 @@ if __name__ == '__main__':
         for run in runs_list:
             print '========================== Processing Run {} =========================='.format(run)
 
-            raw_filename = args.NetScope_dir + '/RawDataNetScope_Run{}.dat'.format(run)
+            raw_filename = args.NetScope_root_dir + '/RawDataNetScope_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the NetScope file: ', raw_filename
                 cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/NetScopeTiming/RawDataSaver0NetScope_Run{}_*_Raw.dat {}'.format(args.daq_dir, run, raw_filename)
