@@ -120,7 +120,7 @@ if __name__ == '__main__':
                     continue
             if not args.N_skip is None:
                 for i,n in enumerate(args.N_skip):
-                    cmd_Dat2Root += ' --NSkip{}={}'.format(i,n)
+                    cmd_Dat2Root += ' --NSkip{}={}'.format(i+1,n)
 
             N_tot = max(int(args.N_evts), N_expected_evts)
             nj = 1 + N_tot/args.N_max_job
