@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
             N_expected_evts = -1
             if os.path.exists(NimPlus_file):
-                cmd = 'more {} | grep muxout-A | awk \'{{print $3}}\''.format(NimPlus_file)
+                cmd = 'more {} | grep sig_norm | awk \'{{print $3}}\''.format(NimPlus_file)
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
                 (out, err) = proc.communicate()
                 N_expected_evts = int(out)
