@@ -28,6 +28,7 @@
 
 // LOCAL INCLUDES
 #include "Configuration.hh"
+#include "Interpolator.hh"
 
 // This is the base class for .dat --> .root converters.
 
@@ -60,6 +61,7 @@ class DatAnalyzer {
         void AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err = 0);
         float PolyEval(float x, float* coeff, unsigned int deg);
         float WSInterp(float t, int N, float* tn, float* cn);
+        int TimeOverThreshold(double tThresh, double tMin, double tMax, int ich, int t_index, float& time1, float& time2);
 
 
         void RunEventsLoop();

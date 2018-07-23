@@ -343,6 +343,12 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     return 0;
 }
 
+/*
+**************************************************
+Speficic analysis of VME, including telescope data
+then calls main analyzer DatAnalyzer::Analyze()
+**************************************************
+*/
 void VMEAnalyzer::Analyze(){
   if(pixel_input_file_path != ""){
     xIntercept = -999;
@@ -381,5 +387,6 @@ void VMEAnalyzer::Analyze(){
 
   }
 
+  //calling main analyzer -- DatAnalyzer::Analyze() -- in DatAnalyzer.cc
   DatAnalyzer::Analyze();
 }
