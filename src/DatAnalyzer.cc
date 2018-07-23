@@ -1053,8 +1053,8 @@ int DatAnalyzer::TimeOverThreshold(double tThresh, double tMin, double tMax, int
 	if(nIterations == 1000) return -3;//iterations reached maximum
 	time1 = t;
 
-/*
-	std::cout << "===================================" << std::endl;
+
+/*	std::cout << "===================================" << std::endl;
 	std::cout << "time1: " << time1 << " f(t) = " << voltage.f(time1) << std::endl;
 	std::cout << "===================================" << std::endl;
 */
