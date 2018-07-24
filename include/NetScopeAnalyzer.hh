@@ -3,6 +3,7 @@
 #define NetScope_CHANNELS 4
 #define NetScope_TIMES 1
 #define NetScope_SAMPLES 1000
+#define NetScope_F_SAMPLES 500
 #define SCOPE_MEM_LENGTH_MAX 12500000
 
 #include "DatAnalyzer.hh"
@@ -25,7 +26,7 @@ class NetScopeAnalyzer : public DatAnalyzer {
         float yzero[NetScope_CHANNELS];
     };
     //Scope Tektronix DPO7254 ADC already in account in the binary conversion
-    NetScopeAnalyzer() : DatAnalyzer(NetScope_CHANNELS, NetScope_TIMES, NetScope_SAMPLES, 1, 1.) {}
+    NetScopeAnalyzer() : DatAnalyzer(NetScope_CHANNELS, NetScope_TIMES, NetScope_SAMPLES, 1, 1., NetScope_F_SAMPLES) {}
 
     void GetCommandLineArgs(int argc, char **argv);
 

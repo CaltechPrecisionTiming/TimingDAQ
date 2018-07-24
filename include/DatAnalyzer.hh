@@ -21,6 +21,7 @@
 #include "TLine.h"
 #include "TVectorF.h"
 #include "TMatrixF.h"
+#include <TComplex.h>
 // #include "TDecompSVD.h"
 #include "TDecompChol.h"
 // #include "TMatrixDSym.h"
@@ -30,11 +31,14 @@
 #include "Configuration.hh"
 #include "Interpolator.hh"
 
+#define F_LOW 0//low frequency in GHz
+#define F_HIGH 5//High frequency in GHz
+
 // This is the base class for .dat --> .root converters.
 
 class DatAnalyzer {
     public:
-        DatAnalyzer(int numChannels, int numTimes, int numSamples, int res, float scale);
+        DatAnalyzer(int numChannels, int numTimes, int numSamples, int res, float scale, int numFsamples = 0);
         ~DatAnalyzer();
         int getNumChannels() { return NUM_CHANNELS; }
         int getNumTimes() { return NUM_TIMES; }
@@ -62,7 +66,8 @@ class DatAnalyzer {
         float PolyEval(float x, float* coeff, unsigned int deg);
         float WSInterp(float t, int N, float* tn, float* cn);
         int TimeOverThreshold(double tThresh, double tMin, double tMax, int ich, int t_index, float& time1, float& time2);
-
+        float FrequencySpectrum(double freq, double tMin, double tMax, int ich, int t_index);
+        float FrequencySpectrum(double freq, double tMin, double tMax, unsigned int n_samples, float* my_channel, float* my_time);
 
         void RunEventsLoop();
 
@@ -71,8 +76,10 @@ class DatAnalyzer {
         const unsigned int NUM_CHANNELS;
         const unsigned int NUM_TIMES;
         const unsigned int NUM_SAMPLES;
+        const unsigned int NUM_F_SAMPLES;//Fourier samples
         const unsigned int DAC_RESOLUTION; // DAC resolution (2^[bit])
         const float DAC_SCALE; // [V] total scale of the DAC
+
 
         float scale_minimum = -500; // [mV] Voltage value corresponding to 0 DAC counts
 
@@ -101,9 +108,12 @@ class DatAnalyzer {
         // Analysis variables
         float* AUX_time;
         float* AUX_channel;
+        float* AUX_channel_spectrum;
 
         float** time;
         float** channel;
+        float** channel_spectrum;
+        float* frequency;
 
         // Output tree vars
         unsigned int i_evt = 0;

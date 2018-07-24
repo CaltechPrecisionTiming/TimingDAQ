@@ -5,25 +5,45 @@
 
 using namespace std;
 
-DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res, float scale) :
-        NUM_CHANNELS(numChannels), NUM_TIMES(numTimes), NUM_SAMPLES(numSamples),
+DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res, float scale, int numFsamples) :
+        NUM_CHANNELS(numChannels), NUM_TIMES(numTimes), NUM_SAMPLES(numSamples), NUM_F_SAMPLES(numFsamples),
         DAC_RESOLUTION(res), DAC_SCALE(scale),
         file(0), tree(0) {
 
     AUX_time = new float[numTimes*numSamples];
     AUX_channel = new float[numChannels*numSamples];
 
-    time = new float*[numTimes];
+    time    = new float*[numTimes];
     channel = new float*[numChannels];
 
-    for(unsigned int i=0; i<numChannels; i++) {
+    if ( numFsamples > 0 )
+    {
+      AUX_channel_spectrum = new float[numChannels*numFsamples];
+      channel_spectrum     = new float*[numFsamples];
+      frequency = new float[numFsamples];
+    }
+
+    for(unsigned int i=0; i<numChannels; i++)
+    {
       channel[i] = &(AUX_channel[i*numSamples]);
       if(i<numTimes) time[i] = &(AUX_time[i*numSamples]);
+      if ( numFsamples ) channel_spectrum[i] = &(AUX_channel_spectrum[i*numFsamples]);
     }
+
+    if ( numFsamples > 0 )
+    {
+      float f_step = (F_HIGH-F_LOW)/float(numFsamples);
+      for (unsigned int i = 0; i < numFsamples; i++)
+      {
+        frequency[i] = F_LOW + f_step*float(i);
+      }
+    }
+
     if ( verbose ) {
       cout << "NUM_CHANNELS: " << NUM_CHANNELS << endl;
       cout << "NUM_TIMES: " << NUM_TIMES << endl;
       cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
+      cout << "NUM_F_SAMPLES: " << NUM_F_SAMPLES << endl;
     }
 }
 
@@ -592,6 +612,31 @@ void DatAnalyzer::Analyze(){
       delete c;
     }
 
+    /***********************************************
+    CHANNEL INTERPOLATION sin(x)/x
+    ************************************************/
+
+    const unsigned int n_samples_interpolation = 20000;
+    float time_interpolation[n_samples_interpolation];
+    float channel_interpolation[n_samples_interpolation];
+    Interpolator voltage;
+    voltage.init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
+    float deltaT = (time[GetTimeIndex(i)][NUM_SAMPLES-1]-time[GetTimeIndex(i)][0])/float(n_samples_interpolation);
+    for (unsigned int is = 0; is < n_samples_interpolation; is++)
+    {
+      time_interpolation[is] = float(is)*deltaT;
+      channel_interpolation[is] = voltage.f(float(is)*deltaT);
+    }
+    /***************************************
+    Fourier Transform
+    ****************************************/
+    for (unsigned int ifq = 0; ifq < NUM_F_SAMPLES; ifq++ )
+    {
+      /*channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3.,
+       var["t_peak"][i]+3., i, GetTimeIndex(i));*/
+       channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3., var["t_peak"][i]+3.,
+        n_samples_interpolation, channel_interpolation, time_interpolation);
+    }
     delete [] yerr;
     delete pulse;
   }
@@ -781,6 +826,11 @@ void DatAnalyzer::InitLoop() {
     if(save_meas){
       tree->Branch("channel", &(channel[0][0]), Form("channel[%d][%d]/F", NUM_CHANNELS, NUM_SAMPLES));
       tree->Branch("time", &(time[0][0]), Form("time[%d][%d]/F", NUM_TIMES, NUM_SAMPLES));
+      if ( NUM_F_SAMPLES > 0 )
+      {
+        tree->Branch("channel_spectrum", &(channel_spectrum[0][0]), Form("channel_spectrum[%d][%d]/F", NUM_CHANNELS, NUM_F_SAMPLES));
+        tree->Branch("frequency", &(frequency[0]), Form("frequency[%d]/F", NUM_F_SAMPLES));
+      }
     }
 
     /*
@@ -1086,4 +1136,46 @@ int DatAnalyzer::TimeOverThreshold(double tThresh, double tMin, double tMax, int
 */
 	return 0;
 
+};
+
+float DatAnalyzer::FrequencySpectrum(double freq, double tMin, double tMax, int ich, int t_index){
+
+	const int range = 0; // extension of samples to be used beyond [tMin, tMax]
+	double deltaT = (time[t_index][NUM_SAMPLES - 1] - time[t_index][0])/(double)(NUM_SAMPLES - 1); // sampling time interval
+	double fCut = 0.5/deltaT; // cut frequency = 0.5 * sampling frequency from WST
+	int n_min = floor(tMin/deltaT) - range; // first sample to use
+	int n_max = ceil(tMax/deltaT) + range; // last sample to use
+	n_min = std::max(n_min,0); // check low limit
+	n_max = std::min(n_max, (int)NUM_SAMPLES - 1); // check high limit
+	int n_0 = (n_min + n_max)/2;
+
+	TComplex s(0.,0.); // Fourier transform at freq
+	TComplex I(0.,1.); // i
+
+	for(int n = n_min; n <= n_max; n++)
+	{
+		s += deltaT*(double)channel[ich][n]*TComplex::Exp(-I*(2.*TMath::Pi()*freq*(n-n_0)*deltaT));//maybe don't need n_0 here, I think it will just add a phase to the fourier transform
+	}
+  return s.Rho();
+};
+
+float DatAnalyzer::FrequencySpectrum(double freq, double tMin, double tMax, unsigned int n_samples, float* my_channel, float* my_time)
+{
+  const int range = 0; // extension of samples to be used beyond [tMin, tMax]
+	double deltaT = (my_time[n_samples - 1] - my_time[0])/(double)(n_samples - 1); // sampling time interval
+	double fCut = 0.5/deltaT; // cut frequency = 0.5 * sampling frequency from WST
+	int n_min = floor(tMin/deltaT) - range; // first sample to use
+	int n_max = ceil(tMax/deltaT) + range; // last sample to use
+	n_min = std::max(n_min,0); // check low limit
+	n_max = std::min(n_max, (int)(n_samples - 1)); // check high limit
+	int n_0 = (n_min + n_max)/2;
+
+	TComplex s(0.,0.); // Fourier transform at freq
+	TComplex I(0.,1.); // i
+
+	for(int n = n_min; n <= n_max; n++)
+	{
+    s += deltaT*(double)my_channel[n]*TComplex::Exp(-I*(2.*TMath::Pi()*freq*(n-n_0)*deltaT));//maybe don't need n_0 here, I think it will just add a phase to the fourier transform
+	}
+  return s.Rho();
 };

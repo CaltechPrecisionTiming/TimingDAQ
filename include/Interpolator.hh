@@ -23,7 +23,7 @@ class Interpolator {
 		double tMin, tMax; // times of first and last samples
 
 		double deltaT; // sampling time interval
-		const int sampleRange = 64; // range of samples to use for interpolation
+		const int sampleRange = 16; // range of samples to use for interpolation
 		double cutFreqRel = 1.0; // cut frequency relative to max frequency (half of sampling freq)
 
 		Interpolator(){}; // default constructor

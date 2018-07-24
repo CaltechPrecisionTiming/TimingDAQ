@@ -17,9 +17,9 @@ double Interpolator::f(double t){
   if(t > tMax) t = tMax;
   double s = (t - tMin)/deltaT;
 
-  int iSampleMin = (int)s - sampleRange;
+  int iSampleMin = (int)s - sampleRange;//interpolation window lower edge
   if(iSampleMin < 0) iSampleMin = 0;
-  int iSampleMax = (int)s + sampleRange;
+  int iSampleMax = (int)s + sampleRange;//interpolation window higher edge
   if(iSampleMax > (int)nSamples) iSampleMax = nSamples;
 
   double result = 0.;
