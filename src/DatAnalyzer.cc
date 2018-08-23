@@ -757,8 +757,8 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 
   input_file_path = ParseCommandLine( argc, argv, "input_file" );
   ifstream in_file(input_file_path.Data());
-  if (!in_file || input_file_path == "" || !input_file_path.EndsWith(".dat")){
-    cerr << "[ERROR]: please provide a valid input file. Use: --input_file=<your_input_file_path>.dat " << endl;
+  if (!in_file || input_file_path == "" || !(input_file_path.EndsWith(".dat") || input_file_path.EndsWith(".root")) ){
+    cerr << "[ERROR]: please provide a valid input file. Use: --input_file=<your_input_file_path>.dat or  --input_file=<your_input_file_path>.root" << endl;
     exit(0);
   }
   else if (verbose)
@@ -850,6 +850,12 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 
 void DatAnalyzer::InitLoop() {
 
+  std::cout << "Initializing input root file" << std::endl;
+  if ( 1 )//place holder for input file in the future.
+  {
+    file_in = new TFile("/Users/cmorgoth/git/ETL_ASIC/examplePulses.root","READ");
+    tree_in = (TTree*)file_in->Get("pulse");
+  }
     std::cout << "Initializing input file reader and output tree" << std::endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
     ifstream out_file(output_file_path.Data());
@@ -991,7 +997,10 @@ void DatAnalyzer::InitLoop() {
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
 
     // Initialize the input file stream
-    bin_file = fopen( input_file_path.Data(), "r" );
+    if ( input_file_path.EndsWith(".dat") )
+    {
+      bin_file = fopen( input_file_path.Data(), "r" );
+    }
 }
 
 void DatAnalyzer::ResetVar(unsigned int n_ch) {

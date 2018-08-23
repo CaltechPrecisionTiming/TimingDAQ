@@ -123,6 +123,9 @@ class DatAnalyzer {
         // Output root file
         TFile *file;
         TTree *tree;
+        //Input root files (optional, now use by ETL simulation)
+        TFile* file_in;
+        TTree* tree_in;
 
         std::map<TString, float*> var;
         std::vector<TString> var_names = {
