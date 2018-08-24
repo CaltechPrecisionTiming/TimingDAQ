@@ -47,12 +47,14 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
     }
 }
 
-DatAnalyzer::~DatAnalyzer() {
-    cout << "In DatAnalyzer destructor" << endl;
-    if (file) {
-        file->Close();
-    }
-}
+DatAnalyzer::~DatAnalyzer()
+{
+  cout << "In DatAnalyzer destructor" << endl;
+  if (file)
+  {
+    file->Close();
+  }
+};
 
 /*
 **********************************************
@@ -71,10 +73,8 @@ void DatAnalyzer::Analyze(){
       continue;
     }
     TString name = Form("pulse_event%d_ch%d", i_evt, i);
-
     // Get the attenuation/amplification scale factor and convert ADC counts to mV
     float scale_factor = (1000 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
-
     // ------- Get baseline ------
     float baseline = 0;
     unsigned int bl_st_idx = config->baseline[0];
@@ -84,13 +84,13 @@ void DatAnalyzer::Analyze(){
     }
     baseline /= (float) bl_lenght;
     var["baseline"][i] = scale_factor * baseline;
-
     // ------------- Get minimum position, max amplitude and scale the signal
     unsigned int idx_min = 0;
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
+      //if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
+      if(( j<bl_st_idx+bl_lenght && j>10 && fabs(channel[i][j]) > fabs(amp))) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -104,6 +104,7 @@ void DatAnalyzer::Analyze(){
     }
     baseline_RMS = sqrt(baseline_RMS/bl_lenght);
     var["baseline_RMS"][i] = baseline_RMS;
+
 
     // --------------- Define pulse graph
     float * yerr = new float[NUM_SAMPLES];
@@ -128,7 +129,6 @@ void DatAnalyzer::Analyze(){
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
-
     if( fittable ) {
       // Correct the polarity if wrong
       if(amp > 0) {
@@ -429,7 +429,6 @@ void DatAnalyzer::Analyze(){
       // std::cout << "CH: " << i << "\n";
       // std::cout << "DEBUG: amplitude : " << var["amp"][i] << " --> " << var["InterpolatedAmp"][i]  << "\n";
 
-
       //Constant threshold timestamping
       for (auto thr : config->constant_threshold)
       {
@@ -441,7 +440,6 @@ void DatAnalyzer::Analyze(){
           if( retCode == 0 ) var[Form("tot_%d", (int)(fabs(thr)))][i] = var[Form("t1_%d", (int)(fabs(thr)))][i]-var[Form("t0_%d", (int)(fabs(thr)))][i];
         }
       }
-
 
       //CFD time stamping
       for (auto thr : config->constant_fraction) {
@@ -657,6 +655,7 @@ void DatAnalyzer::Analyze(){
     CHANNEL INTERPOLATION sin(x)/x
     ************************************************/
 
+
     const unsigned int n_samples_interpolation = 5000;
     float time_interpolation[n_samples_interpolation];
     float channel_interpolation[n_samples_interpolation];
@@ -668,16 +667,19 @@ void DatAnalyzer::Analyze(){
       time_interpolation[is] = float(is)*deltaT;
       channel_interpolation[is] = voltage.f(float(is)*deltaT);
     }
+
     /***************************************
     Fourier Transform
     ****************************************/
+
     for (unsigned int ifq = 0; ifq < NUM_F_SAMPLES; ifq++ )
     {
-      /*channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3.,
-       var["t_peak"][i]+3., i, GetTimeIndex(i));*/
+      //channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3.,
+       //var["t_peak"][i]+3., i, GetTimeIndex(i));
        channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3., var["t_peak"][i]+3.,
         n_samples_interpolation, channel_interpolation, time_interpolation);
     }
+
     delete [] yerr;
     delete pulse;
   }
@@ -689,6 +691,7 @@ Loop Over All Events and Check Corruption
 *****************************************
 */
 void DatAnalyzer::RunEventsLoop() {
+    std::cout << "before Events loop started" << std::endl;
     InitLoop();
 
     unsigned int evt_progress_print_rate = verbose ? 100 : 1000;
@@ -696,8 +699,9 @@ void DatAnalyzer::RunEventsLoop() {
 
     std::cout << "Events loop started" << std::endl;
     unsigned int N_written_evts = 0;
-    for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
-
+    if ( bin_file != NULL )
+    {
+      for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
         else if (corruption == 1) {
@@ -707,17 +711,42 @@ void DatAnalyzer::RunEventsLoop() {
 
         if( i_evt >= start_evt ) {
           if (corruption == 0) Analyze();
-
           N_written_evts++;
           tree->Fill();
-
           if(N_written_evts%evt_progress_print_rate == 0) {
             //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
           }
         }
+      }
+    }
+    else if ( tree_in != NULL )
+    {
+      int n_evt_tree = tree_in->GetEntries();
+      //std::cout << "NNNN: " << n_evt_tree << std::endl;
+      for( i_evt = 0; i_evt < n_evt_tree && (N_evts==0 || i_evt<N_evts); i_evt++){
+        //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
+        int corruption = GetChannelsMeasurement( i_evt );
+        //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
+        if(corruption == -1) break;
+        else if (corruption == 1) {
+          cout << "Corruption skip SUCCEDED!" << endl;
+          cout << "Not analyzing current loaded evt" << endl;
+        }
+        //cout << "!!!!!!!!!!!!!!!!! Event3 : " << N_written_evts << endl;
+        if( i_evt >= start_evt ) {
+          //cout << "!!!!!!!!!!!!!!!!! Event4 : " << N_written_evts << endl;
+          if (corruption == 0) Analyze();
+          //cout << "!!!!!!!!!!!!!!!!! Event5 : " << N_written_evts << endl;
+          N_written_evts++;
+          tree->Fill();
+          if(N_written_evts%evt_progress_print_rate == 0) {
+            //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
+          }
+        }
+      }
     }
 
-    fclose(bin_file);
+    if ( bin_file != NULL ) fclose(bin_file);
     cout << "\nLoaded total of " << i_evt << " events\n";
 
     if(N_evt_expected>0 && N_evt_expected!=i_evt && N_evts == 0) {
@@ -849,13 +878,6 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 }
 
 void DatAnalyzer::InitLoop() {
-
-  std::cout << "Initializing input root file" << std::endl;
-  if ( 1 )//place holder for input file in the future.
-  {
-    file_in = new TFile("/Users/cmorgoth/git/ETL_ASIC/examplePulses.root","READ");
-    tree_in = (TTree*)file_in->Get("pulse");
-  }
     std::cout << "Initializing input file reader and output tree" << std::endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
     ifstream out_file(output_file_path.Data());
@@ -864,8 +886,14 @@ void DatAnalyzer::InitLoop() {
       exit(0);
     }
     tree = new TTree("pulse", "Digitized waveforms");
-
     tree->Branch("i_evt", &i_evt, "i_evt/i");
+
+    std::cout << "Initializing input root file" << std::endl;
+    if ( 1 )//place holder for input file in the future.
+    {
+      file_in = new TFile("/Users/cmorgoth/git/ETL_ASIC/LGADSimulation_SNR20_ShapingTime1.root","READ");
+      tree_in = (TTree*)file_in->Get("pulse");
+    }
 
     /*
     ************************
@@ -995,13 +1023,12 @@ void DatAnalyzer::InitLoop() {
     }
 
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
-
     // Initialize the input file stream
     if ( input_file_path.EndsWith(".dat") )
     {
       bin_file = fopen( input_file_path.Data(), "r" );
     }
-}
+};
 
 void DatAnalyzer::ResetVar(unsigned int n_ch) {
   for(auto n: var_names) {

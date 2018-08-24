@@ -55,6 +55,10 @@ class DatAnalyzer {
           std::cerr << "Please use a child class of DatAnalyzer" << std::endl;
           return 0;
         }
+        virtual int GetChannelsMeasurement( int i ) {
+          std::cerr << "Please use a child class of DatAnalyzer" << std::endl;
+          return 0;
+        }
 
         virtual unsigned int GetTimeIndex(unsigned int n_ch) { return n_ch; } // Return the index of the time associated with the channel n_ch
         virtual void Analyze();
