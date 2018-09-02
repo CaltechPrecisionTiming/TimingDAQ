@@ -89,8 +89,8 @@ void DatAnalyzer::Analyze(){
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);
-      //if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
-      if(( j<bl_st_idx+bl_lenght && j>10 && fabs(channel[i][j]) > fabs(amp))) {
+      if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
+      //if(( j<bl_st_idx+bl_lenght && j>10 && fabs(channel[i][j]) > fabs(amp))) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -813,14 +813,22 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
   }
 
   // -------- Non compulsory command line arguments
-
   output_file_path = ParseCommandLine( argc, argv, "output_file" );
   if ( output_file_path == "" ){
     output_file_path = input_file_path;
-    output_file_path.ReplaceAll(".dat", ".root");
+
+    if ( output_file_path.EndsWith(".dat") )
+    {
+      output_file_path.ReplaceAll(".dat", "_converted.root");
+    }
+    else if ( output_file_path.EndsWith(".root") )
+    {
+      output_file_path.ReplaceAll(".root", "_converted.root");
+    }
+    std::cout << "=====" << output_file_path << std::endl;
   }
   else if (!output_file_path.EndsWith(".root")) output_file_path += ".root";
-  if (verbose) {cout << "Output file: " << output_file_path.Data() << endl;}
+  if (verbose) {std::cout << "Output file: " << output_file_path.Data() << std::endl;}
 
 
   aux = ParseCommandLine( argc, argv, "N_evts" );
@@ -889,9 +897,10 @@ void DatAnalyzer::InitLoop() {
     tree->Branch("i_evt", &i_evt, "i_evt/i");
 
     std::cout << "Initializing input root file" << std::endl;
-    if ( 1 )//place holder for input file in the future.
+    if ( input_file_path.EndsWith(".root") )//place holder for input file in the future.
     {
-      file_in = new TFile("/Users/cmorgoth/git/ETL_ASIC/LGADSimulation_SNR20_ShapingTime1.root","READ");
+      //file_in = new TFile("/Users/cmorgoth/git/TimingDAQ/LGADSimulation_SNR20_ShapingTime1.root","READ");
+      file_in = new TFile(input_file_path,"READ");
       tree_in = (TTree*)file_in->Get("pulse");
     }
 
