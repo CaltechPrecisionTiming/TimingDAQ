@@ -4,7 +4,8 @@ INC = $(shell pwd)
 
 CPPFLAGS := $(shell root-config --cflags) -I$(INC)/include
 LDFLAGS := $(shell root-config --glibs)
-CPPFLAGS += -g -std=c++14
+#CPPFLAGS += -g -std=c++14
+CPPFLAGS += -g
 
 TARGETS = VMEDat2Root DRSDat2Root DRSclDat2Root NetScopeDat2Root ETL_ASIC_Dat2Root
 SRC = src/Configuration.cc src/Interpolator.cc src/DatAnalyzer.cc
