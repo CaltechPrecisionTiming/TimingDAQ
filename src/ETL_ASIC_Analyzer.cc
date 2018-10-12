@@ -41,8 +41,8 @@ int ETL_ASIC_Analyzer::GetChannelsMeasurement( int i ) {
     unsigned int i_evt;
     float mych[ETL_ASIC_SAMPLES];
     float mytime[ETL_ASIC_SAMPLES];
-    tree_in->SetBranchStatus("shapednoise",0);
-    tree_in->SetBranchStatus("noise",0);
+    //tree_in->SetBranchStatus("shapednoise",0);
+    //tree_in->SetBranchStatus("noise",0);
     tree_in->SetBranchAddress("i_evt", &i_evt);
     tree_in->SetBranchAddress("channel", &mych[0]);
     tree_in->SetBranchAddress("time", &mytime[0]);

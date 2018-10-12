@@ -12,11 +12,11 @@ int TimeOverThreshold(double tThresh, double tMin, double tMax,
 
 	while( nIterations <= 1000)
 	{
-		//std::cout << "tStep: " << tStep << std::endl;
-		//std::cout << "t: " << t << " " << voltage.f(t) << " " << channel[10] << " " <<  tThresh << std::endl;
+		std::cout << "tStep: " << tStep << std::endl;
+		std::cout << "t: " << t << " " << voltage.f(t) << " " << channel[10] << " " <<  tThresh << std::endl;
 		while((voltage.f(t) - tThresh)*tStep < 0.)
 		{
-			//std::cout << nIterations << " t: " << t  << " " << voltage.f(t) << " " << tThresh << std::endl;
+			std::cout << nIterations << " t: " << t  << " " << voltage.f(t) << " " << tThresh << std::endl;
 			if(t<tMin) return -1;
 			if(t>tMax) return -2;
 			t += tStep;
@@ -29,11 +29,11 @@ int TimeOverThreshold(double tThresh, double tMin, double tMax,
 	if(nIterations == 1000) return -3;//iterations reached maximum
 	time1 = t;
 
-/*
+
 	std::cout << "===================================" << std::endl;
 	std::cout << "time1: " << time1 << " f(t) = " << voltage.f(time1) << std::endl;
 	std::cout << "===================================" << std::endl;
-*/
+
 	tStep = tStepInit;
 	t += tStep;
 
