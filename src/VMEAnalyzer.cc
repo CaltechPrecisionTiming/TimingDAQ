@@ -206,21 +206,34 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     unsigned int event_header;
 
+    //header from Lorenzo
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    //cout << "Trigger Number: " << event_header << "\n";
+  
+
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    if(i_evt == 0) {
+    if(i_evt == 0) {      
       ref_event_size = event_header & 0xfffffff;
       if ( verbose ) { cout << "[INFO] Setting the event size to " << ref_event_size << endl; }
     }
+    
+
     // second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     unsigned int group_mask = event_header & 0x0f; // 4-bit channel group mask
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
+    //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     if(i_evt == start_evt) event_time_tag = event_header;
-    // cout << "Evt Time: " << event_header-event_time_tag << endl;
+    //cout << "Evt Time: " << event_header-event_time_tag << endl;
 
 
     // check again for end of file
@@ -230,6 +243,8 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     for(unsigned int k = 0; k<4; k++){
       if(group_mask & (0x1 << k)) active_groups.push_back(k);
     }
+
+ 
 
     //************************************
     // Loop over channel groups
@@ -312,6 +327,13 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
     if (feof(bin_file)) return 0;
+    
+    //read header from Lorenzo
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);  
+
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     int magicWord1 = (event_header >> 28) & 0xf;
     int eventSize =  (event_header) & 0xfffffff;
@@ -320,7 +342,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     int boardID = (event_header >> 27) & 0x1f;
     int pattern = (event_header >> 8) & 0xffff;
     //reverse by 2 lines
-    fseek(bin_file, -2*sizeof(unsigned int), SEEK_CUR);
+    fseek(bin_file, -6*sizeof(unsigned int), SEEK_CUR);
 
     if (magicWord1 != 10 || pattern != 0 || eventSize != ref_event_size) {
       is_corrupted = true;
