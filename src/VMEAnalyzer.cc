@@ -87,6 +87,7 @@ void VMEAnalyzer::LoadCalibration(){
 
 void VMEAnalyzer::InitLoop(){
   DatAnalyzer::InitLoop();
+  tree->Branch("triggerNumber", &triggerNumber, "triggerNumber/I");
   tree->Branch("corruption", &N_corr, "corruption/s");
   if (verbose) { cout << "   corruption" << endl; }
 
@@ -215,7 +216,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     //cout << "Header: " << (event_header & 0xffffffff) << "\n";
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     //cout << "Trigger Number: " << event_header << "\n";
-  
+    triggerNumber = event_header;
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);

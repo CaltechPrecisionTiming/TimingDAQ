@@ -708,6 +708,8 @@ void DatAnalyzer::RunEventsLoop() {
     if ( bin_file != NULL )
     {
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
+	//if (i_evt % 100 == 0) 
+	  cout << "Processing Event " << i_evt << "\n";
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
         else if (corruption == 1) {
