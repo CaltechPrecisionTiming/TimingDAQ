@@ -101,6 +101,7 @@ void DatAnalyzer::Analyze(){
     var["amp"][i] = -amp;
 
     float baseline_RMS = 0;
+    var["noise"][i] = channel[i][bl_st_idx+5];
     for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
       baseline_RMS += channel[i][j]*channel[i][j];
     }
