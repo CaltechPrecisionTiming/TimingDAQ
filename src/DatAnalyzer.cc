@@ -89,8 +89,8 @@ void DatAnalyzer::Analyze(){
     unsigned int idx_min = 0;
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
-      //channel[i][j] = scale_factor * (channel[i][j] - baseline);//baseline subtraction
-      channel[i][j] = scale_factor * channel[i][j];//no baseline subtraction
+      channel[i][j] = scale_factor * (channel[i][j] - baseline);//baseline subtraction
+      //channel[i][j] = scale_factor * channel[i][j];//no baseline subtraction
       if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
       //if(( j<bl_st_idx+bl_lenght && j>10 && fabs(channel[i][j]) > fabs(amp))) {
         idx_min = j;
