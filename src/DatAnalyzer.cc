@@ -44,6 +44,8 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       cout << "NUM_TIMES: " << NUM_TIMES << endl;
       cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
       cout << "NUM_F_SAMPLES: " << NUM_F_SAMPLES << endl;
+      cout << "DAC_SCALE : " << DAC_SCALE << "\n";      
+      cout << "DAC_RESOLUTION : " << DAC_RESOLUTION << "\n";
     }
 }
 
@@ -75,7 +77,10 @@ void DatAnalyzer::Analyze(){
     TString name = Form("pulse_event%d_ch%d", i_evt, i);
     // Get the attenuation/amplification scale factor and convert ADC counts to mV
     //float scale_factor = (30.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
-    float scale_factor = (100000.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
+    float scale_factor = (1000.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
+
+    //cout << "check : " << scale_factor << " = " << DAC_SCALE << " " << DAC_RESOLUTION << " " << config->getChannelMultiplicationFactor(i) << "\n"; 
+
     // ------- Get baseline ------
     float baseline = 0;
     unsigned int bl_st_idx = config->baseline[0];
@@ -708,8 +713,7 @@ void DatAnalyzer::RunEventsLoop() {
     if ( bin_file != NULL )
     {
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
-	//if (i_evt % 100 == 0) 
-	  cout << "Processing Event " << i_evt << "\n";
+	if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
         else if (corruption == 1) {
