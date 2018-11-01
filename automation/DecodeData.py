@@ -124,8 +124,10 @@ if __name__ == '__main__':
 
             N_tot = max(int(args.N_evts), N_expected_evts)
             nj = 1 + N_tot/args.N_max_job
-            evt_start_list = np.arange(0, N_tot, N_tot/float(nj))
-            evt_start_list = np.uint32(np.ceil(evt_start_list))
+            evt_start_list = np.array([0])
+            if (N_tot>0):
+                evt_start_list = np.arange(0, N_tot, N_tot/float(nj))
+                evt_start_list = np.uint32(np.ceil(evt_start_list))
 
             if evt_start_list.shape[0] == 1:
                 cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
