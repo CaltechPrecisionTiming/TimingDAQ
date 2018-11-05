@@ -385,9 +385,9 @@ void VMEAnalyzer::Analyze(){
     chi2 = -999.;
     ntracks = 0;
 
-    while (idx_px_tree < entries_px_tree && triggerNumber >= pixel_event->trigger) {
+    while (idx_px_tree < entries_px_tree && triggerNumber-1 >= pixel_event->trigger) {
       pixel_tree->GetEntry(idx_px_tree);
-      if (pixel_event->trigger == triggerNumber) {
+      if (pixel_event->trigger == triggerNumber-1) {
         if(ntracks == 0) {
           xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
           yIntercept = 1e-3*pixel_event->yIntercept;
@@ -402,7 +402,7 @@ void VMEAnalyzer::Analyze(){
       	ntracks++;
         idx_px_tree++;
       }
-      else if (triggerNumber > pixel_event->trigger) {
+      else if (triggerNumber-1 > pixel_event->trigger) {
         cout << "[ERROR] Pixel tree not ordered" << endl;
         exit(0);
       }
