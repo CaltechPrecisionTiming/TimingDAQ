@@ -21,9 +21,6 @@ def GetCommandLineArgs():
     p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RECO/v5')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
-
-    p.add_argument('--out_name', default='DataVMETiming')
-
     p.add_argument('--config_VME', default='FNAL_TestBeam_1806/VME_180610_v5.config')
     p.add_argument('--config_NetScope', default='FNAL_TestBeam_1806/NetScope_180611_v5.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
@@ -52,10 +49,10 @@ if __name__ == '__main__':
             print '========================== Processing Run {} =========================='.format(run)
 
             print 'Getting NimPlus triggers'
-            NimPlus_file = args.NimPlus_dir + '/TriggerCountNimPlus_{}.cnt'.format(run)
+            NimPlus_file = args.NimPlus_dir + '/TriggerCountNimPlusX_{}.cnt'.format(run)
 
             if not os.path.exists(NimPlus_file):
-                cmd = 'rsync -art otsdaq@ftbf-daq-08.fnal.gov:{}/NimPlus/TriggerCountNimPlus_{}.cnt {}'.format(args.daq_dir, run, NimPlus_file)
+                cmd = 'rsync -art otsdaq@ftbf-daq-08.fnal.gov:{}/NimPlus/TriggerCountNimPlusX_{}.cnt {}'.format(args.daq_dir, run, NimPlus_file)
                 out = subprocess.call(cmd, shell=True)
                 if out:
                     print '[WARNING] NimPlus cnt file copy failed'
@@ -70,7 +67,7 @@ if __name__ == '__main__':
             else:
                 print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
-            raw_filename = args.VME_raw_dir + '/Raw' + args.out_name + '_Run{}.dat'.format(run)
+            raw_filename = args.VME_raw_dir + '/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the VME file: ', raw_filename
                 cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.VME_raw_dir)
@@ -92,7 +89,7 @@ if __name__ == '__main__':
             else:
                 print '\nVME file found: ', raw_filename
 
-            root_filename = args.VME_root_dir + '/' + args.out_name + '_Run{}.root'.format(run)
+            root_filename = args.VME_root_dir + '/DataVMETiming_Run{}.root'.format(run)
             if args.no_Dat2Root:
                 print '[INFO] No Dat2Root flag active'
                 continue
@@ -124,10 +121,8 @@ if __name__ == '__main__':
 
             N_tot = max(int(args.N_evts), N_expected_evts)
             nj = 1 + N_tot/args.N_max_job
-            evt_start_list = np.array([0])
-            if (N_tot>0):
-                evt_start_list = np.arange(0, N_tot, N_tot/float(nj))
-                evt_start_list = np.uint32(np.ceil(evt_start_list))
+            evt_start_list = np.arange(0, N_tot, N_tot/float(nj))
+            evt_start_list = np.uint32(np.ceil(evt_start_list))
 
             if evt_start_list.shape[0] == 1:
                 cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
@@ -184,7 +179,7 @@ if __name__ == '__main__':
         for run in runs_list:
             print '========================== Processing Run {} =========================='.format(run)
 
-            raw_filename = args.NetScope_root_dir + '/RawDataNetScope_Run{}.dat'.format(run)
+            raw_filename = args.NetScope_raw_dir + '/RawDataNetScope_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the NetScope file: ', raw_filename
                 cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/NetScopeTiming/RawDataSaver0NetScope_Run{}_*_Raw.dat {}'.format(args.daq_dir, run, raw_filename)
