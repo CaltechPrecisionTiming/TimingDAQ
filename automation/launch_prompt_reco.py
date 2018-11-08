@@ -4,7 +4,7 @@ import subprocess, argparse
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
-    p.add_argument('--config_vme', default='NONE') #FNAL_TestBeam_1811/VME_DQM.config
+    p.add_argument('--config_vme', default='FNAL_TestBeam_1811/VME_DQM.config')
     p.add_argument('--config_scope', default='NONE') #FNAL_TestBeam_1811/NetScope_DQM.config
     
     return p.parse_args()
@@ -12,8 +12,8 @@ def GetCommandLineArgs():
 if __name__ == '__main__':
     args = GetCommandLineArgs()
 
-    daq_dir = '/data/TestBeam/2018_10_November_CMSTiming/'
-    data_dir =  os.environ['PWD']+'/data/' #'/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data') #bbtl
+    daq_dir = '/data/TestBeam/2018_11_November_CMSTiming/'
+    data_dir = '/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data'
 
     if (args.config_scope=='NONE'): 
         print "DQM::INFO: Running DQM without NetScope!"

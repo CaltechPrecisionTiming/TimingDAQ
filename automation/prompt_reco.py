@@ -15,7 +15,7 @@ def GetCommandLineArgs():
     p.add_argument('--config_vme', default='')
     p.add_argument('--no_scope', action='store_true')
     p.add_argument('--config_scope', default='')
-    p.add_argument('--daq_dir', default='/data/TestBeam/2018_10_November_CMSTiming/')
+    p.add_argument('--daq_dir', default='/data/TestBeam/2018_11_November_CMSTiming/')
     p.add_argument('--data_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/')
     return p.parse_args()
 
@@ -56,7 +56,8 @@ if __name__ == '__main__':
     cmd = 'python automation/DecodeData.py {0} \\\n'.format(args.run)
     cmd += ' --daq_dir={0}\\\n'.format(args.daq_dir)
     cmd += ' --track_dir={0}\\\n'.format(track_dir)
-    cmd += ' --NimPlus_dir={0}\\\n'.format(nim_dir)    cmd += ' --VME_raw_dir={0}\\\n'.format(vme_raw_dir)
+    cmd += ' --NimPlus_dir={0}\\\n'.format(nim_dir)    
+    cmd += ' --VME_raw_dir={0}\\\n'.format(vme_raw_dir)
     cmd += ' --NetScope_raw_dir={0}\\\n'.format(scope_raw_dir)
     cmd += ' --VME_root_dir={0}\\\n'.format(vme_root_dir)
     cmd += ' --NetScope_root_dir={0}\\\n'.format(scope_root_dir)
