@@ -1,9 +1,12 @@
 *.root
 *.dat
+*.pyc
+last_run.log
 VMEDat2Root
 DRSDat2Root
 DRSclDat2Root
 ETL_ASIC_Dat2Root
+data/
 
 NetScopeDat2Root
 pulses_imgs/pulse_event*.png
