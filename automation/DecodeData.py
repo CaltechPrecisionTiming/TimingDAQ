@@ -11,14 +11,14 @@ def GetCommandLineArgs():
     p.add_argument('--no_NetScope', action='store_true')
     p.add_argument('-f','--force', action='store_true')
 
-    p.add_argument('--daq_dir', default='/data/TestBeam/2018_06_June_CMSTiming')
-    p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NimPlus')
-    p.add_argument('--VME_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RAW')
-    p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RAW')
-    p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/Tracks')
+    p.add_argument('--daq_dir', default='/data/TestBeam/2018_11_November_CMSTiming')
+    p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NimPlus')
+    p.add_argument('--VME_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RAW')
+    p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RAW')
+    p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/Tracks')
 
-    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/VME/RECO/v5')
-    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_06/data/NetScope/RECO/v5')
+    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RECO/v5')
+    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v5')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
 
