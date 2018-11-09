@@ -47,4 +47,5 @@ rsync -artvu --progress ./*/RECO/* sxie@cmslpc-sl6.fnal.gov:/eos/uscms/store/use
 
 
 Notes:
+!!!! CONFIG FILE SHOULD NOT BE CHANGED. A NEW FILE WITH A NEW NUMBER SHOULD BE CREATED IF MODIFICATIONS ARE NEEDED
 RECO_VERSION is something like v<spec><num> (v1, vf1, ...) and has to have a corresponded config file in the config directory.
