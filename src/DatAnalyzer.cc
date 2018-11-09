@@ -137,7 +137,7 @@ void DatAnalyzer::Analyze(){
     fittable *= fabs(channel[i][idx_min-2]) > 3*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min+3]) > 2*baseline_RMS;
     // fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
-    if( fittable ) {
+    if( fittable  && !config->channels[i].algorithm.Contains("None")) {
       // Correct the polarity if wrong
       if(amp > 0) {
         config->channels[i].polarity *= -1;
@@ -152,7 +152,7 @@ void DatAnalyzer::Analyze(){
         pulse = new TGraphErrors(NUM_SAMPLES, time[GetTimeIndex(i)], channel[i], 0, yerr);
         pulse->SetNameTitle("g_"+name, "g_"+name);
 
-        if ( config->channels[i].counter_auto_pol_switch == 10 && verbose) {
+        if ( config->channels[i].counter_auto_pol_switch == 10 ) {
           cout << "[WARNING] Channel " << i << " automatic polarity switched more than 10 times" << endl;
         }
         config->channels[i].counter_auto_pol_switch ++;
@@ -407,67 +407,66 @@ void DatAnalyzer::Analyze(){
           }
         }
       }
+
+      /*****************************************************
+      Get times from Sin(x)/x interpolation (Luciano's code)
+      ******************************************************/
+      //std::cout << "===============" << i << "================"<< std::endl;
+      if( config->channels[i].algorithm.Contains("TOT") )
+      {
+        //Create Interpolator object
+        Interpolator *voltage = new Interpolator;
+        voltage->init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
+
+        //compute the signal amplitude from interpolation
+        double tStep = (time[GetTimeIndex(i)][NUM_SAMPLES-1] - time[GetTimeIndex(i)][0])/(double)(NUM_SAMPLES-1)*1. ;
+        double tmpT = var["t_peak"][i]-2.*var["risetime"][i];
+        var["InterpolatedAmp"][i] = 666;
+        //std::cout << "====================" << std::endl;
+        while ( tmpT < var["t_peak"][i] + 5.0 )
+        {
+          //cout << "time : " << tmpT << " --> " << voltage->f(tmpT) ;
+          if (voltage->f(tmpT) < var["InterpolatedAmp"][i])//find minimum (negative going pulses)
+          {
+            var["InterpolatedAmp"][i] = voltage->f(tmpT);
+            //cout << " !!!MAX!!! ";
+          }
+          //cout << "\n";
+          tmpT += 0.001;
+        }
+
+        var["InterpolatedAmp"][i] = fabs(var["InterpolatedAmp"][i]);
+
+        //Constant threshold timestamping
+        for (auto thr : config->constant_threshold)
+        {
+          var[Form("t0_%d", (int)(fabs(thr)))][i] = -666;
+          var[Form("t1_%d", (int)(fabs(thr)))][i] = -666;
+          if ( var["amp"][i] > fabs(thr) )
+          {
+            //std::cout << "=====Constant Threshold======" << var["amp"][i] << " " << thr << "========================" << std::endl;
+            int retCode = TimeOverThreshold( voltage, thr, var["t_peak"][i]-2.*var["risetime"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], i, GetTimeIndex(i), var[Form("t0_%d", (int)(fabs(thr)))][i],var[Form("t1_%d", (int)(fabs(thr)))][i]);
+            if( retCode == 0 ) var[Form("tot_%d", (int)(fabs(thr)))][i] = var[Form("t1_%d", (int)(fabs(thr)))][i]-var[Form("t0_%d", (int)(fabs(thr)))][i];
+          }
+        }
+        //CFD time stamping
+        for (auto thr : config->constant_fraction)
+        {
+          var[Form("t0CFD_%d", (int)(100*thr))][i] = -666;
+          var[Form("t1CFD_%d", (int)(100*thr))][i] = -666;
+          var[Form("totCFD_%d", (int)(100*thr))][i] = -666;
+          if ( var["amp"][i] > fabs(thr) && var["InterpolatedAmp"][i] > 0 )
+          {
+            //pulses are negative, so need to multiply the amplitude by -1.0
+            double CFDThreshold = -1.0 * thr * var["InterpolatedAmp"][i];
+            //std::cout << "===CFD====" << var["amp"][i] << " " << CFDThreshold << "========================" << std::endl;
+            int retCode = TimeOverThreshold( voltage, CFDThreshold, var["t_peak"][i]-2.*var["risetime"][i], 200 , i, GetTimeIndex(i), var[Form("t0CFD_%d", (int)(100*thr))][i],var[Form("t1CFD_%d", (int)(100*thr))][i]);
+            if( retCode == 0 ) var[Form("totCFD_%d", (int)(100*thr))][i] = var[Form("t1CFD_%d", (int)(100*thr))][i]-var[Form("t0CFD_%d", (int)(100*thr))][i];
+          }
+        }
+      } //end if algorithm.Contains("TOT")
     }
 
-    /*****************************************************
-    Get times from Sin(x)/x interpolation (Luciano's code)
-    ******************************************************/
-    //std::cout << "===============" << i << "================"<< std::endl;
-    if( config->channels[i].algorithm.Contains("TOT") )
-    {
-
-      //Create Interpolator object
-      Interpolator *voltage = new Interpolator;
-      voltage->init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
-
-      //compute the signal amplitude from interpolation
-      double tStep = (time[GetTimeIndex(i)][NUM_SAMPLES-1] - time[GetTimeIndex(i)][0])/(double)(NUM_SAMPLES-1)*1. ;
-      double tmpT = var["t_peak"][i]-2.*var["risetime"][i];
-      var["InterpolatedAmp"][i] = 666;
-      //std::cout << "====================" << std::endl;
-      while ( tmpT < var["t_peak"][i] + 5.0 )
-      {
-      	//cout << "time : " << tmpT << " --> " << voltage->f(tmpT) ;
-      	if (voltage->f(tmpT) < var["InterpolatedAmp"][i])//find minimum (negative going pulses)
-        {
-      	  var["InterpolatedAmp"][i] = voltage->f(tmpT);
-      	  //cout << " !!!MAX!!! ";
-      	}
-      	//cout << "\n";
-      	tmpT += 0.001;
-      }
-      var["InterpolatedAmp"][i] = fabs(var["InterpolatedAmp"][i]);
-      // std::cout << tStep << "\n";
-      // std::cout << "CH: " << i << "\n";
-      // std::cout << "DEBUG: amplitude : " << var["amp"][i] << " --> " << var["InterpolatedAmp"][i]  << "\n";
-
-      //Constant threshold timestamping
-      for (auto thr : config->constant_threshold)
-      {
-        var[Form("t0_%d", (int)(fabs(thr)))][i] = var[Form("t1_%d", (int)(fabs(thr)))][i] = -666;
-        if ( var["amp"][i] > fabs(thr) )
-        {
-          //std::cout << "=====Constant Threshold======" << var["amp"][i] << " " << thr << "========================" << std::endl;
-          int retCode = TimeOverThreshold( voltage, thr, var["t_peak"][i]-2.*var["risetime"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], i, GetTimeIndex(i), var[Form("t0_%d", (int)(fabs(thr)))][i],var[Form("t1_%d", (int)(fabs(thr)))][i]);
-          if( retCode == 0 ) var[Form("tot_%d", (int)(fabs(thr)))][i] = var[Form("t1_%d", (int)(fabs(thr)))][i]-var[Form("t0_%d", (int)(fabs(thr)))][i];
-        }
-      }
-      //CFD time stamping
-      for (auto thr : config->constant_fraction)
-      {
-        var[Form("t0CFD_%d", (int)(100*thr))][i] = -666;
-        var[Form("t1CFD_%d", (int)(100*thr))][i] = -666;
-        var[Form("totCFD_%d", (int)(100*thr))][i] = -666;
-        if ( var["amp"][i] > fabs(thr) && var["InterpolatedAmp"][i] > 0 )
-        {
-          //pulses are negative, so need to multiply the amplitude by -1.0
-          double CFDThreshold = -1.0 * thr * var["InterpolatedAmp"][i];
-          //std::cout << "===CFD====" << var["amp"][i] << " " << CFDThreshold << "========================" << std::endl;
-          int retCode = TimeOverThreshold( voltage, CFDThreshold, var["t_peak"][i]-2.*var["risetime"][i], 200 , i, GetTimeIndex(i), var[Form("t0CFD_%d", (int)(100*thr))][i],var[Form("t1CFD_%d", (int)(100*thr))][i]);
-          if( retCode == 0 ) var[Form("totCFD_%d", (int)(100*thr))][i] = var[Form("t1CFD_%d", (int)(100*thr))][i]-var[Form("t0CFD_%d", (int)(100*thr))][i];
-        }
-      }
-    } //end if algorithm.Contains("TOT")
 
     /*********************************************
     // ===================  Draw plot of the pulse
@@ -663,33 +662,32 @@ void DatAnalyzer::Analyze(){
       delete c;
     }
 
-    /***********************************************
-    CHANNEL INTERPOLATION sin(x)/x
-    ************************************************/
 
-
-    const unsigned int n_samples_interpolation = 5000;
-    float time_interpolation[n_samples_interpolation];
-    float channel_interpolation[n_samples_interpolation];
-    Interpolator voltage;
-    voltage.init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
-    float deltaT = (time[GetTimeIndex(i)][NUM_SAMPLES-1]-time[GetTimeIndex(i)][0])/float(n_samples_interpolation);
-    for (unsigned int is = 0; is < n_samples_interpolation; is++)
+    if ( NUM_F_SAMPLES > 0 )
     {
-      time_interpolation[is] = float(is)*deltaT;
-      channel_interpolation[is] = voltage.f(float(is)*deltaT);
-    }
+      const unsigned int n_samples_interpolation = 5000;
+      float time_interpolation[n_samples_interpolation];
+      float channel_interpolation[n_samples_interpolation];
+      Interpolator voltage;
+      voltage.init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
+      float deltaT = (time[GetTimeIndex(i)][NUM_SAMPLES-1]-time[GetTimeIndex(i)][0])/float(n_samples_interpolation);
+      for (unsigned int is = 0; is < n_samples_interpolation; is++)
+      {
+        time_interpolation[is] = float(is)*deltaT;
+        channel_interpolation[is] = voltage.f(float(is)*deltaT);
+      }
 
-    /***************************************
-    Fourier Transform
-    ****************************************/
+      /***************************************
+      Fourier Transform
+      ****************************************/
 
-    for (unsigned int ifq = 0; ifq < NUM_F_SAMPLES; ifq++ )
-    {
-      //channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3.,
-       //var["t_peak"][i]+3., i, GetTimeIndex(i));
-       channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3., var["t_peak"][i]+3.,
-        n_samples_interpolation, channel_interpolation, time_interpolation);
+      for (unsigned int ifq = 0; ifq < NUM_F_SAMPLES; ifq++ )
+      {
+        //channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3.,
+         //var["t_peak"][i]+3., i, GetTimeIndex(i));
+         channel_spectrum[i][ifq] = FrequencySpectrum( frequency[ifq], var["t_peak"][i]-3., var["t_peak"][i]+3.,
+          n_samples_interpolation, channel_interpolation, time_interpolation);
+      }
     }
 
     delete [] yerr;
@@ -934,6 +932,7 @@ void DatAnalyzer::InitLoop() {
     int at_least_1_LP[3] = {false};
     bool at_least_1_IL = false;
     bool at_least_1_SPL = false;
+    bool at_least_1_TOT = false;
     for(auto c : config->channels) {
       if( c.second.algorithm.Contains("G")) at_least_1_gaus_fit = true;
       if( c.second.algorithm.Contains("Re")) at_least_1_rising_edge = true;
@@ -942,6 +941,7 @@ void DatAnalyzer::InitLoop() {
       if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
       if( c.second.algorithm.Contains("IL")) at_least_1_IL = true;
       if( c.second.algorithm.Contains("SPL")) at_least_1_SPL = true;
+      if( c.second.algorithm.Contains("TOT")) at_least_1_TOT = true;
     }
 
     /*
@@ -1002,24 +1002,21 @@ void DatAnalyzer::InitLoop() {
     /*******************************************
     TOT Variables
     ********************************************/
-    var_names.push_back("InterpolatedAmp");
-    for (auto thr : config->constant_threshold)
-    {
-      var_names.push_back(Form("t0_%d", (int)(fabs(thr))));
-      var_names.push_back(Form("t1_%d", (int)(fabs(thr))));
-      var_names.push_back(Form("tot_%d", (int)(fabs(thr))));
+    if( at_least_1_TOT ) {
+      var_names.push_back("InterpolatedAmp");
+      for (auto thr : config->constant_threshold)
+      {
+        var_names.push_back(Form("t0_%d", (int)(fabs(thr))));
+        var_names.push_back(Form("t1_%d", (int)(fabs(thr))));
+        var_names.push_back(Form("tot_%d", (int)(fabs(thr))));
+      }
+      for (auto thr : config->constant_fraction)
+      {
+        var_names.push_back(Form("t0CFD_%d", (int)(100*fabs(thr))));
+        var_names.push_back(Form("t1CFD_%d", (int)(100*fabs(thr))));
+        var_names.push_back(Form("totCFD_%d", (int)(100*fabs(thr))));
+      }
     }
-    for (auto thr : config->constant_fraction)
-    {
-      var_names.push_back(Form("t0CFD_%d", (int)(100*fabs(thr))));
-      var_names.push_back(Form("t1CFD_%d", (int)(100*fabs(thr))));
-      var_names.push_back(Form("totCFD_%d", (int)(100*fabs(thr))));
-    }
-
-    /*  var_names.push_back("t0");
-      var_names.push_back("t1");
-      var_names.push_back("tot");
-    */
 
     /*
     *******************************************************

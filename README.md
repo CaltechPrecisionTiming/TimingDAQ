@@ -132,11 +132,13 @@ The meaning of each parameter is explained below:
 
 The following list include all the algorithms that can be performed. If more than one algorithm is deisred, the flags shouls be separed by the character ``+``.
 
+* ``None`` : No fit is run. Equivalent to have all the channels not fittable.
 * ``G<frac>`` : Fit with a gaussian. The range is defined by ``frac``:  takes all the point near the peak that are above ``frac`` of the peak amplitude. If only ``G`` is given, it is interpreted as ``G40``.
 * ``PL<deg>`` : Fit the rising edge with a polynomial of degree ``deg`` in the proximity of the closest point to the constant fraction.
 * ``IL`` : Time given by the line passing from the closest point to the constant fraction specified and the following point in time.
 * ``SPL`` : Time given by the SPline interpolation given by ``TGraph::Eval(v, 0, "S")```
 * ``Re<f_start>-<f_stop>`` : Linear fit from the point closer to the fraction ``f_start``
+* ``TOT`` : WS transform (sinc interpolation) and TimeOverThreshold for all fraction and threshold
 
 ## Automation
 
