@@ -17,12 +17,12 @@ def GetCommandLineArgs():
     p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RAW')
     p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/Tracks')
 
-    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RECO/v5')
-    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v5')
+    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RECO/v1')
+    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v0')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
-    p.add_argument('--config_VME', default='FNAL_TestBeam_1806/VME_180610_v5.config')
-    p.add_argument('--config_NetScope', default='FNAL_TestBeam_1806/NetScope_180611_v5.config')
+    p.add_argument('--config_VME', default='FNAL_TestBeam_1811/VME_DQM.config')
+    p.add_argument('--config_NetScope', default='FNAL_TestBeam_1811/NetScope_DQM.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
     p.add_argument('-N', '--N_evts', type=str, default='0')
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
