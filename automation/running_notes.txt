@@ -6,7 +6,8 @@ cd /data/TestBeam/2018_11_November_CMSTiming/
 
 Every run:
 
-./copy2CERN.sh LXPLUS_USERNAME '*'
+kinit sxie
+./copy2CERN.sh LXPLUS_USERNAME CMSLPC_NAME '*'
 
 
 2)
