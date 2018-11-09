@@ -44,7 +44,7 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       cout << "NUM_TIMES: " << NUM_TIMES << endl;
       cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
       cout << "NUM_F_SAMPLES: " << NUM_F_SAMPLES << endl;
-      cout << "DAC_SCALE : " << DAC_SCALE << "\n";      
+      cout << "DAC_SCALE : " << DAC_SCALE << "\n";
       cout << "DAC_RESOLUTION : " << DAC_RESOLUTION << "\n";
     }
 }
@@ -79,7 +79,7 @@ void DatAnalyzer::Analyze(){
     //float scale_factor = (30.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
     float scale_factor = (1000.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
 
-    //cout << "check : " << scale_factor << " = " << DAC_SCALE << " " << DAC_RESOLUTION << " " << config->getChannelMultiplicationFactor(i) << "\n"; 
+    //cout << "check : " << scale_factor << " = " << DAC_SCALE << " " << DAC_RESOLUTION << " " << config->getChannelMultiplicationFactor(i) << "\n";
 
     // ------- Get baseline ------
     float baseline = 0;
@@ -714,7 +714,7 @@ void DatAnalyzer::RunEventsLoop() {
     if ( bin_file != NULL )
     {
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
-	if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
+      	if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
         else if (corruption == 1) {
@@ -736,31 +736,23 @@ void DatAnalyzer::RunEventsLoop() {
     {
       int n_evt_tree = tree_in->GetEntries();
       //std::cout << "NNNN: " << n_evt_tree << std::endl;
-      for( i_evt = 0; i_evt < n_evt_tree && (N_evts==0 || i_evt<N_evts); i_evt++){
-        //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
-        int corruption = GetChannelsMeasurement( i_evt );
-        //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
-        if(corruption == -1) break;
-        else if (corruption == 1) {
-          cout << "Corruption skip SUCCEDED!" << endl;
-          cout << "Not analyzing current loaded evt" << endl;
-        }
-        //cout << "!!!!!!!!!!!!!!!!! Event3 : " << N_written_evts << endl;
-        if( i_evt >= start_evt ) {
-          //cout << "!!!!!!!!!!!!!!!!! Event4 : " << N_written_evts << endl;
-          if (corruption == 0) Analyze();
-          //cout << "!!!!!!!!!!!!!!!!! Event5 : " << N_written_evts << endl;
-          N_written_evts++;
-          tree->Fill();
-          if(N_written_evts%evt_progress_print_rate == 0) {
-            //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
-          }
+      for(int i_aux = start_evt; i_aux < n_evt_tree && (N_evts==0 || i_aux<N_evts); i_aux++){
+        if (i_aux % 100 == 0) cout << "Processing Event " << i_aux << "\n";
+
+        GetChannelsMeasurement( i_aux );
+        Analyze();
+
+        N_written_evts++;
+        tree->Fill();
+        if(N_written_evts%evt_progress_print_rate == 0) {
+          //cout << "!!!!!!!!!!!!!!!!! Event : " << N_written_evts << endl;
         }
       }
     }
 
     if ( bin_file != NULL ) fclose(bin_file);
-    cout << "\nLoaded total of " << i_evt << " events\n";
+    cout << "\nLoaded total of " << tree->GetEntries() << " events\n";
+
 
     if(N_evt_expected>0 && N_evt_expected!=i_evt && N_evts == 0) {
       cout << endl;
@@ -1213,11 +1205,11 @@ int DatAnalyzer::TimeOverThreshold(Interpolator *voltage, double tThresh, double
 	if(nIterations == 1000) return -3;//iterations reached maximum
 	time1 = t;
 
-/*
-  std::cout << "===================================" << std::endl;
-	std::cout << "time1: " << time1 << " f(t) = " << voltage->f(time1) << std::endl;
-	std::cout << "===================================" << std::endl;
-*/
+  /*
+    std::cout << "===================================" << std::endl;
+  	std::cout << "time1: " << time1 << " f(t) = " << voltage->f(time1) << std::endl;
+  	std::cout << "===================================" << std::endl;
+  */
 	tStep = tStepInit*10.;
 	t += tStep;
 
@@ -1243,11 +1235,11 @@ int DatAnalyzer::TimeOverThreshold(Interpolator *voltage, double tThresh, double
 
 	if(nIterations == 1000) return -6;//iterations reached maximum
 	time2 = t;
-/*
-	std::cout << "===================================" << std::endl;
-	std::cout << "time2: " << time2 << " f(t) = " << voltage->f(time2) << std::endl;
-	std::cout << "===================================" << std::endl;
-*/
+  /*
+  	std::cout << "===================================" << std::endl;
+  	std::cout << "time2: " << time2 << " f(t) = " << voltage->f(time2) << std::endl;
+  	std::cout << "===================================" << std::endl;
+  */
 	return 0;
 
 };
