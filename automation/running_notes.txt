@@ -12,7 +12,6 @@ Every run:
 
 ./copy2CERN_and_CMSLPC.sh RUN_NUMBER
 
-
 2)
 SUDO:
 sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
