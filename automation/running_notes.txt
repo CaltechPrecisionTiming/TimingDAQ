@@ -1,35 +1,51 @@
 1)
+SUDO:
+sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
+
 Once:
 ssh cmslpc
 kinit sxie
 ssh otsdaq@ftbf-daq-08.fnal.gov
 cd /data/TestBeam/2018_11_November_CMSTiming/
-sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
 
 Every run:
 
-./copy2CERN.sh LXPLUS_USERNAME CMSLPC_NAME '*'
+./copy2CERN_and_CMSLPC.sh RUN_NUMBER
 
 
 2)
-Once:
+SUDO:
+sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
 
+Once:
 ssh cmslpc
 kinit sxie
 ssh otsdaq@rulinux04.dhcp.fnal.gov
-kinit sxie
 cd CMSTiming/
-sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
 
 Every run:
-
-./HyperScript_CERN.sh RUN_NUMBER LXPLUS_USERNAME
+./HyperScript_CERN_and_CMSLPC.sh RUN_NUMBER
 
 3)
-On lxplus
 Once:
+ssh lxplus
 cd /eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ
 source setup_lxplus.sh
 
 Every run:
-python automation/DecodeData_CERN.py RUN_NUMBER --no_NetScope --N_max_job=10000
+
+Fast --> python automation/DecodeData_CERN.py --vVME vf1 -R RUN_NUMBER
+Full analysis --> python automation/DecodeData_CERN.py --vVME v2 -R RUN_NUMBER
+
+4)
+Once:
+ssh lxplus
+cd /eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/data
+kinit sxie@FNAL.GOV
+
+Every run:
+rsync -artvu --progress ./*/RECO/* sxie@cmslpc-sl6.fnal.gov:/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/
+
+
+Notes:
+RECO_VERSION is something like v<spec><num> (v1, vf1, ...) and has to have a corresponded config file in the config directory.
