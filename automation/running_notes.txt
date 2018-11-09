@@ -7,7 +7,7 @@ cd /data/TestBeam/2018_11_November_CMSTiming/
 Every run:
 
 kinit sxie
-./copy2CERN.sh LXPLUS_USERNAME CMSLPC_NAME '*'
+./copy2CERN.sh CMSLPC_NAME '*'
 
 
 2)
@@ -19,7 +19,7 @@ kinit sxie
 
 Every run:
 
-./HyperScript_CERN.sh RUN_NUMBER LXPLUS_USERNAME
+./HyperScript_CERN.sh RUN_NUMBER CMSLPC_NAME
 
 3)
 On lxplus
