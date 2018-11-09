@@ -15,7 +15,7 @@ def GetCommandLineArgs():
     p.add_argument('--NimPlus_dir', default='../data/NimPlus')
     p.add_argument('--VME_raw_dir', default='../data/VME/RAW')
     p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RAW')
-    p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/Tracks')
+    p.add_argument('--track_dir', default='../data/Tracks')
 
     p.add_argument('--VME_root_dir', default='../data/VME/RECO/v1')
     p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v0')
