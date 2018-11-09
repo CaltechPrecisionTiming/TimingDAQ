@@ -9,6 +9,7 @@ ETL_ASIC_Dat2Root
 data/
 
 NetScopeDat2Root
+NetScopeStandaloneDat2Root
 pulses_imgs/pulse_event*.png
 *.o
 *.dSYM
