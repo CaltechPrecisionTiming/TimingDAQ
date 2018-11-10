@@ -11,7 +11,7 @@ def GetCommandLineArgs():
     p = argparse.ArgumentParser()
     p.add_argument('-R', '--runs', type=int, nargs='+', default=None)
 
-    p.add_argument('--dir_CERN', type=str, default='/lxplus/data')
+    p.add_argument('--dir_CERN', type=str, default='/lxplus/')
     p.add_argument('--dir_CMSLPC', type=str, default='sxie@cmslpc31.fnal.gov:/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data')
 
     p.add_argument('--no_CERN', action='store_true', default=False)
@@ -32,6 +32,7 @@ def transfer(args, runs):
         cmd_NimPlus = 'rsync -artu --progress ' + NimPlus_file_template.replace('RN', str(rn))
 
         if not args.no_CERN:
+            print '\nCERN....'
             if not os.path.exists(args.dir_CERN + 'VME/RAW/RawDataVMETiming_Run{0}.dat'.format(rn)) or args.force:
                 subprocess.call(cmd_VME + ' ' + args.dir_CERN + 'VME/RAW/', shell=True)
                 # print cmd_VME + ' ' + args.dir_CERN + 'VME/RAW/'
@@ -40,6 +41,7 @@ def transfer(args, runs):
             else:
                 print args.dir_CERN + 'VME/RAW/RawDataVMETiming_Run{0}.dat'.format(rn), 'already existing.'
         if not args.no_CMSLPC:
+            print '\nCMSLPC....'
             subprocess.call(cmd_VME + ' ' + args.dir_CMSLPC + 'VME/RAW/', shell=True)
             # print cmd_VME + ' ' + args.dir_CMSLPC + 'VME/RAW/'
             subprocess.call(cmd_NimPlus + ' ' + args.dir_CMSLPC + 'NimPlus/', shell=True)

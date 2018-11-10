@@ -6,7 +6,7 @@ def GetCommandLineArgs():
     p = argparse.ArgumentParser()
     p.add_argument('-R', '--runs', type=int, nargs='+', help='List of runs to be processed. If two runs are given: if the order is increasing all the runs in the middle are processed as well, otherwise not.')
 
-    p.add_argument('--data_dir', default='../data')
+    p.add_argument('--data_dir', default='/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/data')
     p.add_argument('--vVME', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/VME_vXX.config).\n If not given no VME is run.')
     p.add_argument('--vNetScope', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/NetScope_vXX.config).\n If not given no NetScope is run.')
 
@@ -54,21 +54,21 @@ if __name__ == '__main__':
         for run in runs_list:
             print '========================== Processing Run {} =========================='.format(run)
 
-            print 'Getting NimPlus triggers'
-            NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
-
             N_expected_evts = -1
-            if os.path.exists(NimPlus_file):
-                cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-                (out, err) = proc.communicate()
-                N_expected_evts = int(out)
-                print 'Number of trigger expected', out
-            else:
-                print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
+
+            # print 'Getting NimPlus triggers'
+            # NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
+            # if os.path.exists(NimPlus_file):
+            #     cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
+            #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            #     (out, err) = proc.communicate()
+            #     N_expected_evts = int(out)
+            #     print 'Number of trigger expected', out
+            # else:
+            #     print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
-            if not os.path.exists(raw_filename) or args.force:
+            if not os.path.exists(raw_filename):
                 print '\nCreating the VME file: ', raw_filename
 
                 matched_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(data_dir + 'VME/RAW', run))
@@ -111,8 +111,9 @@ if __name__ == '__main__':
                     cmd_Dat2Root += ' --pixel_input_file=' + tracks_filename
                 else:
                     print '[ERROR] Tracks file not found in', tracks_filename
-                    print 'If you want to run  without tracks use <--no_tracks>.'
-                    continue
+                    if not args.force:
+                        print 'If you want to run  without tracks use <--no_tracks> or <--force>.'
+                        continue
             if not args.N_skip is None:
                 for i,n in enumerate(args.N_skip):
                     cmd_Dat2Root += ' --NSkip{}={}'.format(i+1,n)
