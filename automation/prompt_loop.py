@@ -4,20 +4,23 @@ import subprocess
 import time, re
 
 VMERaw_file_template = 'VME/RAW/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
+Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
 
-    p.add_argument('--v_fast', type=str, default=None)
-    p.add_argument('--v_full', type=str, default=None)
+    p.add_argument('--v_fast', type=str, default=None, help='If None not run')
+    p.add_argument('--v_full', type=str, default=None, help='If None not run')
+
+    p.add_argument('--wait_for_tracks', action='store_true', default=False, help='Wait for track before recostructing it')
 
     p.add_argument('--data_dir', default='../data')
 
     p.add_argument('--ignore_before', type=int, default=0)
 
     p.add_argument('--max_void', type=int, default=-1)
-    p.add_argument('--sleep', type=float, default=60)
-    p.add_argument('--min_file_age', type=float, default=10)
+    p.add_argument('--sleep', type=float, default=30)
+    p.add_argument('--min_file_age', type=float, default=15)
 
     return p.parse_args()
 
@@ -32,26 +35,31 @@ if __name__ == '__main__':
     nothing_changed = 0
 
     while(args.max_void < 0 or nothing_changed < args.max_void):
-        latest_file = glob(args.data_dir + VMERaw_file_template.replace('RN', '*'))[-1]
+        latest_file = glob(data_dir + VMERaw_file_template.replace('RN', '*'))[-1]
         run_number = int(re.search('_Run[0-9]+_', latest_file).group(0)[4:-1])
 
-        if run_number > last_run_number and time.time() - os.path.getmtime(latest_file) > args.min_file_age:
-            cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format()
+        has_run =  False
+        while run_number > last_run_number:
+            print run_number
+            age_check = time.time() - os.path.getmtime(latest_file) > args.min_file_age
+            tracks_check = True
+            if args.wait_for_tracks:
+                tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
+            print age_check
+            print tracks_check
+            if age_check and tracks_check:
+                cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_fast, run_number)
+                print cmd
+                subprocess.call(cmd, shell=True)
+                last_run_number = run_number
+                has_run = True
+            else:
+                run_number -= 1
 
-
-        run_list = [int(run_number)-1]
-
-        if time.time() - os.path.getmtime(latest_file) > args.min_file_age:
-            run_list.append(int(run_number))
-
-        transfer(args, run_list)
-
-        if last_run_number != run_list[-1]:
-            last_run_number = run_list[-1]
-        else:
+        if not has_run:
             nothing_changed += 1
 
-        print '\n\n...Going to sleep for {0:.0f} s'.format(args.sleep)
+        print '\n...Going to sleep for {0:.0f} s\n\n'.format(args.sleep)
         time.sleep(args.sleep)
 
     print '\n\nStopped because nothing changed for at least {0:.1f} min'.format(args.sleep*nothing_changed/60.0)
