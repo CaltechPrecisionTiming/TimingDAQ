@@ -6,7 +6,7 @@ def GetCommandLineArgs():
     p = argparse.ArgumentParser()
     p.add_argument('-R', '--runs', type=int, nargs='+', help='List of runs to be processed. If two runs are given: if the order is increasing all the runs in the middle are processed as well, otherwise not.')
 
-    p.add_argument('--data_dir', default='/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/data')
+    p.add_argument('--data_dir', default='../data')
     p.add_argument('--vVME', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/VME_vXX.config).\n If not given no VME is run.')
     p.add_argument('--vNetScope', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/NetScope_vXX.config).\n If not given no NetScope is run.')
 
