@@ -29,7 +29,7 @@ kinit sxie
 cd CMSTiming/
 
 Every run:
-./HyperScript_CERN_and_CMSLPC.sh RUN_NUMBER
+./HyperScript_CERN_and_CMSLPC.sh RUN_NUMBER FLAG(0 for CERN, 1 for FNAL, 2 for both) 
 
 3)
 Once:
