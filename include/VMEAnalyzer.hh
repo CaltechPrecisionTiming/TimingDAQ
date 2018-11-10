@@ -50,7 +50,7 @@ class VMEAnalyzer : public DatAnalyzer {
     //VME binary
     int triggerNumber = -1;
     unsigned short N_corr = 0;
-    unsigned long Max_corruption = 1000;
+    unsigned long Max_corruption = 0;
     unsigned int event_time_tag = 0;
     unsigned int group_time_tag = 0;
 
@@ -69,7 +69,7 @@ class VMEAnalyzer : public DatAnalyzer {
 
     unsigned long int idx_px_tree = 0;
     unsigned long int entries_px_tree = 0;
-  
+
     float xIntercept;
     float yIntercept;
     float xSlope;

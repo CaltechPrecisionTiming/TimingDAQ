@@ -55,17 +55,16 @@ if __name__ == '__main__':
             print '========================== Processing Run {} =========================='.format(run)
 
             N_expected_evts = -1
-
-            # print 'Getting NimPlus triggers'
-            # NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
-            # if os.path.exists(NimPlus_file):
-            #     cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
-            #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-            #     (out, err) = proc.communicate()
-            #     N_expected_evts = int(out)
-            #     print 'Number of trigger expected', out
-            # else:
-            #     print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
+            print 'Getting NimPlus triggers'
+            NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
+            if os.path.exists(NimPlus_file):
+                cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+                (out, err) = proc.communicate()
+                N_expected_evts = int(out)
+                print 'Number of trigger expected', out
+            else:
+                print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename):

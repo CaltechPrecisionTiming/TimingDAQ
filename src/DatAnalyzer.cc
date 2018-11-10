@@ -749,7 +749,7 @@ void DatAnalyzer::RunEventsLoop() {
     }
 
     if ( bin_file != NULL ) fclose(bin_file);
-    cout << "\nLoaded total of " << tree->GetEntries() << " events\n";
+    cout << "\nLoaded total of " << tree->GetEntries() << " (" << i_evt << ") events\n";
 
 
     if(N_evt_expected>0 && N_evt_expected!=i_evt && N_evts == 0) {

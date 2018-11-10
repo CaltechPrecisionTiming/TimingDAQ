@@ -234,6 +234,18 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
     triggerNumber = (event_header&0x3fffff);
     // cout << "triggernumber = " << triggerNumber << "\n";
+    if( triggerNumber != i_evt ) {
+      N_corr++;
+      cout << "Detected missing event: N_trg = " << triggerNumber << " - i_evt = " << i_evt << endl;
+      i_evt = triggerNumber;
+
+      cout << "Resetting pixel tree" << endl;
+      while (idx_px_tree < entries_px_tree && i_evt > pixel_event->trigger) {
+        pixel_tree->GetEntry(idx_px_tree);
+        idx_px_tree++;
+      }
+    }
+
 
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     if(i_evt == start_evt) event_time_tag = event_header;
@@ -356,7 +368,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     if(is_corrupted) {
       cout << "Found data Corruption at end of event " << i_evt << endl;
       if(N_corr >= Max_corruption) {
-        cout << "[ERROR] Corruption number over threshold. Stopping acquisition." << endl;
+        cout << "[ERROR] Corruption number over threshold (" << Max_corruption << "). Stopping acquisition." << endl;
         return -1;
       }
       cout << "Trying to skip to next event header...\n";
