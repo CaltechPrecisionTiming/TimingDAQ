@@ -232,6 +232,9 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
+    triggerNumber = (event_header&0x3fffff);
+    cout << "triggernumber = " << triggerNumber << "\n";
+
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     if(i_evt == start_evt) event_time_tag = event_header;
     //cout << "Evt Time: " << event_header-event_time_tag << endl;
