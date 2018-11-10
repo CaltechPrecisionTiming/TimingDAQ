@@ -9,7 +9,7 @@ Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
 
-    p.add_argument('--v_fast', type=str, default=None, help='If None not run')
+    p.add_argument('--v_fast', type=str, default=None, help='Version of the config to run inline. (e.g. vf1).\nIf None no inline decoding is run')
     p.add_argument('--v_full', type=str, default=None, help='If None not run')
 
     p.add_argument('--wait_for_tracks', action='store_true', default=False, help='Wait for track before recostructing it')
@@ -27,6 +27,11 @@ def GetCommandLineArgs():
 if __name__ == '__main__':
     args = GetCommandLineArgs()
 
+    if args.v_fast==None and args.v_full==None:
+        print 'At least v_fast or v_full needs to be given'
+        print 'Run with -h for help'
+        exit(0)
+
     data_dir = args.data_dir
     if not data_dir.endswith('/'):
         data_dir += '/'
@@ -40,13 +45,11 @@ if __name__ == '__main__':
 
         has_run =  False
         while run_number > last_run_number:
-            print run_number
             age_check = time.time() - os.path.getmtime(latest_file) > args.min_file_age
             tracks_check = True
             if args.wait_for_tracks:
                 tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
-            print age_check
-            print tracks_check
+
             if age_check and tracks_check:
                 cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_fast, run_number)
                 print cmd
