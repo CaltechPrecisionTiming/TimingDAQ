@@ -4,58 +4,58 @@ import numpy as np
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
-    p.add_argument('-R', '--runs', type=int, nargs='+', help='List of runs to be processed. If two runs are given: if the order is increasing all the runs in the middle are processed as well, otherwise not.')
-
-    p.add_argument('--data_dir', default='../data')
-    p.add_argument('--vVME', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/VME_vXX.config).\n If not given no VME is run.')
-    p.add_argument('--vNetScope', default=None, help='Version of the config. Something like vXX (v1, vf1, ...) and has to have a corresponded config file in the config directory (config/config_dir/NetScope_vXX.config).\n If not given no NetScope is run.')
-
-    p.add_argument('--code_dir', default=os.environ['PWD'])
-    p.add_argument('--config_dir', default='FNAL_TestBeam_1811/')
-
+    p.add_argument('runs', type=int, nargs='+')
     p.add_argument('--no_tracks', action='store_true', default=False)
     p.add_argument('--no_Dat2Root', action='store_true')
-    p.add_argument('-f','--force', action='store_true', help='Run even if tracks are not present')
-    p.add_argument('--N_max_job', type=int, default=100000)
+    p.add_argument('--no_VME', action='store_true')
+    p.add_argument('--no_NetScope', action='store_true')
+    p.add_argument('-f','--force', action='store_true')
 
-    #Dat2Root arguments
+    p.add_argument('--daq_dir', default='/data/TestBeam/2018_11_November_CMSTiming')
+    p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NimPlus')
+    p.add_argument('--VME_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RAW')
+    p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RAW')
+    p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/Tracks')
+
+    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RECO/v1')
+    p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v0')
+    p.add_argument('--code_dir', default=os.environ['PWD'])
+
+    p.add_argument('--config_VME', default='FNAL_TestBeam_1811/VME_DQM_v1.config')
+    p.add_argument('--config_NetScope', default='FNAL_TestBeam_1811/NetScope_DQM.config')
     p.add_argument('--NO_save_meas', default=False, action='store_true')
     p.add_argument('-N', '--N_evts', type=str, default='0')
     p.add_argument('--draw_debug_pulses', default=False, action='store_true')
+
     p.add_argument('-v', '--verbose', default=False, action='store_true')
+    p.add_argument('--N_max_job', type=int, default=1000)
+
     p.add_argument('--N_skip', type=int, nargs='+')
 
     return p.parse_args()
 
 if __name__ == '__main__':
     args = GetCommandLineArgs()
-    data_dir = args.data_dir
-    if not data_dir.endswith('/'):
-        data_dir += '/'
-
-    code_dir = args.code_dir
-    if not code_dir.endswith('/'):
-        code_dir += '/'
 
     runs_list = []
-    if len(args.runs) == 2 and (args.runs[0] < args.runs[1]):
+    if len(args.runs) == 2:
         runs_list = range(args.runs[0], args.runs[1]+1)
     else:
         runs_list = args.runs
 
-    if not args.vVME == None:
+    if not args.no_VME:
         print 'Processing VME'
-
-        output_dir = data_dir + 'VME/RECO/' + args.vVME
-        if not os.path.isdir(output_dir):
-            print 'Creating the output directory ', output_dir
-            os.mkdir(output_dir)
-
         for run in runs_list:
             print '========================== Processing Run {} =========================='.format(run)
 
             print 'Getting NimPlus triggers'
-            NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
+            NimPlus_file = args.NimPlus_dir + '/TriggerCountNimPlusX_{}.cnt'.format(run)
+
+            if not os.path.exists(NimPlus_file):
+                cmd = 'rsync -art otsdaq@ftbf-daq-08.fnal.gov:{}/NimPlus/TriggerCountNimPlusX_{}.cnt {}'.format(args.daq_dir, run, NimPlus_file)
+                out = subprocess.call(cmd, shell=True)
+                if out:
+                    print '[WARNING] NimPlus cnt file copy failed'
 
             N_expected_evts = -1
             if os.path.exists(NimPlus_file):
@@ -67,27 +67,29 @@ if __name__ == '__main__':
             else:
                 print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
-            raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
+            raw_filename = args.VME_raw_dir + '/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the VME file: ', raw_filename
+                cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.VME_raw_dir)
+                subprocess.call(cmd, shell=True)
 
-                matched_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(data_dir + 'VME/RAW', run))
+                copied_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.VME_raw_dir, run))
 
-                if len(matched_files) == 0:
-                    sys.exit('[ERROR] Unable to find files like: ' +  '{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(data_dir + 'VME/RAW', run))
-                elif len(matched_files) > 1:
-                    cmd = 'cat ' + ' '.join(matched_files) + ' > ' +raw_filename
+                if len(copied_files) == 0:
+                    sys.exit('[ERROR] Unable to find files like: ' +  '{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.VME_raw_dir, run))
+                elif len(copied_files) > 1:
+                    cmd = 'cat ' + ' '.join(copied_files) + ' > ' +raw_filename
                     # print cmd
                     subprocess.call(cmd, shell=True)
-                    for f in matched_files:
+                    for f in copied_files:
                         os.remove(f)
                 else:
-                    cmd = 'mv '+ matched_files[0] + ' ' + raw_filename
+                    cmd = 'mv '+ copied_files[0] + ' ' + raw_filename
                     subprocess.call(cmd, shell=True)
             else:
                 print '\nVME file found: ', raw_filename
 
-            root_filename = output_dir + '/DataVMETiming_Run{}.root'.format(run)
+            root_filename = args.VME_root_dir + '/DataVMETiming_Run{}.root'.format(run)
             if args.no_Dat2Root:
                 print '[INFO] No Dat2Root flag active'
                 continue
@@ -95,9 +97,9 @@ if __name__ == '__main__':
                 print root_filename, 'already present'
                 continue
 
-            cmd_Dat2Root = code_dir + 'VMEDat2Root'
+            cmd_Dat2Root = args.code_dir + '/VMEDat2Root'
             cmd_Dat2Root += ' --input_file=' + raw_filename
-            cmd_Dat2Root += ' --config=' + code_dir + 'config/' + args.config_dir + 'VME_{}.config'.format(args.vVME)
+            cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config_VME
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
             if args.verbose:
@@ -105,7 +107,7 @@ if __name__ == '__main__':
             if not args.NO_save_meas:
                 cmd_Dat2Root += ' --save_meas'
             if not args.no_tracks:
-                tracks_filename = data_dir + 'Tracks/Run{}_CMSTiming_converted.root'.format(run)
+                tracks_filename = args.track_dir + '/Run{}_CMSTiming_converted.root'.format(run)
 
                 if os.path.exists(tracks_filename):
                     cmd_Dat2Root += ' --pixel_input_file=' + tracks_filename
@@ -174,25 +176,20 @@ if __name__ == '__main__':
 
             print 'Finished processing run ', run
 
-    if not args.vNetScope==None:
+    if not args.no_NetScope:
         print 'Processing NetScope'
-
-        output_dir = data_dir + 'NetScope/RECO/' + args.vNetScope
-        if not os.path.isdir(output_dir):
-            print 'Creating the output directory ', output_dir
-            os.mkdir(output_dir)
-
         for run in runs_list:
             print '========================== Processing Run {} =========================='.format(run)
 
-            raw_filename = data_dir + 'NetScope/RAW/RawDataNetScope_Run{}.dat'.format(run)
-            if not os.path.exists(raw_filename):
-                print '\nNetScope file NOT found: ', raw_filename
-                continue
+            raw_filename = args.NetScope_raw_dir + '/RawDataNetScope_Run{}.dat'.format(run)
+            if not os.path.exists(raw_filename) or args.force:
+                print '\nCreating the NetScope file: ', raw_filename
+                cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/NetScopeTiming/RawDataSaver0NetScope_Run{}_*_Raw.dat {}'.format(args.daq_dir, run, raw_filename)
+                subprocess.call(cmd, shell=True)
             else:
                 print '\nNetScope file found: ', raw_filename
 
-            root_filename = output_dir + '/DataNetScope_Run{}.root'.format(run)
+            root_filename = args.NetScope_root_dir + '/DataNetScope_Run{}.root'.format(run)
             if args.no_Dat2Root:
                 print '[INFO] No Dat2Root flag active'
                 continue
@@ -200,9 +197,9 @@ if __name__ == '__main__':
                 print root_filename, 'already present'
                 continue
 
-            cmd_Dat2Root = code_dir + 'NetScopeDat2Root'
+            cmd_Dat2Root = args.code_dir + '/NetScopeDat2Root'
             cmd_Dat2Root += ' --input_file=' + raw_filename
-            cmd_Dat2Root += ' --config=' + code_dir + 'config/' + args.config_dir + 'NetScope_{}.config'.format(args.vNetScope)
+            cmd_Dat2Root += ' --config=' + args.code_dir + '/config/' + args.config_NetScope
             cmd_Dat2Root += ' --output_file=' + root_filename
             cmd_Dat2Root += ' --N_evts=' + args.N_evts
             if args.draw_debug_pulses:
