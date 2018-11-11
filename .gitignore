@@ -1,6 +1,7 @@
 *.root
 *.dat
 *.pyc
+*.log
 last_run.log
 VMEDat2Root
 DRSDat2Root
@@ -11,7 +12,7 @@ data/
 NetScopeDat2Root
 NetScopeStandaloneDat2Root
 pulses_imgs/pulse_event*.png
-automation/lsfbatch/LSFJOB*
+automation/lsfbatch/jobs/*
 automation/condor/cmd/*
 *.o
 *.dSYM
