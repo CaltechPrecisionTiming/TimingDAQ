@@ -29,7 +29,13 @@ kinit sxie
 cd CMSTiming/
 
 Every run:
-./HyperScript_CERN_and_CMSLPC.sh RUN_NUMBER FLAG(0 for CERN, 1 for FNAL, 2 for both) 
+./HyperScriptFastTrigger_CERN_and_CMSLPC.sh RUN_NUMBER FLAG(0 for CERN, 1 for FNAL, 2 for both) 
+
+Alternatively:
+Run HypeScript with 0 flag and then from otsdaq@rulinux04 ~CMSTiming do 
+python copy_cern_to_lpc.py (change mhussain to your user name)
+
+
 
 3)
 Once:
