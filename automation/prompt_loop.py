@@ -56,6 +56,7 @@ if __name__ == '__main__':
                 subprocess.call(cmd, shell=True)
                 last_run_number = run_number
                 has_run = True
+                nothing_changed = 0
             else:
                 run_number -= 1
 

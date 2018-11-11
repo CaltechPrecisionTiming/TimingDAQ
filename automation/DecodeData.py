@@ -13,6 +13,8 @@ def GetCommandLineArgs():
     p.add_argument('--code_dir', default=os.environ['PWD'])
     p.add_argument('--config_dir', default='FNAL_TestBeam_1811/')
 
+    p.add_argument('--no_NimPlus', action='store_true', default=False)
+    p.add_argument('--NimPlus_flag', type=str, default='muxout-B')
     p.add_argument('--no_tracks', action='store_true', default=False)
     p.add_argument('--no_Dat2Root', action='store_true')
     p.add_argument('-f','--force', action='store_true', help='Run even if tracks are not present')
@@ -55,16 +57,17 @@ if __name__ == '__main__':
             print '========================== Processing Run {} =========================='.format(run)
 
             N_expected_evts = -1
-            print 'Getting NimPlus triggers'
-            NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlusX_{}.cnt'.format(run)
-            if os.path.exists(NimPlus_file):
-                cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-                (out, err) = proc.communicate()
-                N_expected_evts = int(out)
-                print 'Number of trigger expected', out
-            else:
-                print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
+            if not args.no_NimPlus:
+                print 'Getting NimPlus triggers'
+                NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlus_{}.cnt'.format(run)
+                if os.path.exists(NimPlus_file):
+                    cmd = 'more {} | grep {} | awk \'{{print $3}}\''.format(NimPlus_file, args.NimPlus_flag)
+                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+                    (out, err) = proc.communicate()
+                    N_expected_evts = int(out)
+                    print 'Number of trigger expected', out
+                else:
+                    print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename):

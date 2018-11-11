@@ -5,13 +5,13 @@ import time, re
 
 #RN is a wildcard for run run number
 VME_file_template = 'CMSTiming/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
-NimPlus_file_template = 'NimPlus/TriggerCountNimPlusX_RN.cnt'
+NimPlus_file_template = 'NimPlus/TriggerCountNimPlus*_RN.cnt'
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
     p.add_argument('-R', '--runs', type=int, nargs='+', default=None)
 
-    p.add_argument('--dir_CERN', type=str, default='/lxplus/')
+    p.add_argument('--dir_CERN', type=str, default='/lxplus/data')
     p.add_argument('--dir_CMSLPC', type=str, default='sxie@cmslpc31.fnal.gov:/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data')
 
     p.add_argument('--no_CERN', action='store_true', default=False)
