@@ -51,9 +51,14 @@ if __name__ == '__main__':
                 tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
 
             if age_check and tracks_check:
-                cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_fast, run_number)
-                print cmd
-                subprocess.call(cmd, shell=True)
+                if not args.v_fast == None:
+                    cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_fast, run_number)
+                    print cmd
+                    subprocess.call(cmd, shell=True)
+                if not args.v_full == None:
+                    cmd = './automation/lsfbatch/submit_job.sh {0} {1}'.format(run_number, args.v_full)
+                    subprocess.call(cmd, shell=True)
+                    
                 last_run_number = run_number
                 has_run = True
                 nothing_changed = 0

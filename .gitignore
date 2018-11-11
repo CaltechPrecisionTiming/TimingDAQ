@@ -12,7 +12,8 @@ data/
 NetScopeDat2Root
 NetScopeStandaloneDat2Root
 pulses_imgs/pulse_event*.png
-automation/lsfbatch/jobs/*
+automation/lsfbatch/jobs/LSFJOB*
+automation/lsfbatch/log/*.log
 automation/condor/cmd/*
 *.o
 *.dSYM
