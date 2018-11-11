@@ -585,7 +585,7 @@ void DatAnalyzer::Analyze(){
           voltage_interpolator->init(NUM_SAMPLES, time[GetTimeIndex(i)][0], time[GetTimeIndex(i)][NUM_SAMPLES-1], channel[i]);
 
           //compute the signal amplitude from interpolation
-          double tStep = 0.1*(time[GetTimeIndex(i)][NUM_SAMPLES-1] - time[GetTimeIndex(i)][0])/(double)(NUM_SAMPLES-1) ;
+          double tStep = 0.05*(time[GetTimeIndex(i)][NUM_SAMPLES-1] - time[GetTimeIndex(i)][0])/(double)(NUM_SAMPLES-1) ;
           double t_st = var["t_peak"][i]-2.*var["risetime"][i];
           double t_stop = var["t_peak"][i]+2.*var["risetime"][i];
           int N_aux = (t_stop - t_st)/tStep;
@@ -600,14 +600,14 @@ void DatAnalyzer::Analyze(){
           }
 
           TGraph* gr_interpolation = new TGraph(t_aux.size(), &(t_aux[0]), &(v_aux[0]));
-          gr_interpolation->SetMarkerStyle(7);
+          gr_interpolation->SetMarkerStyle(6);
           gr_interpolation->SetMarkerColor(2);
-          gr_interpolation->Draw('P');
+          gr_interpolation->Draw("P");
 
           TLine* line = new TLine();
           line->SetLineWidth(1);
           line->SetLineColor(46);
-          line->DrawLine(t_st, var["InterpolatedAmp"][i], t_stop, var["InterpolatedAmp"][i]);
+          line->DrawLine(t_st, -var["InterpolatedAmp"][i], t_stop, -var["InterpolatedAmp"][i]);
         }
 
         // ---------- Rising edge only inverted!! -----
@@ -640,28 +640,39 @@ void DatAnalyzer::Analyze(){
         inv_pulse->GetYaxis()->SetTitle("Time [ns]");
         inv_pulse->Draw("APE1");
 
-        vector<float> t_WS;
-        vector<float> c_WS;
-        float overstep = 6;
-        for(unsigned int jj = j_begin; jj < j_begin + j_span; jj++) {
-          for(unsigned int kk = 0; kk < overstep; kk++) {
-            float tt = time[GetTimeIndex(i)][jj] + (time[GetTimeIndex(i)][jj+1] - time[GetTimeIndex(i)][jj]) * kk/overstep;
-            float cc = WSInterp(tt, NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
-
-            t_WS.push_back(tt);
-            c_WS.push_back(cc);
-          }
-        }
-        TGraph* inv_pulse_WS = new TGraph(t_WS.size(), &(c_WS[0]), &(t_WS[0]));
-        inv_pulse_WS->SetMarkerStyle(7);
-        inv_pulse_WS->SetMarkerColor(2);
-        // inv_pulse_WS->Draw("P");
-
         TGraph* gr_inv_pre_post = new TGraph(2);
         gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
         gr_inv_pre_post->SetPoint(1, channel[i][j_90_pre], time[GetTimeIndex(i)][j_90_pre]);
         gr_inv_pre_post->SetMarkerColor(4);
         gr_inv_pre_post->Draw("P*");
+
+        if( config->channels[i].algorithm.Contains("TOT") )
+        {
+          //compute the signal amplitude from interpolation
+          double tStep = 0.1*(time[GetTimeIndex(i)][NUM_SAMPLES-1] - time[GetTimeIndex(i)][0])/(double)(NUM_SAMPLES-1) ;
+          double t_st = time[GetTimeIndex(i)][j_begin];
+          double t_stop = time[GetTimeIndex(i)][j_begin + j_span - 1];
+          int N_aux = (t_stop - t_st)/tStep;
+
+          vector<double> t_aux;
+          vector<double> v_aux;
+
+          for(uint aux_i = 0; aux_i <= N_aux; aux_i++) {
+            double t = t_st + tStep*aux_i;
+            t_aux.push_back(t);
+            v_aux.push_back(voltage_interpolator->f(t));
+          }
+
+          TGraph* gr_interpolation = new TGraph(t_aux.size(), &(v_aux[0]), &(t_aux[0]));
+          gr_interpolation->SetMarkerStyle(6);
+          gr_interpolation->SetMarkerColor(2);
+          gr_interpolation->Draw("P");
+
+          TLine* line = new TLine();
+          line->SetLineWidth(1);
+          line->SetLineColor(46);
+          line->DrawLine(-var["InterpolatedAmp"][i], t_st, -var["InterpolatedAmp"][i], t_stop);
+        }
 
         // -------------- If exist, draw local polinomial fit
         unsigned int count = 0;
@@ -1192,16 +1203,6 @@ float DatAnalyzer::PolyEval(float x, float* coeff, unsigned int deg) {
   }
   return out;
 }
-
-float DatAnalyzer::WSInterp(float t, int N, float* tn, float* cn) {
-  float out = 0;
-  float dt = (tn[0] - tn[N-1])/N;
-  for(unsigned i = 0; i < N; i++) {
-    float x = (t - tn[i])/dt;
-    out += cn[i] * sin(3.14159265358 * x) / (3.14159265358 * x);
-  }
-  return out;
-};
 
 
 int DatAnalyzer::TimeOverThreshold(Interpolator *voltage_interpolator, double tThresh, double tMin, double tMax, int ich, int t_index, float& time1, float& time2)
