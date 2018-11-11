@@ -1,0 +1,13 @@
+#! /bin/sh
+
+$LSB_TRAPSIGS
+$LSB_RCP1
+$LSB_RCP2
+$LSB_RCP3
+# LSBATCH: User input
+/usr/local/lsf/etc/job_starter '/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ/automation/lsfbatch/job.sh 386'
+ExitStat=$?
+wait
+# LSBATCH: End user input
+true
+exit `expr $? "|" $ExitStat`

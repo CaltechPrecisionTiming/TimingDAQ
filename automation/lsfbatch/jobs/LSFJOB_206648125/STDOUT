@@ -1,0 +1,34 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/ocerri/206648125> on <b6bb55bda1.cern.ch>
+
+============= Processing run 386 ====================
+/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/CMSSW_9_0_2/src
+/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ
+Setup ok
+
+-------------- TimingDAQ (Dat2Root) --------------
+[INFO] Number of expected events: 7310
+before Events loop started
+Initializing input file reader and output tree
+Initializing input root file
+Events loop started
+Processing Event 0
+Processing Event 100
+Processing Event 200
+[WARNING] Channel 4 automatic polarity switched more than 10 times
+Processing VME
+========================== Processing Run 386 ==========================
+Getting NimPlus triggers
+Number of trigger expected 7310
+
+
+VME file found:  ../data/VME/RAW/RawDataVMETiming_Run386.dat
+
+/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ/VMEDat2Root --input_file=../data/VME/RAW/RawDataVMETiming_Run386.dat --config=/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ/config/FNAL_TestBeam_1811/VME_v2ct.config --pixel_input_file=../data/Tracks/Run386_CMSTiming_converted.root --N_evt_expected=7310 --output_file=../data/VME/RECO/v2ct/DataVMETiming_Run386.root --N_evts=0
+Finished processing run  386
+
+Job finished at Sun Nov 11 02:25:26 CET 2018 on node 
+ under linux version Scientific Linux CERN SLC release 6.10 (Carbon)
+
+CERN statistics: This process used approximately : 0:08:06 KSI2K hours (486 KSI2K seconds)
+                 This process corresponds to     : 0:31:36 HS06  hours (1896 HS06  seconds)
