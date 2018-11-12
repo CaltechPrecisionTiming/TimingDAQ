@@ -109,5 +109,7 @@ if __name__ == '__main__':
     else:
         if len(args.runs) == 2 and (args.runs[0] < args.runs[1]):
             runs_list = range(args.runs[0], args.runs[1]+1)
+        else:
+            run_list = args.runs
 
-        transfer(args, args.runs)
+        transfer(args, run_list)
