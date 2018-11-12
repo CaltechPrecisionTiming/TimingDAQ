@@ -40,13 +40,9 @@ Fast --> python automation/DecodeData.py -f --vVME vf1 -R RUN_NUMBER
 Full analysis --> python automation/DecodeData.py --vVME v2 --NO_save_meas -R RUN_NUMBER
 
 4)
-Once:
-ssh lxplus
-cd /eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/data
-kinit sxie@FNAL.GOV
-
-Every run:
-rsync -artvu --progress ./*/RECO/* sxie@cmslpc-sl6.fnal.gov:/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/
+Once in a while:
+cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
+rsync -rtauv --progress ../data/VME/RECO/vf1/* ocerri@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/data/VME/RECO/vf1/
 
 
 Notes:
