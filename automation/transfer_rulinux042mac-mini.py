@@ -17,7 +17,7 @@ def GetCommandLineArgs():
     p.add_argument('--sleep', type=float, default=30)
     p.add_argument('--min_file_age', type=float, default=90)
 
-    p.add_argument('-f', '--force', action='store_true', default=False)
+    p.add_argument('-v', '--vebose', action='store_true', default=False)
 
     return p.parse_args()
 
@@ -30,6 +30,19 @@ def transfer(args, rn):
     cmd += ' ' + args.dir_data + 'Tracks/'
 
     subprocess.call(cmd, shell=True)
+
+def get_last_remote_file(args):
+    cmd = "ssh otsdaq@rulinux04.dhcp.fnal.gov \'cd " + args.dir_rulinux04 + "; "
+    cmd += "ls -1ltr " + track_file_template.replace('RN', '*') + "\'"
+
+    output = subprocess.check_output(cmd, shell=True)
+    last_file = output.split('\n')[-2]
+    last_file = last_file.split(' ')
+    fn = last_file[-1]
+
+    size = int(last_file[-5])
+    run_number = re.search('Run[0-9]+_', fn).group(0)[4:-1]
+    return int(run_number), size
 
 if __name__ == '__main__':
     args = GetCommandLineArgs()
@@ -44,7 +57,15 @@ if __name__ == '__main__':
         nothing_changed = 0
 
         while(args.max_void < 0 or nothing_changed < args.max_void):
+            r_pre, s_pre = get_last_remote_file(args)
             transfer(args, '*')
+            r_post, s_post = get_last_remote_file(args)
+
+            if (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
+                if args.verbose:
+                    print 'Removing locally file potentially broken'
+                cmd = 'rm ' + args.dir_data + 'Tracks/' + track_file_template.replace('RN', str(r_post))
+                subprocess.call(cmd, shell=True)
 
             files = args.dir_data + 'Tracks/' + track_file_template.replace('RN', '*')
             files = glob(files)
