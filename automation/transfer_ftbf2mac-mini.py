@@ -83,8 +83,13 @@ if __name__ == '__main__':
                 high_run_number -= 1
 
             latest_file = glob(args.dir_data + 'VME/RAW/*')[-1]
-            run_number_local = re.search('_Run[0-9]+', latest_file).group(0)[4:]
-            run_number_local = int(run_number_local)
+            aux_1 = re.search('_Run[0-9]+', latest_file).group(0)[4:]
+            aux_1 = int(aux_1)
+
+            latest_file = glob(args.dir_data + 'VME/RAW/*_Run*_*')[-1]
+            aux_2 = re.search('_Run[0-9]+_', latest_file).group(0)[4:-1]
+            aux_2 = int(aux_2)
+            run_number_local = max(aux_1, aux_2)
 
             run_list = range(run_number_local+1, high_run_number+1)
 

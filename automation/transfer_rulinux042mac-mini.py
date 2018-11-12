@@ -17,7 +17,7 @@ def GetCommandLineArgs():
     p.add_argument('--sleep', type=float, default=30)
     p.add_argument('--min_file_age', type=float, default=90)
 
-    p.add_argument('-v', '--vebose', action='store_true', default=False)
+    p.add_argument('-v', '--verbose', action='store_true', default=False)
 
     return p.parse_args()
 
@@ -59,6 +59,7 @@ if __name__ == '__main__':
         while(args.max_void < 0 or nothing_changed < args.max_void):
             r_pre, s_pre = get_last_remote_file(args)
             transfer(args, '*')
+            time.sleep(2)
             r_post, s_post = get_last_remote_file(args)
 
             if (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
@@ -82,7 +83,7 @@ if __name__ == '__main__':
             else:
                 nothing_changed += 1
 
-            print '\n\n...Going to sleep for {0:.0f} s'.format(args.sleep)
+            print '...Going to sleep for {0:.0f} s\n'.format(args.sleep)
             time.sleep(args.sleep)
 
         print '\n\nStopped because nothing changed for at least {0:.1f} min'.format(args.sleep*nothing_changed/60.0)
