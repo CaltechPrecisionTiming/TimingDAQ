@@ -32,8 +32,10 @@ Check the teminal to monitor the process
 Once:
 cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
 
-Every run:
+Automatic:
+python automation/prompt_loop_mac-mini.py --v_fast vf1 --v_full v2 --wait_for_tracks
 
+Manual:
 Fast --> python automation/DecodeData.py -f --vVME vf1 -R RUN_NUMBER
 Full analysis --> python automation/DecodeData.py --vVME v2 --NO_save_meas -R RUN_NUMBER
 

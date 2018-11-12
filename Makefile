@@ -2,7 +2,7 @@ CXX = $(shell root-config --cxx)
 LD = $(shell root-config --ld)
 INC = $(shell pwd)
 
-CPPFLAGS := $(shell root-config --cflags) -I$(INC)/include
+CPPFLAGS := $(shell root-config --cflags) -I$(INC)/include -Wl -rpath $(shell root-config --prefix)/lib
 LDFLAGS := $(shell root-config --glibs)
 #CPPFLAGS += -g -std=c++14
 CPPFLAGS += -g
