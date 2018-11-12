@@ -46,17 +46,15 @@ if __name__ == '__main__':
         has_run =  False
         while run_number > last_run_number:
             age_check = time.time() - os.path.getmtime(latest_file) > args.min_file_age
-            tracks_check = True
-            if args.wait_for_tracks:
-                tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
+            tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
 
-            if age_check and tracks_check:
-                if not args.v_fast == None:
-                    cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_fast, run_number)
+            if age_check and (not args.wait_for_tracks or tracks_check):
+                if not args.v_fast == None and:
+                    cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_fast, run_number)
                     print cmd
                     subprocess.call(cmd, shell=True)
                 if not args.v_full == None:
-                    cmd = 'python automation/DecodeData.py -f --vVME {0} -R {1}'.format(args.v_full, run_number)
+                    cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_full, run_number)
                     cmd += ' &> ~/tmp/{}.log &'.format(run_number)
                     print cmd
                     subprocess.call(cmd, shell=True)
@@ -70,7 +68,7 @@ if __name__ == '__main__':
         if not has_run:
             nothing_changed += 1
 
-        print '\n...Going to sleep for {0:.0f} s\n\n'.format(args.sleep)
+        print 'Last run processed {0}\n...Going to sleep for {1:.0f} s\n\n'.format(last_run_number, args.sleep)
         time.sleep(args.sleep)
 
     print '\n\nStopped because nothing changed for at least {0:.1f} min'.format(args.sleep*nothing_changed/60.0)
