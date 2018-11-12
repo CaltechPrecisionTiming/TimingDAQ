@@ -6,6 +6,8 @@ import time, re
 VMERaw_file_template = 'VME/RAW/RawDataSaver0CMSVMETiming_RunRN*dat'
 Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 
+cmd_DQM_template = 'python ../DataQualityMonitor/DQM_SiPM.py -C ../DatQualityMonitor/config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_RunRN.root &> ~/tmp/DQM.log &'
+
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
 
@@ -13,6 +15,7 @@ def GetCommandLineArgs():
     p.add_argument('--v_full', type=str, default=None, help='If None not run')
 
     p.add_argument('--wait_for_tracks', action='store_true', default=False, help='Wait for track before recostructing it')
+    p.add_argument('--run_DQM', action='store_true', default=False, help='Run DQM')
 
     p.add_argument('--data_dir', default='../data')
 
@@ -26,6 +29,11 @@ def GetCommandLineArgs():
 
 if __name__ == '__main__':
     args = GetCommandLineArgs()
+
+    if args.run_DQM:
+        args.run_DQM = False
+        print "Sorry, not implemented yet. Run manually"
+        print "python DQM_SiPM.py -C config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_Run<N>.root"
 
     if args.v_fast==None and args.v_full==None:
         print 'At least v_fast or v_full needs to be given'
@@ -53,6 +61,10 @@ if __name__ == '__main__':
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_fast, run_number)
                     print cmd
                     subprocess.call(cmd, shell=True)
+                    if args.run_DQM:
+                        print cmd_DQM_template.replace('RN', str(run_number))
+                        subprocess.call(cmd_DQM_template.replace('RN', str(run_number)), shell=True)
+
                 if not args.v_full == None:
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_full, run_number)
                     cmd += ' &> ~/tmp/{}.log &'.format(run_number)

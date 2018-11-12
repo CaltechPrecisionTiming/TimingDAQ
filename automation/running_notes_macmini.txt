@@ -33,7 +33,7 @@ Once:
 cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
 
 Automatic:
-python automation/prompt_loop_mac-mini.py --v_fast vf1 --v_full v2 --wait_for_tracks
+python automation/prompt_loop_mac-mini.py --v_fast vf1 --v_full v2 --wait_for_tracks --run_DQM
 
 Manual:
 Fast --> python automation/DecodeData.py -f --vVME vf1 -R RUN_NUMBER
