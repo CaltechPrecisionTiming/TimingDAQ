@@ -14,7 +14,7 @@ def GetCommandLineArgs():
     p.add_argument('--dir_data', type=str, default='../data/')
 
     p.add_argument('--max_void', type=int, default=-1)
-    p.add_argument('--sleep', type=float, default=30)
+    p.add_argument('--sleep', type=float, default=60)
     p.add_argument('--min_file_age', type=float, default=90)
 
     p.add_argument('-v', '--verbose', action='store_true', default=False)
@@ -57,10 +57,12 @@ if __name__ == '__main__':
         nothing_changed = 0
 
         while(args.max_void < 0 or nothing_changed < args.max_void):
+            print "Loop start"
             r_pre, s_pre = get_last_remote_file(args)
             transfer(args, '*')
             time.sleep(2)
             r_post, s_post = get_last_remote_file(args)
+            print r_pre, s_pre, r_post, s_post
 
             if (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
                 if args.verbose:
