@@ -34,7 +34,7 @@ def transfer(args, runs):
 
         cmd_NimPlus = cmd + NimPlus_file_template.replace('RN', str(rn))
         cmd_NimPlus += ' ' + args.dir_data + 'NimPlus/'
-        print cmd_NimPlus
+        # print cmd_NimPlus
         subprocess.call(cmd_NimPlus, shell=True)
 
 def get_last_remote_file(args):
