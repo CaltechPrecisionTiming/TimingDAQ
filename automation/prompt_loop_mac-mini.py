@@ -49,7 +49,7 @@ if __name__ == '__main__':
             tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
 
             if age_check and (not args.wait_for_tracks or tracks_check):
-                if not args.v_fast == None and:
+                if not args.v_fast == None:
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_fast, run_number)
                     print cmd
                     subprocess.call(cmd, shell=True)
