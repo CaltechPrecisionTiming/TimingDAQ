@@ -28,17 +28,9 @@ Every run:
 Check the teminal to monitor the process
 
 
-3)
+3) Process the decoding and the analysis
 Once:
-ssh lxplus
-cd /eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ
-source setup_lxplus.sh
-
-Alternatively, to run on cmslpc:
-ssh cmslpc
-kinit sxie
-cd /eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/TimingDAQ
-source setup_cmslpc.sh
+cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
 
 Every run:
 

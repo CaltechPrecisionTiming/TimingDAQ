@@ -29,7 +29,7 @@ def transfer(args, runs):
 
         cmd_VME = cmd + VME_file_template.replace('RN', str(rn))
         cmd_VME += ' ' + args.dir_data + 'VME/RAW/'
-        print cmd_VME
+        # print cmd_VME
         subprocess.call(cmd_VME, shell=True)
 
         cmd_NimPlus = cmd + NimPlus_file_template.replace('RN', str(rn))
