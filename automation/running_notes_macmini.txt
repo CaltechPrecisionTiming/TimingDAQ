@@ -1,27 +1,14 @@
-1)
-Sudo:
-ssh cmslpc
-kinit cmorgoth
-ssh otsdaq@ftbf-daq-08.fnal.gov
-sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
-
+1) Get VME binary and NimPlus
+->The guy on macmini
 Once:
-ssh cmslpc
 kinit sxie
-ssh otsdaq@ftbf-daq-08.fnal.gov
-cd /data/TestBeam/2018_11_November_CMSTiming/
-kinit sxie
-python transfer_ftbf2EOS.py
+python automation/transfer_ftbf2mac-mini.py
 Every run:
 
 Check the teminal to monitor the process
 
-2) The guy in charge of the OTSDAQ should do it
-SUDO:
-kinit cmorgoth
-ssh otsdaq@rulinux04.dhcp.fnal.gov
-sshfs -o allow_other cpena@lxplus.cern.ch:/eos/cms/store/group/phys_susy/razor/FNAL_TB_1811 /lxplus/
-
+2) Get tracks
+--> The guy in charge of the OTSDAQ should do it
 Once:
 ssh cmslpc
 kinit sxie
@@ -30,12 +17,15 @@ kinit sxie
 cd CMSTiming/
 
 Every run:
-./HyperScriptFastTrigger_CERN_and_CMSLPC.sh RUN_NUMBER FLAG(0 for CERN, 1 for FNAL, 2 for both)
+./HyperScript_macmini.sh RUN_NUMBER
 
-Alternatively:
-Run HypeScript with 0 flag and then from otsdaq@rulinux04 ~CMSTiming do
-python copy_cern_to_lpc.py (change mhussain to your user name)
+--> Decode guy on macmini:
+Once:
+cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
+python automation/transfer_rulinux042mac-mini.py
 
+Every run:
+Check the teminal to monitor the process
 
 
 3)
