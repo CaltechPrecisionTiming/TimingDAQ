@@ -759,8 +759,6 @@ void DatAnalyzer::RunEventsLoop() {
       cout << "          " << N_evt_expected << "  !=  " << i_evt << endl;
       cout << "====================================================" << endl;
       cout << endl;
-      cout << "No tree wrote." << endl;
-      exit(0);
     }
     file->Write();
     cout << "\nWritten total of " << N_written_evts << " events\n";
