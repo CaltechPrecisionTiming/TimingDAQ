@@ -14,7 +14,7 @@ def GetCommandLineArgs():
     p.add_argument('--config_dir', default='FNAL_TestBeam_1811/')
 
     p.add_argument('--no_NimPlus', action='store_true', default=False)
-    p.add_argument('--NimPlus_flag', type=str, default='muxout-B')
+    p.add_argument('--NimPlus_flag', type=str, default='muxout-D')
     p.add_argument('--no_tracks', action='store_true', default=False)
     p.add_argument('--no_Dat2Root', action='store_true')
     p.add_argument('-f','--force', action='store_true', help='Run even if tracks are not present')
