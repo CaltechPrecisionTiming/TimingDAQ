@@ -4,6 +4,7 @@ import subprocess
 import time, re
 
 VMERaw_file_template = 'VME/RAW/RawDataSaver0CMSVMETiming_RunRN*dat'
+NimPlus_file_template = 'NimPlus/TriggerCountNimPlus_RN.cnt'
 Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 
 cmd_DQM_template = 'python ../DataQualityMonitor/DQM_SiPM.py -C ../DatQualityMonitor/config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_RunRN.root &> ~/tmp/DQM.log &'
@@ -14,6 +15,7 @@ def GetCommandLineArgs():
     p.add_argument('--v_fast', type=str, default=None, help='Version of the config to run inline. (e.g. vf1).\nIf None no inline decoding is run')
     p.add_argument('--v_full', type=str, default=None, help='If None not run')
 
+    p.add_argument('--wait_for_NimPlus', action='store_false', default=True, help='Wait for binary before recostructing it')
     p.add_argument('--wait_for_tracks', action='store_true', default=False, help='Wait for track before recostructing it')
     p.add_argument('--run_DQM', action='store_true', default=False, help='Run DQM')
 
@@ -48,15 +50,17 @@ if __name__ == '__main__':
     nothing_changed = 0
 
     while(args.max_void < 0 or nothing_changed < args.max_void):
-        latest_file = glob(data_dir + VMERaw_file_template.replace('RN', '*'))[-1]
-        run_number = int(re.search('_Run[0-9]+_', latest_file).group(0)[4:-1])
+        latest_file = glob(data_dir + Tracks_file_template.replace('RN', '*'))[-1]
+        # latest_file = glob(data_dir + VMERaw_file_template.replace('RN', '*'))[-1]
+        run_number = int(re.search('Run[0-9]+_', latest_file).group(0)[3:-1])
 
         has_run =  False
         while run_number > last_run_number:
             age_check = time.time() - os.path.getmtime(latest_file) > args.min_file_age
             tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
+            nimplus_check = os.path.exists(data_dir + NimPlus_file_template.replace('RN', str(run_number)))
 
-            if age_check and (not args.wait_for_tracks or tracks_check):
+            if age_check and (not args.wait_for_tracks or tracks_check) and (not args.wait_for_NimPlus or nimplus_check):
                 if not args.v_fast == None:
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_fast, run_number)
                     print cmd

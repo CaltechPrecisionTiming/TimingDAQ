@@ -17,7 +17,7 @@ kinit sxie
 cd CMSTiming/
 
 Every run:
-./HyperScript_macmini.sh RUN_NUMBER
+./HyperScriptFastTrigger_NewGeo_18_12_11.sh RUN_NUMBER
 
 --> Decode guy on macmini:
 Once:

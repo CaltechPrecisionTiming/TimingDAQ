@@ -67,7 +67,7 @@ if __name__ == '__main__':
                     N_expected_evts = int(out)
                     print 'Number of trigger expected', out
                 else:
-                    print '[WARNING] NO NimPlus file present in ' + args.NimPlus_dir
+                    print '[WARNING] NO NimPlus file present: ' + NimPlus_file
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename):
