@@ -41,7 +41,7 @@ def get_last_remote_file(args):
     fn = last_file[-1]
 
     size = int(last_file[-5])
-    run_number = re.search('Run[0-9]+_', fn).group(0)[4:-1]
+    run_number = re.search('Run[0-9]+_', fn).group(0)[3:-1]
     return int(run_number), size
 
 if __name__ == '__main__':

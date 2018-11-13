@@ -36,7 +36,7 @@ class Configuration {
         unsigned int N = 0;
 
         int polarity = +1;
-        unsigned int counter_auto_pol_switch = 0;
+        int counter_auto_pol_switch = -1;
 
         float amplification = 0;
         float attenuation = 0;

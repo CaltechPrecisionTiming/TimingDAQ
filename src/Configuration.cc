@@ -88,11 +88,26 @@ void Configuration::parseConfigurationLine(std::string line) {
 
       // polarity
       nextConfigurationElement(ss, item);
-      if ( item == "+" ) {
+      TString aux_string = item;
+      // if ( item == "+." ) {
+      //     aux_ch.polarity = 1;
+      //     aux_ch.counter_auto_pol_switch = -1;
+      //     if( verbose ) { cout << "    Negative pulse set (+: straight) and no polarity switch allowed." << std::endl;}
+      // }
+      // else if ( item == "-." ) {
+      //     aux_ch.polarity = -1;
+      //     aux_ch.counter_auto_pol_switch = -1;
+      //     if( verbose ) { cout << "    Positive pulse set (-: inverse) and no polarity switch allowed." << std::endl;}
+      // }
+      if ( aux_string.Contains(".") ) {
+          aux_ch.counter_auto_pol_switch = 0;
+          if( verbose ) { cout << "    Polarity switch allowed." << std::endl;}
+      }
+      if ( aux_string.Contains("+") ) {
           aux_ch.polarity = 1;
           if( verbose ) { cout << "    Negative pulse set (+: straight)" << std::endl;}
       }
-      else if ( item == "-" ) {
+      else if ( aux_string.Contains("-") ) {
           aux_ch.polarity = -1;
           if( verbose ) { cout << "    Positive pulse set (-: inverse)" << std::endl;}
       }
