@@ -220,15 +220,13 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    if(i_evt == 0) {
-      ref_event_size = event_header & 0xfffffff;
-      if ( verbose ) { cout << "[INFO] Setting the event size to " << ref_event_size << endl; }
-    }
-
+    // int magicWord1 = (event_header >> 28) & 0xf;
+    // int eventSize =  (event_header) & 0xfffffff;
 
     // second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     unsigned int group_mask = event_header & 0x0f; // 4-bit channel group mask
+
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
@@ -344,23 +342,19 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
     if (feof(bin_file)) return 0;
 
-    // //read header from Lorenzo
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     int magicWord1 = (event_header >> 28) & 0xf;
-    int eventSize =  (event_header) & 0xfffffff;
+    ref_event_size =  (event_header) & 0xfffffff;
     if (feof(bin_file)) return 0;
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     int boardID = (event_header >> 27) & 0x1f;
     int pattern = (event_header >> 8) & 0xffff;
+    group_mask = event_header & 0x0f; // 4-bit channel group mask
+
     //reverse by 2 lines
     fseek(bin_file, -2*sizeof(unsigned int), SEEK_CUR);
 
-    if (magicWord1 != 10 || pattern != 0 || eventSize != ref_event_size) {
+    if ( magicWord1 != 10 || pattern != 0 ) {
       is_corrupted = true;
       cout << "[WARNING] Following bits not matching the expected header" << endl;
     }
