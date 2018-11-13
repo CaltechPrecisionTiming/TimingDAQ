@@ -122,7 +122,7 @@ The meaning of each parameter is explained below:
 | Parameter | Values | Notes|
 | -------- | :-----: | ------|
 |``ch_num``| ``unsigned int`` | Number of the channel to be activated.|
-|``pol``| ``+`` or ``-`` | Polarity of the waveform. Pulses are supposed to have the peak below the baseline.|
+|``pol``| ``+``, ``-`` or ``.`` | Polarity of the waveform. Pulses are supposed to have the peak below the baseline. Adding ``.`` allow automatic polarity switch (e.g. ``+.``).|
 |``amp`` | ``float`` | Value of the amplification applied [dB]. |
 |``att`` | ``float`` | Value of the attenuation applied [dB]. |
 |``algo`` | ``string`` | Algorithms to be applied to fit the rising edge to compute the constant fraction times. |

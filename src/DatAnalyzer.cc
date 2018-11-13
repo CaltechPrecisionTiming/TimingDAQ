@@ -139,7 +139,7 @@ void DatAnalyzer::Analyze(){
     // fittable *= fabs(channel[i][idx_min-3]) > 2*baseline_RMS;
     if( fittable  && !config->channels[i].algorithm.Contains("None")) {
       // Correct the polarity if wrong
-      if(amp > 0) {
+      if( amp > 0 && config->channels[i].counter_auto_pol_switch >= 0 ) {
         config->channels[i].polarity *= -1;
         amp = -amp;
         var["amp"][i] = -amp;
