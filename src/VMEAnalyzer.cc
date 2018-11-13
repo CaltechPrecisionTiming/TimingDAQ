@@ -206,22 +206,34 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     }
 
     unsigned int event_header;
-
-    // //header from Lorenzo
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // //cout << "Trigger Number: " << event_header << "\n";
-    // triggerNumber = event_header;
+    bool half_event = false;
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    // int magicWord1 = (event_header >> 28) & 0xf;
-    // int eventSize =  (event_header) & 0xfffffff;
+    unsigned int magicWord1 = (event_header >> 28) & 0xf;
+    unsigned int eventSize =  (event_header) & 0xfffffff;
+    // cout << "Event size " << eventSize << endl;
+    // cout << "Ref event size " << ref_event_size << endl;
+
+    bool ref_check = (ref_event_size == 13836);
+    bool size_check = (eventSize == 6920);
+    bool check =  (ref_check && size_check);
+
+    if(i_evt == 0) {
+      ref_event_size = event_header & 0xfffffff;
+      if ( verbose ) { cout << "[INFO] Setting the event size to " << ref_event_size << endl; }
+    }
+    else if ( check ) {
+      N_false++;
+      half_event = true;
+      // cout << "N_false " << N_false << endl;
+    }
+    else if ( ref_event_size != eventSize ) {
+      cout << "Unexpected non-matching event size" << endl;
+      cout << "Ref event size " << ref_event_size << endl;
+      cout << "Event size " << eventSize << endl;
+      return -1;
+    }
 
     // second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
@@ -229,26 +241,29 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
     triggerNumber = (event_header&0x3fffff);
-    // cout << "triggernumber = " << triggerNumber << "\n";
-    if( triggerNumber != i_evt ) {
-      N_corr++;
-      cout << "Detected missing event: N_trg = " << triggerNumber << " - i_evt = " << i_evt << endl;
-      i_evt = triggerNumber;
+    // if(N_false%2==1 || half_event) {cout << "triggerNumber" << triggerNumber << endl;}
+    triggerNumber -= N_false/2;
+    // if(N_false%2==1 || half_event) {cout << "triggerNumber" << triggerNumber << endl;}
 
-      cout << "Resetting pixel tree" << endl;
+    // cout << "triggernumber = " << triggerNumber << "\n";
+    if( triggerNumber != i_evt && (N_false%2) == 0 && !half_event) {
+      N_corr++;
+      cout << "\tDetected missing event: N_trg " << triggerNumber << " != i_evt " << i_evt << endl;
+      i_evt = triggerNumber;
+      cout << "\tResetting pixel tree" << endl;
       while (idx_px_tree < entries_px_tree && i_evt > pixel_event->trigger) {
         pixel_tree->GetEntry(idx_px_tree);
         idx_px_tree++;
       }
     }
 
+    // if(N_false%2==1 || half_event) {cout << "i_evt" << i_evt << endl;}
+
 
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     if(i_evt == start_evt) event_time_tag = event_header;
     //cout << "Evt Time: " << event_header-event_time_tag << endl;
-
 
     // check again for end of file
     if (feof(bin_file)) return -1;
@@ -257,8 +272,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     for(unsigned int k = 0; k<4; k++){
       if(group_mask & (0x1 << k)) active_groups.push_back(k);
     }
-
-
 
     //************************************
     // Loop over channel groups
@@ -339,12 +352,19 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       // cout << k << ": " << event_header-group_time_tag << endl;
     } //loop over groups
 
-    // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
+    if (half_event && (N_false%2) == 1) {
+      i_evt--;
+      return 1;
+    }
+
     if (feof(bin_file)) return 0;
+    // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
+
+
 
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    int magicWord1 = (event_header >> 28) & 0xf;
-    ref_event_size =  (event_header) & 0xfffffff;
+    magicWord1 = (event_header >> 28) & 0xf;
+    // unsigned int ref_event_size =  (event_header) & 0xfffffff;
     if (feof(bin_file)) return 0;
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     int boardID = (event_header >> 27) & 0x1f;
@@ -394,9 +414,9 @@ void VMEAnalyzer::Analyze(){
     chi2 = -999.;
     ntracks = 0;
 
-    while (idx_px_tree < entries_px_tree && triggerNumber >= (pixel_event->trigger+0)) {
+    while (idx_px_tree < entries_px_tree && i_evt >= (pixel_event->trigger+0)) {
       pixel_tree->GetEntry(idx_px_tree);
-      if ((pixel_event->trigger+0) == triggerNumber) {
+      if ((pixel_event->trigger+0) == i_evt) {
         if(ntracks == 0) {
           xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
           yIntercept = 1e-3*pixel_event->yIntercept;
@@ -411,7 +431,7 @@ void VMEAnalyzer::Analyze(){
       	ntracks++;
         idx_px_tree++;
       }
-      else if (triggerNumber > (pixel_event->trigger+0)) {
+      else if (i_evt > (pixel_event->trigger+0)) {
         cout << "[ERROR] Pixel tree not ordered" << endl;
         exit(0);
       }

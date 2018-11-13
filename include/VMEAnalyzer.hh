@@ -48,13 +48,14 @@ class VMEAnalyzer : public DatAnalyzer {
     double tcal[VME_TIMES][1024];
 
     //VME binary
-    int triggerNumber = -1;
+    unsigned int triggerNumber = -1;
     unsigned short N_corr = 0;
     unsigned long Max_corruption = 0;
     unsigned int event_time_tag = 0;
     unsigned int group_time_tag = 0;
 
     unsigned int ref_event_size = 0;
+    unsigned int N_false = 0;
 
     vector<int> manual_skip = {0};
 
