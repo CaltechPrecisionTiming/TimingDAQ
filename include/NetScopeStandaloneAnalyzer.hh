@@ -3,7 +3,7 @@
 #define NetScope_CHANNELS 4
 #define NetScope_TIMES 1
 #define NetScope_SAMPLES 1000
-#define NetScope_F_SAMPLES 500
+#define NetScope_F_SAMPLES 0
 #define SCOPE_MEM_LENGTH_MAX 12500000
 
 #include "DatAnalyzer.hh"
