@@ -35,7 +35,7 @@ class Configuration {
       struct Channel {
         unsigned int N = 0;
 
-        vector<int> baseline_idx = {0, 0};
+        vector<float> baseline_time = {0, 0};
 
         int polarity = +1;
         int counter_auto_pol_switch = -1;
