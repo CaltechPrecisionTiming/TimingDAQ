@@ -61,7 +61,12 @@ if __name__ == '__main__':
         has_run =  False
         while run_number > last_run_number:
             age_check = time.time() - os.path.getmtime(latest_file) > args.min_file_age
-            tracks_check = os.path.exists(data_dir + Tracks_file_template.replace('RN', str(run_number)))
+            tks_file = data_dir + Tracks_file_template.replace('RN', str(run_number))
+            tracks_check = os.path.exists(tks_file)
+            if args.wait_for_tracks and tracks_check:
+                while time.time() - os.path.getmtime(tks_file) < 5:
+                    print "Waiting for traks to be transferred"
+                    time.sleep(5)
             nimplus_check = os.path.exists(data_dir + NimPlus_file_template.replace('RN', str(run_number)))
 
             if age_check and ((not args.wait_for_tracks) or tracks_check) and ((not args.wait_for_NimPlus) or nimplus_check):

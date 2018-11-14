@@ -66,7 +66,7 @@ if __name__ == '__main__':
             while (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
                 print "File from run", r_post, "still changing"
                 r_pre, s_pre = get_last_remote_file(args)
-                time.sleep(5)
+                time.sleep(10)
                 r_post, s_post = get_last_remote_file(args)
 
             transfer(args, '*')
