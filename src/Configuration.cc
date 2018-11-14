@@ -36,13 +36,15 @@ void Configuration::parseConfigurationLine(std::string line) {
         return;
     }
     else if (line.substr(0, 8) == "Baseline") {
-      nextConfigurationElement(ss, item);
-      nextConfigurationElement(ss, item);
-      baseline[0] = std::stoi(item);
-      nextConfigurationElement(ss, item);
-      baseline[1] = std::stoi(item);
-
-      if( verbose ) { cout << "[CONFIG] Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;}
+      // nextConfigurationElement(ss, item);
+      // nextConfigurationElement(ss, item);
+      // baseline[0] = std::stoi(item);
+      // nextConfigurationElement(ss, item);
+      // baseline[1] = std::stoi(item);
+      //
+      // if( verbose ) { cout << "[CONFIG] Baseline = [ " << baseline[0] << ", " << baseline[1] << " ]" << endl;}
+      cout << "Baseline configured by channel now" << endl;
+      exit(0);
     }
     else if (line.substr(0, 16) == "ConstantFraction") {
       nextConfigurationElement(ss, item);
@@ -89,16 +91,6 @@ void Configuration::parseConfigurationLine(std::string line) {
       // polarity
       nextConfigurationElement(ss, item);
       TString aux_string = item;
-      // if ( item == "+." ) {
-      //     aux_ch.polarity = 1;
-      //     aux_ch.counter_auto_pol_switch = -1;
-      //     if( verbose ) { cout << "    Negative pulse set (+: straight) and no polarity switch allowed." << std::endl;}
-      // }
-      // else if ( item == "-." ) {
-      //     aux_ch.polarity = -1;
-      //     aux_ch.counter_auto_pol_switch = -1;
-      //     if( verbose ) { cout << "    Positive pulse set (-: inverse) and no polarity switch allowed." << std::endl;}
-      // }
       if ( aux_string.Contains(".") ) {
           aux_ch.counter_auto_pol_switch = 0;
           if( verbose ) { cout << "    Polarity switch allowed." << std::endl;}
@@ -114,6 +106,22 @@ void Configuration::parseConfigurationLine(std::string line) {
       else {
         std::cerr << "[ERROR] Invalid polarity for channel " << chNum << std::endl;
         exit(0);
+      }
+
+      // Baseline idx_start
+      nextConfigurationElement(ss, item);
+      uint aux_idx = std::stoi(item);
+      aux_ch.baseline_idx[0] = aux_idx;
+      if ( aux_idx ) {
+          if( verbose ) { cout << "    Baseline from idx " << aux_idx << std::flush;}
+      }
+
+      // Baseline idx_stop
+      nextConfigurationElement(ss, item);
+      aux_idx = std::stoi(item);
+      aux_ch.baseline_idx[1] = aux_idx;
+      if ( aux_idx ) {
+          if( verbose ) { cout << " to idx " << aux_idx << std::endl;}
       }
 
       // amplification [dB]

@@ -83,13 +83,29 @@ void DatAnalyzer::Analyze(){
 
     // ------- Get baseline ------
     float baseline = 0;
-    unsigned int bl_st_idx = config->baseline[0];
-    unsigned int bl_lenght = config->baseline[1];
-    for(unsigned int j=bl_st_idx; j<(bl_st_idx+bl_lenght); j++) {
-      baseline += channel[i][j];
+    float bl_start_time = config->channels[i].baseline_idx[0];
+    unsigned int bl_st_idx = -1;
+
+    float bl_stop_time = config->channels[i].baseline_idx[1];
+
+    unsigned int j = 0;
+    while (time[GetTimeIndex(i)][j] < bl_stop_time)
+    {
+      if (time[GetTimeIndex(i)][j] > bl_start_time) {
+        if (bl_start_time == -1) bl_st_idx = j;
+        baseline += channel[i][j];
+      }
+      j++;
     }
+    unsigned int bl_lenght = j - bl_st_idx;
+    cout << bl_st_idx  << " " << bl_lenght << endl;
+
+    // for(unsigned int j=bl_st_idx; j<(bl_st_idx+bl_lenght); j++) {
+    //   baseline += channel[i][j];
+    // }
     baseline /= (float) bl_lenght;
     var["baseline"][i] = scale_factor * baseline;
+
     // ------------- Get minimum position, max amplitude and scale the signal
     unsigned int idx_min = 0;
     float amp = 0;
