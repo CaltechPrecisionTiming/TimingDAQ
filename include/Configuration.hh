@@ -37,6 +37,8 @@ class Configuration {
 
         vector<float> baseline_time = {0, 0};
 
+        vector<float> v_baseline = {};
+
         int polarity = +1;
         int counter_auto_pol_switch = -1;
 
