@@ -5,7 +5,11 @@ import time, re
 
 #RN is a wildcard for run run number
 VME_file_template = 'CMSTiming/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
-NimPlus_file_template = 'NimPlus/TriggerCountNimPlus*_RN.cnt'
+NimPlus_file_template = '/../2018_11_November_RD53/NimPlus/TriggerCountNimPlus*_RN.cnt'
+
+cmd_RunHyperScript_template = 'ssh otsdaq@rulinux04.dhcp.fnal.gov \''
+cmd_RunHyperScript_template += 'cd CMSTiming; ./HyperScriptFastTrigger_NewGeo_18_12_11.sh RN'
+cmd_RunHyperScript_template += '\''
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
@@ -13,6 +17,8 @@ def GetCommandLineArgs():
 
     p.add_argument('--dir_ftbf', type=str, default='/data/TestBeam/2018_11_November_CMSTiming/')
     p.add_argument('--dir_data', type=str, default='../data/')
+
+    p.add_argument('-H', '--run_HyperScript', action='store_true', default=False)
 
     p.add_argument('--max_void', type=int, default=-1)
     p.add_argument('--sleep', type=float, default=60)
@@ -36,6 +42,13 @@ def transfer(args, runs):
         cmd_NimPlus += ' ' + args.dir_data + 'NimPlus/'
         # print cmd_NimPlus
         subprocess.call(cmd_NimPlus, shell=True)
+
+        if args.run_HyperScript:
+            print 'Running Hyperscript'
+            cmd = cmd_RunHyperScript_template.replace('RN', str(rn))
+            cmd += ' &> ~/tmp/Hyper_{}.log &'.format(rn)
+            print cmd
+            subprocess.call(cmd, shell=True)
 
 def get_last_remote_file(args):
     cmd = "ssh otsdaq@ftbf-daq-08 \'cd " + args.dir_ftbf + "; "

@@ -58,17 +58,18 @@ if __name__ == '__main__':
 
         while(args.max_void < 0 or nothing_changed < args.max_void):
             print "Loop start"
-            r_pre, s_pre = get_last_remote_file(args)
-            transfer(args, '*')
-            time.sleep(2)
-            r_post, s_post = get_last_remote_file(args)
-            print r_pre, s_pre, r_post, s_post
 
-            if (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
-                if args.verbose:
-                    print 'Removing locally file potentially broken'
-                cmd = 'rm ' + args.dir_data + 'Tracks/' + track_file_template.replace('RN', str(r_post))
-                subprocess.call(cmd, shell=True)
+            r_pre, s_pre = get_last_remote_file(args)
+            time.sleep(5)
+            r_post, s_post = get_last_remote_file(args)
+
+            while (r_pre == r_post and not s_pre == s_post) or (r_pre < r_post):
+                print "File from run", r_post, "still changing"
+                r_pre, s_pre = get_last_remote_file(args)
+                time.sleep(5)
+                r_post, s_post = get_last_remote_file(args)
+
+            transfer(args, '*')
 
             files = args.dir_data + 'Tracks/' + track_file_template.replace('RN', '*')
             files = glob(files)
@@ -78,7 +79,7 @@ if __name__ == '__main__':
 
             run_number = re.search('Run[0-9]+_', files[-1]).group(0)[3:-1]
 
-            print 'Last run present', run_number
+            print 'Lastest run present', run_number
 
             if last_run_number != run_number:
                 last_run_number = run_number
