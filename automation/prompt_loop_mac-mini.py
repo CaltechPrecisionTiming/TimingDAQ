@@ -2,6 +2,7 @@ from glob import glob
 import shutil, os, argparse
 import subprocess
 import time, re
+import numpy as np
 
 VMERaw_file_template = 'VME/RAW/RawDataSaver0CMSVMETiming_RunRN*dat'
 NimPlus_file_template = 'NimPlus/TriggerCountNimPlus_RN.cnt'
@@ -9,7 +10,7 @@ Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 
 cp_cmd_template = 'rsync -uv --progress ../data/VME/RECO/{version}/DataVMETiming_Run{RN}.root otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_11_November_CMSTiming/RECO/{version}/ &> ~/tmp/transfer.log &'
 
-cmd_DQM_template = '../DataQualityMonitor/runDQM.sh RN &> ~/tmp/DQM.log &'
+cmd_DQM_template = '../DataQualityMonitor/runDQM.sh {RN} {v} &> ~/tmp/DQM.log &'
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
@@ -36,11 +37,6 @@ def GetCommandLineArgs():
 if __name__ == '__main__':
     args = GetCommandLineArgs()
 
-    # if args.run_DQM:
-    #     args.run_DQM = False
-    #     print "Sorry, not implemented yet. Run manually"
-    #     print "python DQM_SiPM.py -C config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_Run<N>.root"
-
     if args.v_fast==None and args.v_full==None:
         print 'At least v_fast or v_full needs to be given'
         print 'Run with -h for help'
@@ -56,7 +52,13 @@ if __name__ == '__main__':
     while(args.max_void < 0 or nothing_changed < args.max_void):
         latest_file = glob(data_dir + Tracks_file_template.replace('RN', '*'))[-1]
         # latest_file = glob(data_dir + VMERaw_file_template.replace('RN', '*'))[-1]
-        run_number = int(re.search('Run[0-9]+_', latest_file).group(0)[3:-1])
+        # run_number = int(re.search('Run[0-9]+_', latest_file).group(0)[3:-1])
+
+        # flist = glob(data_dir + Tracks_file_template.replace('RN', '*'))
+        flist = glob(data_dir + VMERaw_file_template.replace('RN', '*'))
+        rlist = map(lambda x: int(re.search('Run[0-9]+', x).group(0)[3:]), flist)
+        run_number = np.max(rlist)
+
 
         has_run =  False
         while run_number > last_run_number:
@@ -75,8 +77,9 @@ if __name__ == '__main__':
                     print cmd
                     subprocess.call(cmd, shell=True)
                     if args.run_DQM:
-                        print cmd_DQM_template.replace('RN', str(run_number))
-                        subprocess.call(cmd_DQM_template.replace('RN', str(run_number)), shell=True)
+                        cmd = cmd_DQM_template.format(RN=run_number, v=args.v_fast)
+                        print cmd
+                        subprocess.call(cmd, shell=True)
 
                     if args.auto_copy:
                         print "Copying", args.v_fast
