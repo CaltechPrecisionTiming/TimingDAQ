@@ -77,7 +77,9 @@ if __name__ == '__main__':
                 print 'No run presents.... move one manually'
                 exit(0)
 
-            run_number = re.search('Run[0-9]+_', files[-1]).group(0)[3:-1]
+            rlist = map(lambda x: int(re.search('_Run[0-9]+', x).group(0)[4:]), files)
+            run_number = np.max(rlist)
+
 
             print 'Lastest run present', run_number
 
