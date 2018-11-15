@@ -108,20 +108,20 @@ void Configuration::parseConfigurationLine(std::string line) {
         exit(0);
       }
 
-      // Baseline idx_start
+      // Baseline start time
       nextConfigurationElement(ss, item);
-      uint aux_idx = std::stoi(item);
-      aux_ch.baseline_idx[0] = aux_idx;
+      float aux_idx = std::stof(item);
+      aux_ch.baseline_time[0] = aux_idx;
       if ( aux_idx ) {
-          if( verbose ) { cout << "    Baseline from idx " << aux_idx << std::flush;}
+          if( verbose ) { cout << "    Baseline from time " << aux_ch.baseline_time[0] << std::flush;}
       }
 
-      // Baseline idx_stop
+      // Baseline stop time
       nextConfigurationElement(ss, item);
-      aux_idx = std::stoi(item);
-      aux_ch.baseline_idx[1] = aux_idx;
+      aux_idx = std::stof(item);
+      aux_ch.baseline_time[1] = aux_idx;
       if ( aux_idx ) {
-          if( verbose ) { cout << " to idx " << aux_idx << std::endl;}
+          if( verbose ) { cout << " to time " << aux_ch.baseline_time[1] << std::endl;}
       }
 
       // amplification [dB]

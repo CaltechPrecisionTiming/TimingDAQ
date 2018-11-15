@@ -83,27 +83,40 @@ void DatAnalyzer::Analyze(){
 
     // ------- Get baseline ------
     float baseline = 0;
-    float bl_start_time = config->channels[i].baseline_idx[0];
+    float bl_start_time = config->channels[i].baseline_time[0];
     unsigned int bl_st_idx = -1;
 
-    float bl_stop_time = config->channels[i].baseline_idx[1];
+    float bl_stop_time = config->channels[i].baseline_time[1];
 
     unsigned int j = 0;
     while (time[GetTimeIndex(i)][j] < bl_stop_time)
     {
       if (time[GetTimeIndex(i)][j] > bl_start_time) {
-        if (bl_start_time == -1) bl_st_idx = j;
+        if (bl_st_idx == -1) bl_st_idx = j;
         baseline += channel[i][j];
       }
       j++;
     }
     unsigned int bl_lenght = j - bl_st_idx;
-    cout << bl_st_idx  << " " << bl_lenght << endl;
-
-    // for(unsigned int j=bl_st_idx; j<(bl_st_idx+bl_lenght); j++) {
-    //   baseline += channel[i][j];
-    // }
     baseline /= (float) bl_lenght;
+
+    if (config->channels[i].v_baseline.size() < 200) {
+      config->channels[i].v_baseline.push_back(baseline);
+    }
+    else {
+      float mean = TMath::Mean(config->channels[i].v_baseline.size(), &(config->channels[i].v_baseline[0]));
+      float rms = TMath::RMS(config->channels[i].v_baseline.size(), &(config->channels[i].v_baseline[0]));
+
+      if (fabs(mean - baseline)/rms > 10) {
+        // cout << rms << endl;
+        // cout << i_evt << "\tBaseline " << baseline << " (" << i << ") forced to average " << mean << endl;
+        baseline = mean;
+      }
+      else if (config->channels[i].v_baseline.size() < 800){
+        config->channels[i].v_baseline.push_back(baseline);
+      }
+    }
+
     var["baseline"][i] = scale_factor * baseline;
 
     // ------------- Get minimum position, max amplitude and scale the signal
@@ -112,8 +125,17 @@ void DatAnalyzer::Analyze(){
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
       channel[i][j] = scale_factor * (channel[i][j] - baseline);//baseline subtraction
       //channel[i][j] = scale_factor * channel[i][j];//no baseline subtraction
-      if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
-      //if(( j<bl_st_idx+bl_lenght && j>10 && fabs(channel[i][j]) > fabs(amp))) {
+      bool range_check = j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES);
+      bool max_check = true;
+      if ( config->channels[i].counter_auto_pol_switch >= 0 ) {
+        max_check = fabs(channel[i][j]) > fabs(amp);
+      }
+      else {
+        max_check = channel[i][j] < amp;
+      }
+
+      if(( range_check && max_check) || j == bl_st_idx+bl_lenght) {
+      // if(( j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES) && fabs(channel[i][j]) > fabs(amp)) || j == bl_st_idx+bl_lenght) {
         idx_min = j;
         amp = channel[i][j];
       }
@@ -912,10 +934,9 @@ void DatAnalyzer::InitLoop() {
     tree = new TTree("pulse", "Digitized waveforms");
     tree->Branch("i_evt", &i_evt, "i_evt/i");
 
-    std::cout << "Initializing input root file" << std::endl;
     if ( input_file_path.EndsWith(".root") )//place holder for input file in the future.
     {
-      //file_in = new TFile("/Users/cmorgoth/git/TimingDAQ/LGADSimulation_SNR20_ShapingTime1.root","READ");
+      std::cout << "Initializing input root file" << std::endl;
       file_in = new TFile(input_file_path,"READ");
       tree_in = (TTree*)file_in->Get("pulse");
     }
