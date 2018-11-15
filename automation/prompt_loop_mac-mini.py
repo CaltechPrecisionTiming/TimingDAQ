@@ -9,7 +9,7 @@ Tracks_file_template = 'Tracks/RunRN_CMSTiming_converted.root'
 
 cp_cmd_template = 'rsync -uv --progress ../data/VME/RECO/{version}/DataVMETiming_Run{RN}.root otsdaq@ftbf-daq-08.fnal.gov:/data/TestBeam/2018_11_November_CMSTiming/RECO/{version}/ &> ~/tmp/transfer.log &'
 
-cmd_DQM_template = 'python ../DataQualityMonitor/DQM_SiPM.py -C ../DatQualityMonitor/config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_RunRN.root &> ~/tmp/DQM.log &'
+cmd_DQM_template = '../DataQualityMonitor/runDQM.sh RN &> ~/tmp/DQM.log &'
 
 def GetCommandLineArgs():
     p = argparse.ArgumentParser()
@@ -36,10 +36,10 @@ def GetCommandLineArgs():
 if __name__ == '__main__':
     args = GetCommandLineArgs()
 
-    if args.run_DQM:
-        args.run_DQM = False
-        print "Sorry, not implemented yet. Run manually"
-        print "python DQM_SiPM.py -C config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_Run<N>.root"
+    # if args.run_DQM:
+    #     args.run_DQM = False
+    #     print "Sorry, not implemented yet. Run manually"
+    #     print "python DQM_SiPM.py -C config/FNAL_TB_1811/VME_vf1.txt -S ~/cernbox/ocerri/www/FNAL_TB_1811/ -i ../data/VME/RECO/vf1/DataVMETiming_Run<N>.root"
 
     if args.v_fast==None and args.v_full==None:
         print 'At least v_fast or v_full needs to be given'
