@@ -3,7 +3,7 @@
 Once:
 kinit sxie
 -- Check the line 8 or 9 commented inside transfer_ftbf2mac-mini.py to change from Slave to Master
-python automation/transfer_ftbf2mac-mini.py -run_HyperScript
+python automation/transfer_ftbf2mac-mini.py --run_HyperScript
 
 Every run:
 Check the teminal to monitor the process
@@ -26,8 +26,8 @@ Automatic:
 python python automation/prompt_loop_mac-mini.py --v_fast v3 --wait_for_tracks --auto_copy --run_DQM --ignore_before LAST_RUN_TAKEN
 
 Manual:
-Fast --> python automation/DecodeData.py -f --vVME v4 -R RUN_NUMBER
-Full analysis --> python automation/DecodeData.py --vVME v3 --NO_save_meas -R RUN_NUMBER
+--> python automation/DecodeData.py -f --vVME v4 -R RUN_NUMBER
+--> python automation/DecodeData.py --vVME v3 --NO_save_meas -R RUN_NUMBER
 
 
 

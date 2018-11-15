@@ -2,6 +2,7 @@ from glob import glob
 import shutil, os, argparse
 import subprocess
 import time, re
+import numpy as np
 
 #RN is a wildcard for run run number
 VME_file_template = 'CMSTiming/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
@@ -96,14 +97,10 @@ if __name__ == '__main__':
                     print 'Last remote file possibly increasing in size, considering previous one.'
                 high_run_number -= 1
 
-            latest_file = glob(args.dir_data + 'VME/RAW/*')[-1]
-            aux_1 = re.search('_Run[0-9]+', latest_file).group(0)[4:]
-            aux_1 = int(aux_1)
 
-            latest_file = glob(args.dir_data + 'VME/RAW/*_Run*_*')[-1]
-            aux_2 = re.search('_Run[0-9]+_', latest_file).group(0)[4:-1]
-            aux_2 = int(aux_2)
-            run_number_local = max(aux_1, aux_2)
+            flist = glob(args.dir_data + 'VME/RAW/*')
+            rlist = map(lambda x: int(re.search('_Run[0-9]+', x).group(0)[4:]), flist)
+            run_number_local = np.max(rlist)
 
             run_list = range(run_number_local+1, high_run_number+1)
 
