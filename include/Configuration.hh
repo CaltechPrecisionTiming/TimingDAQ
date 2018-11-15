@@ -35,6 +35,8 @@ class Configuration {
       struct Channel {
         unsigned int N = 0;
 
+        vector<int> baseline_idx = {0, 0};
+
         int polarity = +1;
         int counter_auto_pol_switch = -1;
 
@@ -62,7 +64,8 @@ class Configuration {
       // returns true if the specified channel is present in the config
       bool hasChannel(unsigned int ch);
 
-      unsigned int baseline[2] = {20, 150};
+      // unsigned int baseline[2] = {20, 150};
+
       // must be between 0.1 and 0.9
       vector<float> constant_fraction = {0.15, 0.3, 0.45};
       vector<float> constant_threshold = {};
