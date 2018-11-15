@@ -5,8 +5,8 @@ import time, re
 
 #RN is a wildcard for run run number
 VME_file_template = 'CMSTiming/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
-NimPlus_file_template = 'NimPlus/TriggerCountNimPlus*_RN.cnt'
-# NimPlus_file_template = '/../2018_11_November_RD53/NimPlus/TriggerCountNimPlus*_RN.cnt'
+# NimPlus_file_template = 'NimPlus/TriggerCountNimPlus*_RN.cnt'
+NimPlus_file_template = '/../2018_11_November_RD53/NimPlus/TriggerCountNimPlus*_RN.cnt'
 
 cmd_RunHyperScript_template = 'ssh otsdaq@rulinux04.dhcp.fnal.gov \''
 cmd_RunHyperScript_template += 'cd CMSTiming; ./HyperScriptFastTrigger_NewGeo_18_12_11.sh RN'
