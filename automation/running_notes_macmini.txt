@@ -6,7 +6,7 @@ kinit sxie
 python automation/transfer_ftbf2mac-mini.py --run_HyperScript
 
 Every run:
-Check the teminal to monitor the process
+Check the terminal to monitor the process
 
 2) Get tracks
 Once:
@@ -15,7 +15,7 @@ kinit sxie
 python automation/transfer_rulinux042mac-mini.py
 
 Every run:
-Check the teminal to monitor the process
+Check the terminal to monitor the process
 
 
 3) Process the decoding and the analysis
@@ -23,11 +23,11 @@ Once:
 cd /Users/fqnet1/FNAL_TB/18_11/TimingDAQ
 
 Automatic:
-python python automation/prompt_loop_mac-mini.py --v_fast v3 --wait_for_tracks --auto_copy --run_DQM --ignore_before LAST_RUN_TAKEN
+python python automation/prompt_loop_mac-mini.py --v_fast v5 --wait_for_tracks --auto_copy --run_DQM --ignore_before LAST_RUN_TAKEN
 
 Manual:
---> python automation/DecodeData.py -f --vVME v4 -R RUN_NUMBER
---> python automation/DecodeData.py --vVME v3 --NO_save_meas -R RUN_NUMBER
+--> python automation/DecodeData.py -f --vVME v5 -R RUN_NUMBER
+--> python automation/DecodeData.py --vVME v5 --NO_save_meas -R RUN_NUMBER
 
 
 
