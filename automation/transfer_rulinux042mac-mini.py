@@ -2,6 +2,7 @@ from glob import glob
 import shutil, os, argparse
 import subprocess
 import time, re
+import numpy as np
 
 #RN is a wildcard for run run number
 track_file_template = 'RunRN_CMSTiming_converted.root'
@@ -77,7 +78,7 @@ if __name__ == '__main__':
                 print 'No run presents.... move one manually'
                 exit(0)
 
-            rlist = map(lambda x: int(re.search('_Run[0-9]+', x).group(0)[4:]), files)
+            rlist = map(lambda x: int(re.search('Run[0-9]+', x).group(0)[3:]), files)
             run_number = np.max(rlist)
 
 
