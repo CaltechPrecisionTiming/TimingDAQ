@@ -17,6 +17,7 @@ def GetCommandLineArgs():
     p.add_argument('--NimPlus_flag', type=str, default='muxout-D')
     p.add_argument('--no_tracks', action='store_true', default=False)
     p.add_argument('--no_Dat2Root', action='store_true')
+    p.add_argument('--save_raw', action='store_true',default=False)
     p.add_argument('-f','--force', action='store_true', help='Run even if tracks are not present')
     p.add_argument('--N_max_job', type=int, default=100000)
 
@@ -102,6 +103,8 @@ if __name__ == '__main__':
             cmd_Dat2Root += ' --config=' + code_dir + 'config/' + args.config_dir + 'VME_{}.config'.format(args.vVME)
             if args.draw_debug_pulses:
                 cmd_Dat2Root += ' --draw_debug_pulses'
+            if args.save_raw:
+                cmd_Dat2Root += ' --save_raw'
             if args.verbose:
                 cmd_Dat2Root += ' --verbose'
             if not args.NO_save_meas:

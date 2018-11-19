@@ -51,7 +51,7 @@ def transfer(args, runs):
         if args.run_HyperScript:
             print 'Running Hyperscript'
             cmd = cmd_RunHyperScript_template.replace('RN', str(rn))
-            cmd += ' &> ~/tmp/Hyper_{}.log &'.format(rn)
+            cmd += ' &> /tmp/Hyper_{}.log &'.format(rn)
             print cmd
             subprocess.call(cmd, shell=True)
 
