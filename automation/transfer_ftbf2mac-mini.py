@@ -11,6 +11,8 @@ VME_file_template = 'CMSTiming/RawDataSaver0CMSVMETiming_RunRN_*_Raw.dat'
 #Running as slave
 NimPlus_file_template = '/../2018_11_November_RD53/NimPlus/TriggerCountNimPlus*_RN.cnt'
 
+#Copy Desktop Digitizer Data
+DT5742_file_template = 'DT5742/DT5742_RAW_RunRN.dat'
 
 cmd_RunHyperScript_template = 'ssh otsdaq@rulinux04.dhcp.fnal.gov \''
 cmd_RunHyperScript_template += 'cd CMSTiming; ./HyperScriptFastTrigger_NewGeo_18_12_11.sh RN'
@@ -47,6 +49,11 @@ def transfer(args, runs):
         cmd_NimPlus += ' ' + args.dir_data + 'NimPlus/'
         # print cmd_NimPlus
         subprocess.call(cmd_NimPlus, shell=True)
+        
+        cmd_DT5742 = cmd + DT5742_file_template.replace('RN', str(rn))
+        cmd_DT5742 += ' ' + args.dir_data + 'DT5742/RAW/'
+        # print cmd_VME
+        subprocess.call(cmd_DT5742, shell=True)
 
         if args.run_HyperScript:
             print 'Running Hyperscript'
