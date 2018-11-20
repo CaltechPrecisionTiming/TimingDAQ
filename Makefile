@@ -10,7 +10,7 @@ ifeq ($(shell uname), Darwin)
 	CPPFLAGS += -rpath $(shell root-config --prefix)/lib
 endif
 
-TARGETS = VMEDat2Root DRSDat2Root DRSclDat2Root NetScopeDat2Root NetScopeStandaloneDat2Root ETL_ASIC_Dat2Root
+TARGETS = VMEDat2Root DRSDat2Root DRSclDat2Root NetScopeDat2Root NetScopeStandaloneDat2Root ETL_ASIC_Dat2Root DT5742Dat2Root
 SRC = src/Configuration.cc src/Interpolator.cc src/DatAnalyzer.cc
 
 all : $(TARGETS)

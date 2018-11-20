@@ -504,7 +504,10 @@ void DatAnalyzer::Analyze(){
         }
       } //end if algorithm.Contains("TOT")
     }
-
+    else
+    {
+      std::cout << "[WARNING]: NOT FITTABLE: event = " << i_evt << std::endl;
+    }
 
     /*********************************************
     // ===================  Draw plot of the pulse
