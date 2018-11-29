@@ -3,6 +3,7 @@
 *.pyc
 *.log
 last_run.log
+DT5742Dat2Root
 VMEDat2Root
 DRSDat2Root
 DRSclDat2Root
