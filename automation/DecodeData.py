@@ -59,20 +59,20 @@ if __name__ == '__main__':
 
             N_expected_evts = -1
             if not args.no_NimPlus:
-                print 'Getting NimPlus triggers'
                 NimPlus_file = data_dir + 'NimPlus/TriggerCountNimPlus_{}.cnt'.format(run)
                 if os.path.exists(NimPlus_file):
                     cmd = 'more {} | grep {} | awk \'{{print $3}}\''.format(NimPlus_file, args.NimPlus_flag)
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
                     (out, err) = proc.communicate()
                     N_expected_evts = int(out)
-                    print 'Number of trigger expected', out
+                    print 'Number of trigger expected from NimPlus:', out
                 else:
                     print '[WARNING] NO NimPlus file present: ' + NimPlus_file
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename):
-                print '\nCreating the VME file: ', raw_filename
+                if args.verbose:
+                    print 'Creating the VME file: ', raw_filename
 
                 matched_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(data_dir + 'VME/RAW', run))
 
@@ -134,7 +134,8 @@ if __name__ == '__main__':
                 cmd_Dat2Root += ' --N_evt_expected=' + str(N_expected_evts)
                 cmd_Dat2Root += ' --output_file=' + root_filename
                 cmd_Dat2Root += ' --N_evts=' + args.N_evts
-                print '\n'+cmd_Dat2Root
+                if args.verbose:
+                    print '\n'+cmd_Dat2Root
                 subprocess.call(cmd_Dat2Root, shell=True)
             else:
                 print 'Dividing the run into', evt_start_list.shape[0], 'jobs'

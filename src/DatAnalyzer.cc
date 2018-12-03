@@ -738,7 +738,6 @@ Loop Over All Events and Check Corruption
 *****************************************
 */
 void DatAnalyzer::RunEventsLoop() {
-    std::cout << "before Events loop started" << std::endl;
     InitLoop();
 
     unsigned int evt_progress_print_rate = verbose ? 100 : 1000;
@@ -748,8 +747,13 @@ void DatAnalyzer::RunEventsLoop() {
     unsigned int N_written_evts = 0;
     if ( bin_file != NULL )
     {
+      auto last_displaced_time = std::time(0);
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
-      	if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
+        if ((i_evt % 100 == 0 && std::time(0) - last_displaced_time > 5) || i_evt == 0) {
+          last_displaced_time = std::time(0);
+          cout << "Processing Event " << i_evt << "\n";
+        }
+      	// if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
         int corruption = GetChannelsMeasurement();
         if (corruption == 1) {
           cout << "\tAnomaly detected at event " << i_evt << endl;

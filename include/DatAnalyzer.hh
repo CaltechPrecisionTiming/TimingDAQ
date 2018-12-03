@@ -4,6 +4,7 @@
 // STD INCLUDES
 #include <iostream>
 #include <string>
+#include <ctime>
 
 // SYS includes
 #include <sys/types.h>
