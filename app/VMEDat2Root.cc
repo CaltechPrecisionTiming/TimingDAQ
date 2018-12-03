@@ -19,7 +19,9 @@ int main(int argc, char **argv) {
   analyzer->RunEventsLoop();
 
   //patch for some lost memory situation
-  assert(false);
+  #ifndef __APPLE__
+    assert(false);
+  #endif
 
   return 0;
 }
