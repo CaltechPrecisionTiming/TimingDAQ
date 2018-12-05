@@ -180,8 +180,8 @@ void Configuration::parseConfigurationLine(std::string line) {
 
 float Configuration::getChannelMultiplicationFactor(unsigned int ch) {
   float out = channels[ch].polarity;
-  out *= pow(10, channels[ch].amplification/20.);
-  out *= pow(10, -channels[ch].attenuation/20.);
+  out *= pow(10, -channels[ch].amplification/20.);
+  out *= pow(10, channels[ch].attenuation/20.);
   return out;
 }
 

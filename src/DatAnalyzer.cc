@@ -301,12 +301,12 @@ void DatAnalyzer::Analyze(){
 
           if( config->channels[i].algorithm.Contains("IL")) {
             unsigned int j_aux = j_close + 1;
+            if ( fabs(channel[i][j_close-1] - f*amp) < fabs(channel[i][j_close+1] - f*amp) ) j_aux -= 2;
 
             float t1 = time[GetTimeIndex(i)][j_close];
             float v1 = channel[i][j_close];
             float t2 = time[GetTimeIndex(i)][j_aux];
             float v2 = channel[i][j_aux];
-
 
             float out = 0;
             if (v1 == v2) {
@@ -318,6 +318,37 @@ void DatAnalyzer::Analyze(){
 
             // cout << Form("%g: %g %g %g %g %g %g", f, t1, v1, t2, v2, amp*f, out) << endl;
             var[Form("IL_%d", (int)(100*f))][i] = out;
+          }
+
+          if( config->channels[i].algorithm.Contains("FL")) {
+            unsigned int j1, j2;
+            if (channel[i][j_close] < f*amp) {
+              j1 = j_close - 1;
+              if ( fabs(channel[i][j_close-2] - f*amp) < fabs(channel[i][j_close+1] - f*amp) ) j2 = j_close-2;
+              else j2 = j_close+1;
+            }
+            else {
+              j1 = j_close + 1;
+              if ( fabs(channel[i][j_close+2] - f*amp) < fabs(channel[i][j_close-1] - f*amp) ) j2 = j_close+2;
+              else j2 = j_close-1;
+            }
+
+            vector<unsigned int> idx = {j_close, j1, j2};
+            double sx = 0, sx2 = 0, sy = 0, sxy = 0;
+            for( auto j :idx ) {
+              auto y = time[GetTimeIndex(i)][j];
+              auto x = channel[i][j];
+              sx += x;
+              sx2 += x*x;
+              sy += y;
+              sxy += x*y;
+            }
+
+            double q = (sy*sx2 - sx*sxy)/(3*sx2 - sx*sx);
+            double m = (3*sxy - sx*sy)/(3*sx2 - sx*sx);
+
+            // cout << Form("%g: %g %g %g %g %g %g", f, t1, v1, t2, v2, amp*f, out) << endl;
+            var[Form("FL_%d", (int)(100*f))][i] = m*amp*f + q;
           }
 
           if (config->channels[i].algorithm.Contains("SPL")) {
@@ -359,7 +390,7 @@ void DatAnalyzer::Analyze(){
           }
         }
       }
-      if ( config->constant_threshold.size() && config->channels[i].algorithm.Contains("LP")) {
+      if ( config->constant_threshold.size() ) {
         float start_level =  - 3 * baseline_RMS;
         unsigned int j_start =  GetIdxFirstCross( start_level, channel[i], idx_min, -1);
 
@@ -385,6 +416,8 @@ void DatAnalyzer::Analyze(){
 
           if( config->channels[i].algorithm.Contains("IL")) {
             unsigned int j_aux = j_close + 1;
+            if ( fabs(channel[i][j_close-1] - thr) < fabs(channel[i][j_close+1] - thr) ) j_aux -= 2;
+
 
             float t1 = time[GetTimeIndex(i)][j_close];
             float v1 = channel[i][j_close];
@@ -401,6 +434,37 @@ void DatAnalyzer::Analyze(){
             }
 
             var[Form("IL_%dmV", (int)(fabs(thr)))][i] = out;
+          }
+
+          if( config->channels[i].algorithm.Contains("FL")) {
+            unsigned int j1, j2;
+            if (channel[i][j_close] < thr) {
+              j1 = j_close - 1;
+              if ( fabs(channel[i][j_close-2] - thr) < fabs(channel[i][j_close+1] - thr) ) j2 = j_close-2;
+              else j2 = j_close+1;
+            }
+            else {
+              j1 = j_close + 1;
+              if ( fabs(channel[i][j_close+2] - thr) < fabs(channel[i][j_close-1] - thr) ) j2 = j_close+2;
+              else j2 = j_close-1;
+            }
+
+            vector<unsigned int> idx = {j_close, j1, j2};
+            double sx = 0, sx2 = 0, sy = 0, sxy = 0;
+            for( auto j :idx ) {
+              auto y = time[GetTimeIndex(i)][j];
+              auto x = channel[i][j];
+              sx += x;
+              sx2 += x*x;
+              sy += y;
+              sxy += x*y;
+            }
+
+            double q = (sy*sx2 - sx*sxy)/(3*sx2 - sx*sx);
+            double m = (3*sxy - sx*sy)/(3*sx2 - sx*sx);
+
+            // cout << Form("%g: %g %g %g %g %g %g", f, t1, v1, t2, v2, amp*f, out) << endl;
+            var[Form("FL_%dmV", (int)(fabs(thr)))][i] = m*thr + q;
           }
 
           if (config->channels[i].algorithm.Contains("SPL")) {
@@ -801,7 +865,7 @@ void DatAnalyzer::RunEventsLoop() {
       cout << endl;
     }
     file->Write();
-    cout << "\nWritten total of " << N_written_evts << " events\n";
+    cout << "Written total of " << N_written_evts << " events\n";
 }
 
 
@@ -968,6 +1032,7 @@ void DatAnalyzer::InitLoop() {
     bool at_least_1_rising_edge = false;
     int at_least_1_LP[3] = {false};
     bool at_least_1_IL = false;
+    bool at_least_1_FL = false;
     bool at_least_1_SPL = false;
     bool at_least_1_TOT = false;
     for(auto c : config->channels) {
@@ -977,6 +1042,7 @@ void DatAnalyzer::InitLoop() {
       if( c.second.algorithm.Contains("LP2")) at_least_1_LP[1] = true;
       if( c.second.algorithm.Contains("LP3")) at_least_1_LP[2] = true;
       if( c.second.algorithm.Contains("IL")) at_least_1_IL = true;
+      if( c.second.algorithm.Contains("FL")) at_least_1_FL = true;
       if( c.second.algorithm.Contains("SPL")) at_least_1_SPL = true;
       if( c.second.algorithm.Contains("TOT")) at_least_1_TOT = true;
     }
@@ -992,6 +1058,15 @@ void DatAnalyzer::InitLoop() {
       }
       for (auto thr : config->constant_threshold) {
         var_names.push_back(Form("IL_%dmV", (int)(fabs(thr))));
+      }
+    }
+
+    if( at_least_1_FL) {
+      for (auto f : config->constant_fraction) {
+        var_names.push_back(Form("FL_%d", (int)(100*f)));
+      }
+      for (auto thr : config->constant_threshold) {
+        var_names.push_back(Form("FL_%dmV", (int)(fabs(thr))));
       }
     }
 

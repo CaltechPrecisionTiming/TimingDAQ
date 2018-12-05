@@ -65,9 +65,8 @@ if __name__ == '__main__':
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
                     (out, err) = proc.communicate()
                     N_expected_evts = int(out)
-                    print 'Number of trigger expected from NimPlus:', out
                 else:
-                    print '[WARNING] NO NimPlus file present: ' + NimPlus_file
+                    print '[WARNING] No NimPlus file present: ' + NimPlus_file
 
             raw_filename = data_dir + 'VME/RAW/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename):
@@ -88,7 +87,7 @@ if __name__ == '__main__':
                     cmd = 'mv '+ matched_files[0] + ' ' + raw_filename
                     subprocess.call(cmd, shell=True)
             else:
-                print '\nVME file found: ', raw_filename
+                print 'VME file found: ', raw_filename
 
             root_filename = output_dir + '/DataVMETiming_Run{}.root'.format(run)
             if args.no_Dat2Root:
