@@ -17,7 +17,6 @@ def GetCommandLineArgs():
 
     p.add_argument('-R', '--runs', type=int, nargs='+', help='List of runs to be processed. If two runs are given: if the order is increasing all the runs in the middle are processed as well, otherwise not.')
 
-
     p.add_argument('--v_fast', type=str, default=None, help='Version of the config to run inline. (e.g. vf1).\nIf None no inline decoding is run')
     p.add_argument('--v_full', type=str, default=None, help='If None not run')
 
@@ -26,6 +25,8 @@ def GetCommandLineArgs():
     p.add_argument('--run_DQM', action='store_true', default=False, help='Run DQM')
 
     p.add_argument('--data_dir', default='../data')
+
+    p.add_argument('--opt_DecodeData', type=str, default='', help='options to pass to DecodeData.py. Use xx instead of -- to declare options.')
 
     return p.parse_args()
 
@@ -55,6 +56,8 @@ if __name__ == '__main__':
             if ((not args.wait_for_tracks) or tracks_check) and ((not args.wait_for_NimPlus) or nimplus_check):
                 if not args.v_fast == None:
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_fast, run)
+                    if args.opt_DecodeData:
+                        cmd += ' ' + args.opt_DecodeData.replace('xx', '--')
                     print cmd
                     subprocess.call(cmd, shell=True)
                     if args.run_DQM:
@@ -65,6 +68,8 @@ if __name__ == '__main__':
 
                 if not args.v_full == None:
                     cmd = 'python automation/DecodeData.py --vVME {0} -R {1}'.format(args.v_full, run)
+                    if args.opt_DecodeData:
+                        cmd += ' ' + args.opt_DecodeData
                     cmd += ' &> ~/tmp/{}.log &'.format(run)
                     print cmd
                     subprocess.call(cmd, shell=True)
