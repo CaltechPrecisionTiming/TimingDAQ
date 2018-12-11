@@ -211,10 +211,18 @@ void DatAnalyzer::Analyze(){
       var["intfull"][i] = GetPulseIntegral(channel[i], time[GetTimeIndex(i)], 5, NUM_SAMPLES-5);
 
       // -------------- Compute rise and falling time
+      float* coeff;
+
       j_90_pre = GetIdxFirstCross(amp*0.9, channel[i], j_10_pre, +1);
-      var["risetime"][i] = time[GetTimeIndex(i)][j_90_pre] - time[GetTimeIndex(i)][j_10_pre];
+      AnalyticalPolinomialSolver(j_90_pre-j_10_pre+1, &(time[GetTimeIndex(i)][j_10_pre]), &(channel[i][j_10_pre]), 1, coeff);
+      var["risetime"][i] = coeff[1];
+      delete [] coeff;
+
       j_90_post = GetIdxFirstCross(amp*0.9, channel[i], j_10_post, -1);
-      var["decaytime"][i] = time[GetTimeIndex(i)][j_10_post] - time[GetTimeIndex(i)][j_10_post];
+      AnalyticalPolinomialSolver(j_10_post-j_90_post+1, &(time[GetTimeIndex(i)][j_90_post]), &(channel[i][j_90_post]), 1, coeff);
+      var["decaytime"][i] = coeff[1];
+      delete [] coeff;
+
 
       /************************************
       // -------------- Do the gaussian fit
@@ -266,9 +274,12 @@ void DatAnalyzer::Analyze(){
         Re_slope = flinear->GetParameter(0);
         Re_b     = flinear->GetParameter(1);
 
-        var["linear_RE_risetime"][i] = (0.90*amp-Re_b)/Re_slope - (0.10*amp-Re_b)/Re_slope;
         for ( auto f : config->constant_fraction ) {
           var[Form("linear_RE_%d", (int)(100*f))][i] = (f*amp-Re_b)/Re_slope;
+        }
+
+        for ( auto thr : config->constant_threshold ) {
+          var[Form("linear_RE__%dmV", (int)(fabs(thr)))][i] = (thr-Re_b)/Re_slope;
         }
 
         delete flinear;
@@ -1105,9 +1116,12 @@ void DatAnalyzer::InitLoop() {
     **********************
     */
     if( at_least_1_rising_edge ) {
-      var_names.push_back("linear_RE_risetime");
       for (auto f : config->constant_fraction) {
         var_names.push_back(Form("linear_RE_%d", (int)(100*f)));
+      }
+
+      for (auto thr : config->constant_threshold) {
+        var_names.push_back(Form("linear_RE__%dmV", (int)(fabs(thr))));
       }
     }
 
@@ -1221,6 +1235,7 @@ unsigned int DatAnalyzer::GetIdxFirstCross(float value, float* v, unsigned int i
 
 void DatAnalyzer::AnalyticalPolinomialSolver(unsigned int Np, float* in_x, float* in_y, unsigned int deg, float* &out_coeff, float* err) {
   if(deg <= 0 || deg>3) { cout << "[ERROR]: You don't need AnalyticalPolinomialSolver for this" << endl; exit(0);}
+  if(Np < deg+1) return;
 
   TVectorF x, x2, x3;
   x.Use(Np, in_x);
