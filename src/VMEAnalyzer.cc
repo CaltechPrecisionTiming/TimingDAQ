@@ -220,15 +220,17 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    if(i_evt == 0) {      
+    if(i_evt == 0) {
       ref_event_size = event_header & 0xfffffff;
       if ( verbose ) { cout << "[INFO] Setting the event size to " << ref_event_size << endl; }
     }
-    
 
-    // second header word
+
+    //second header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     unsigned int group_mask = event_header & 0x0f; // 4-bit channel group mask
+    group_mask = 0x0f;
+    std::cout << "group_mask: " << group_mask << std::endl;
     // third and fourth header words
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     //cout << i_evt << " counter: " << (event_header&0x1fffff) << endl;
@@ -245,7 +247,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
       if(group_mask & (0x1 << k)) active_groups.push_back(k);
     }
 
- 
+
 
     //************************************
     // Loop over channel groups
@@ -257,6 +259,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
       // Check if all channels were active (if 8 channels active return 3072)
       int nsample = (event_header & 0xfff) / 3;
+      std::cout << "nsample: " << nsample << std::endl;
       if(nsample != 1024) {
         is_corrupted = true;
         corruption_grp = k;
@@ -328,12 +331,12 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
     if (feof(bin_file)) return 0;
-    
+
     //read header from Lorenzo
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    fread( &event_header, sizeof(unsigned int), 1, bin_file);  
+    fread( &event_header, sizeof(unsigned int), 1, bin_file);
 
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     int magicWord1 = (event_header >> 28) & 0xf;

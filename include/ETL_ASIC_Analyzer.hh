@@ -2,7 +2,7 @@
 #define ETL_ASIC_Analyzer_HH
 #define ETL_ASIC_CHANNELS 1
 #define ETL_ASIC_TIMES 1
-#define ETL_ASIC_SAMPLES 5000
+#define ETL_ASIC_SAMPLES 10000
 
 #include <fstream>
 #include <stdio.h>
