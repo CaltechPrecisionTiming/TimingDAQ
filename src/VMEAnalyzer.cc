@@ -207,16 +207,16 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     unsigned int event_header;
 
-    //header from Lorenzo
-    fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    //cout << "Header: " << (event_header & 0xffffffff) << "\n";
-    fread( &event_header, sizeof(unsigned int), 1, bin_file);
-    //cout << "Trigger Number: " << event_header << "\n";
-    triggerNumber = event_header;
+    // //header from Lorenzo
+    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    // //cout << "Header: " << (event_header & 0xffffffff) << "\n";
+    // fread( &event_header, sizeof(unsigned int), 1, bin_file);
+    // //cout << "Trigger Number: " << event_header << "\n";
+    // triggerNumber = event_header;
 
     // first header word
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
@@ -331,7 +331,6 @@ int VMEAnalyzer::GetChannelsMeasurement() {
 
     // Check if the following bytes corresponds to an event header. Important for skipping the event when the corruption happens during the last group;
     if (feof(bin_file)) return 0;
-
     //read header from Lorenzo
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
     fread( &event_header, sizeof(unsigned int), 1, bin_file);
@@ -346,7 +345,7 @@ int VMEAnalyzer::GetChannelsMeasurement() {
     int boardID = (event_header >> 27) & 0x1f;
     int pattern = (event_header >> 8) & 0xffff;
     //reverse by 2 lines
-    fseek(bin_file, -6*sizeof(unsigned int), SEEK_CUR);
+    fseek(bin_file, -2*sizeof(unsigned int), SEEK_CUR);
 
     if (magicWord1 != 10 || pattern != 0 || eventSize != ref_event_size) {
       is_corrupted = true;
@@ -388,9 +387,9 @@ void VMEAnalyzer::Analyze(){
     chi2 = -999.;
     ntracks = 0;
 
-    while (idx_px_tree < entries_px_tree && i_evt >= pixel_event->trigger) {
+    while (idx_px_tree < entries_px_tree && i_evt >= (pixel_event->trigger+0)) {
       pixel_tree->GetEntry(idx_px_tree);
-      if (pixel_event->trigger == i_evt) {
+      if ((pixel_event->trigger+0) == i_evt) {
         if(ntracks == 0) {
           xIntercept = 1e-3*pixel_event->xIntercept; //um to mm
           yIntercept = 1e-3*pixel_event->yIntercept;
@@ -405,7 +404,7 @@ void VMEAnalyzer::Analyze(){
       	ntracks++;
         idx_px_tree++;
       }
-      else if (i_evt > pixel_event->trigger) {
+      else if (i_evt > (pixel_event->trigger+0)) {
         cout << "[ERROR] Pixel tree not ordered" << endl;
         exit(0);
       }

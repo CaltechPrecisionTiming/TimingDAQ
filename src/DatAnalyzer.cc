@@ -44,6 +44,8 @@ DatAnalyzer::DatAnalyzer(int numChannels, int numTimes, int numSamples, int res,
       cout << "NUM_TIMES: " << NUM_TIMES << endl;
       cout << "NUM_SAMPLES: " << NUM_SAMPLES << endl;
       cout << "NUM_F_SAMPLES: " << NUM_F_SAMPLES << endl;
+      cout << "DAC_SCALE : " << DAC_SCALE << "\n";      
+      cout << "DAC_RESOLUTION : " << DAC_RESOLUTION << "\n";
     }
 }
 
@@ -78,6 +80,7 @@ void DatAnalyzer::Analyze(){
     //float scale_factor = (11.8788843617 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
     //float scale_factor = (100000.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
     //float scale_factor = (1.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
+
     // ------- Get baseline ------
     float baseline = 0;
     unsigned int bl_st_idx = config->baseline[0];
@@ -103,6 +106,7 @@ void DatAnalyzer::Analyze(){
     var["amp"][i] = -amp;
 
     float baseline_RMS = 0;
+    var["noise"][i] = channel[i][bl_st_idx+5];
     for(unsigned int j=bl_st_idx; j<=(bl_st_idx+bl_lenght); j++) {
       baseline_RMS += channel[i][j]*channel[i][j];
     }
@@ -710,8 +714,12 @@ void DatAnalyzer::RunEventsLoop() {
     if ( bin_file != NULL )
     {
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
+<<<<<<< HEAD
 	//if (i_evt % 100 == 0)
 	  cout << "Processing Event " << i_evt << "\n";
+=======
+	if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
+>>>>>>> 22c3648d8a2ba30b6be8978b36643efc3281d3a2
         int corruption = GetChannelsMeasurement();
         if(corruption == -1) break;
         else if (corruption == 1) {

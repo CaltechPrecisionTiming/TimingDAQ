@@ -12,12 +12,12 @@ def GetCommandLineArgs():
     p.add_argument('-f','--force', action='store_true')
 
     p.add_argument('--daq_dir', default='/data/TestBeam/2018_11_November_CMSTiming')
-    p.add_argument('--NimPlus_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NimPlus')
-    p.add_argument('--VME_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RAW')
+    p.add_argument('--NimPlus_dir', default='../data/NimPlus')
+    p.add_argument('--VME_raw_dir', default='../data/VME/RAW')
     p.add_argument('--NetScope_raw_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RAW')
-    p.add_argument('--track_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/Tracks')
+    p.add_argument('--track_dir', default='../data/Tracks')
 
-    p.add_argument('--VME_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/VME/RECO/v1')
+    p.add_argument('--VME_root_dir', default='../data/VME/RECO/v1')
     p.add_argument('--NetScope_root_dir', default='/eos/uscms/store/user/cmstestbeam/BTL_ETL/2018_11/data/NetScope/RECO/v0')
     p.add_argument('--code_dir', default=os.environ['PWD'])
 
@@ -51,12 +51,6 @@ if __name__ == '__main__':
             print 'Getting NimPlus triggers'
             NimPlus_file = args.NimPlus_dir + '/TriggerCountNimPlusX_{}.cnt'.format(run)
 
-            if not os.path.exists(NimPlus_file):
-                cmd = 'rsync -art otsdaq@ftbf-daq-08.fnal.gov:{}/NimPlus/TriggerCountNimPlusX_{}.cnt {}'.format(args.daq_dir, run, NimPlus_file)
-                out = subprocess.call(cmd, shell=True)
-                if out:
-                    print '[WARNING] NimPlus cnt file copy failed'
-
             N_expected_evts = -1
             if os.path.exists(NimPlus_file):
                 cmd = 'more {} | grep sig_cms1 | awk \'{{print $3}}\''.format(NimPlus_file)
@@ -70,8 +64,8 @@ if __name__ == '__main__':
             raw_filename = args.VME_raw_dir + '/RawDataVMETiming_Run{}.dat'.format(run)
             if not os.path.exists(raw_filename) or args.force:
                 print '\nCreating the VME file: ', raw_filename
-                cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.VME_raw_dir)
-                subprocess.call(cmd, shell=True)
+                # cmd = 'rsync -artv otsdaq@ftbf-daq-08.fnal.gov:{}/CMSTiming/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat {}/'.format(args.daq_dir, run, args.VME_raw_dir)
+                # subprocess.call(cmd, shell=True)
 
                 copied_files = glob.glob('{}/RawDataSaver0CMSVMETiming_Run{}_*_Raw.dat'.format(args.VME_raw_dir, run))
 

@@ -1,0 +1,31 @@
+1)
+Once:
+
+ssh otsdaq@ftbf-daq-08.fnal.gov
+cd /data/TestBeam/2018_11_November_CMSTiming/
+
+Every run:
+
+kinit sxie
+./copy2CERN.sh LXPLUS_USERNAME CMSLPC_NAME '*'
+
+
+2)
+Once:
+
+From cmslpc --> ssh otsdaq@rulinux04.dhcp.fnal.gov
+cd CMSTiming/
+kinit sxie
+
+Every run:
+
+./HyperScript_CERN.sh RUN_NUMBER LXPLUS_USERNAME
+
+3)
+On lxplus
+Once:
+Cd /eos/cms/store/group/phys_susy/razor/FNAL_TB_1811/TimingDAQ
+Source setup_lxplus.sh
+
+Every run:
+python automation/DecodeData_CERN.py RUN_NUMBER --no_NetScope --N_max_job=10000
