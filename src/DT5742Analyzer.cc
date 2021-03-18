@@ -247,21 +247,27 @@ int DT5742Analyzer::GetChannelsMeasurement() {
       //std::cout << result << " " << i_evt  << std::endl;
       if (result != event_size) {fputs ("Reading error\n",stderr); exit (3);}
       double x;
-      //x = *(buffer+6);
       x = *(buffer+6);
-      for(int j = 0; j < 18; j++)
-	    {
-        for(int i = 0; i < 1024; i++ )
+      x = *(buffer+6);
+
+
+      for(int j = 0; j < DT5742_CHANNELS; j++)
+      {
+        for(int i = 0; i < DT5742_SAMPLES; i++ )
         {
-		  		raw[j][i] = buffer[i+6+j*1024];
+	  raw[j][i] = buffer[i+6+j*DT5742_SAMPLES];
 		  		//channel[j][i] = ( raw[j][i] - 2047. )/4096. ;//converting to volts [V]
           channel[j][i] = raw[j][i];
-			  	//std::cout << "i = " << i << " ; j = " << j << " ; raw[j][i] = " << raw[j][i] << " ; channel[j][i] = " << channel[j][i] << std::endl;
+	  //std::cout << "i = " << i << " ; j = " << j << " ; raw[j][i] = " << raw[j][i] << " ; channel[j][i] = " << channel[j][i] << std::endl;
           //bin[i] = i;
-          time[0][i] = i*0.2;
-          time[1][i] = i*0.2;
+          for (int k = 0; k < DT5742_TIMES; k++)
+	  {
+	    time[k][i] = i*1.0/DT5742_FREQ;
+
+	  }
+
         }
-	    }
+      }
     //}
     return 0;
 };
@@ -309,7 +315,6 @@ void DT5742Analyzer::Analyze(){
     }
 
   }
-
   //calling main analyzer -- DatAnalyzer::Analyze() -- in DatAnalyzer.cc
   DatAnalyzer::Analyze();
 }

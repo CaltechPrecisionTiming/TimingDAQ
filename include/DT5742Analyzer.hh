@@ -3,6 +3,7 @@
 #define DT5742_CHANNELS 18
 #define DT5742_TIMES 2
 #define DT5742_SAMPLES 1024
+#define DT5742_FREQ 1 //in GHz, 0 is 5, 1 is 2.5 and 2 is 1 for DT5742 config
 
 #include "DatAnalyzer.hh"
 #include <assert.h>

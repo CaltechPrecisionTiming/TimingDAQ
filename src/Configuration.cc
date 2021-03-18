@@ -31,7 +31,7 @@ void Configuration::parseConfigurationLine(std::string line) {
     std::stringstream ss;
     ss.str(line);
     std::string item;
-
+    std::cout<<line<<endl;
     if ( line[0] == '#' ) {
         return;
     }

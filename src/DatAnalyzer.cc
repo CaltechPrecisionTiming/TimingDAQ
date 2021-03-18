@@ -78,8 +78,7 @@ void DatAnalyzer::Analyze(){
     // Get the attenuation/amplification scale factor and convert ADC counts to mV
     //float scale_factor = (30.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
     float scale_factor = (1000.0 * DAC_SCALE / (float)DAC_RESOLUTION) * config->getChannelMultiplicationFactor(i);
-
-    //cout << "check : " << scale_factor << " = " << DAC_SCALE << " " << DAC_RESOLUTION << " " << config->getChannelMultiplicationFactor(i) << "\n";
+    // if (verbose) cout << "check : " << scale_factor << " = " << DAC_SCALE << " " << DAC_RESOLUTION << " " << config->getChannelMultiplicationFactor(i) << "\n";
 
     // ------- Get baseline ------
     float baseline = 0;
@@ -87,7 +86,6 @@ void DatAnalyzer::Analyze(){
     unsigned int bl_st_idx = -1;
 
     float bl_stop_time = config->channels[i].baseline_time[1];
-
     unsigned int j = 0;
     while (time[GetTimeIndex(i)][j] < bl_stop_time)
     {
@@ -96,6 +94,7 @@ void DatAnalyzer::Analyze(){
         baseline += channel[i][j];
       }
       j++;
+
     }
     unsigned int bl_lenght = j - bl_st_idx;
     baseline /= (float) bl_lenght;
@@ -118,12 +117,13 @@ void DatAnalyzer::Analyze(){
     }
 
     var["baseline"][i] = scale_factor * baseline;
+    // if (verbose) cout<<"baseline is "<<var["baseline"][i]<<endl;
 
     // ------------- Get minimum position, max amplitude and scale the signal
     unsigned int idx_min = 0;
     float amp = 0;
     for(unsigned int j=0; j<NUM_SAMPLES; j++) {
-      channel[i][j] = scale_factor * (channel[i][j] - baseline);//baseline subtraction
+      channel[i][j] = scale_factor * (channel[i][j] - baseline);//baseline subtraction, now channel unit is in mV
       //channel[i][j] = scale_factor * channel[i][j];//no baseline subtraction
       bool range_check = j>bl_st_idx+bl_lenght && j<(int)(0.9*NUM_SAMPLES);
       bool max_check = true;
@@ -196,6 +196,7 @@ void DatAnalyzer::Analyze(){
         config->channels[i].counter_auto_pol_switch ++;
       }
 
+
       /*
       ***********************************
       //Get 10% of the amplitude crossings
@@ -222,7 +223,6 @@ void DatAnalyzer::Analyze(){
       AnalyticalPolinomialSolver(j_10_post-j_90_post+1, &(time[GetTimeIndex(i)][j_90_post]), &(channel[i][j_90_post]), 1, coeff);
       var["decaytime"][i] = coeff[1];
       delete [] coeff;
-
 
       /************************************
       // -------------- Do the gaussian fit
@@ -259,6 +259,8 @@ void DatAnalyzer::Analyze(){
       // -------------- Do  linear fit
       ********************************/
       if( config->channels[i].algorithm.Contains("Re") ) {
+        // cout<<config->channels[i].re_bounds[0]<<endl;
+        // cout<<config->channels[i].re_bounds[1]<<endl;
         unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
         unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
         float t_min = time[GetTimeIndex(i)][i_min];
@@ -611,7 +613,6 @@ void DatAnalyzer::Analyze(){
       line->SetLineColor(47);
       line->DrawLine(time[GetTimeIndex(i)][0], var["baseline_RMS"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], var["baseline_RMS"][i]);
       line->DrawLine(time[GetTimeIndex(i)][0], -var["baseline_RMS"][i], time[GetTimeIndex(i)][NUM_SAMPLES-1], -var["baseline_RMS"][i]);
-
       // Draw peak
       line->SetLineColor(8);
       line->SetLineStyle(4);
@@ -666,109 +667,115 @@ void DatAnalyzer::Analyze(){
         gr_pre_post->Draw("P*");
 
 
+        cout<<"here"<<endl;
         // ---------- Rising edge only inverted!! -----
-        c->cd(2);
-        c->SetGrid();
+      //  c->cd(2);
+      //  c->SetGrid();
 
-        if( config->channels[i].algorithm.Contains("Re") ) {
-          unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
-          unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
-          float y[2], x[2];
-          x[0] = channel[i][i_min];
-          x[1] = channel[i][i_max];
-          y[0] = (channel[i][i_min] - Re_b)/Re_slope;
-          y[1] = (channel[i][i_max] - Re_b)/Re_slope;
+      //  if( config->channels[i].algorithm.Contains("Re") ) {
 
-          TGraph* gr_Re = new TGraph(2, x, y);
 
-          gr_Re->SetLineColor(46);
-          gr_Re->SetLineWidth(1);
-          gr_Re->SetLineStyle(7);
-          gr_Re->Draw("CP");
-        }
+      //    unsigned int i_min = GetIdxFirstCross(config->channels[i].re_bounds[0]*amp, channel[i], idx_min, -1);
+      //    unsigned int i_max = GetIdxFirstCross(config->channels[i].re_bounds[1]*amp, channel[i], i_min, +1);
+      //    float y[2], x[2];
+      //    x[0] = channel[i][i_min];
+      //    x[1] = channel[i][i_max];
+      //    y[0] = (channel[i][i_min] - Re_b)/Re_slope;
+      //    y[1] = (channel[i][i_max] - Re_b)/Re_slope;
 
-        unsigned int j_begin = j_10_pre - 6;
-        unsigned int j_span = j_90_pre - j_10_pre + 10;
-        TGraphErrors* inv_pulse = new TGraphErrors(j_span, &(channel[i][j_begin]), &(time[GetTimeIndex(i)][j_begin]), yerr);
-        inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
-        inv_pulse->SetMarkerStyle(5);
-        inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
-        inv_pulse->GetYaxis()->SetTitle("Time [ns]");
-        inv_pulse->Draw("APE1");
+      //    TGraph* gr_Re = new TGraph(2, x, y);
 
-        vector<float> t_WS;
-        vector<float> c_WS;
-        float overstep = 6;
-        for(unsigned int jj = j_begin; jj < j_begin + j_span; jj++) {
-          for(unsigned int kk = 0; kk < overstep; kk++) {
-            float tt = time[GetTimeIndex(i)][jj] + (time[GetTimeIndex(i)][jj+1] - time[GetTimeIndex(i)][jj]) * kk/overstep;
-            float cc = WSInterp(tt, NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
+      //    gr_Re->SetLineColor(46);
+      //    gr_Re->SetLineWidth(1);
+      //    gr_Re->SetLineStyle(7);
+      //    gr_Re->Draw("CP");
+      //  }
 
-            t_WS.push_back(tt);
-            c_WS.push_back(cc);
-          }
-        }
-        TGraph* inv_pulse_WS = new TGraph(t_WS.size(), &(c_WS[0]), &(t_WS[0]));
-        inv_pulse_WS->SetMarkerStyle(7);
-        inv_pulse_WS->SetMarkerColor(2);
-        // inv_pulse_WS->Draw("P");
+      //  unsigned int j_begin = j_10_pre - 6;
+      //  unsigned int j_span = j_90_pre - j_10_pre + 10;
+      //  TGraphErrors* inv_pulse = new TGraphErrors(j_span, &(channel[i][j_begin]), &(time[GetTimeIndex(i)][j_begin]), yerr);
+      //  inv_pulse->SetNameTitle("g_inv"+name, "g_inv"+name);
+      //  inv_pulse->SetMarkerStyle(5);
+      //  inv_pulse->GetXaxis()->SetTitle("Amplitude [mV]");
+      //  inv_pulse->GetYaxis()->SetTitle("Time [ns]");
+      //  inv_pulse->Draw("APE1");
 
-        TGraph* gr_inv_pre_post = new TGraph(2);
-        gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
-        gr_inv_pre_post->SetPoint(1, channel[i][j_90_pre], time[GetTimeIndex(i)][j_90_pre]);
-        gr_inv_pre_post->SetMarkerColor(4);
-        gr_inv_pre_post->Draw("P*");
+      //  vector<float> t_WS;
+      //  vector<float> c_WS;
+      //  float overstep = 6;
+      //  for(unsigned int jj = j_begin; jj < j_begin + j_span; jj++) {
+      //    for(unsigned int kk = 0; kk < overstep; kk++) {
+      //      float tt = time[GetTimeIndex(i)][jj] + (time[GetTimeIndex(i)][jj+1] - time[GetTimeIndex(i)][jj]) * kk/overstep;
+      //      float cc = WSInterp(tt, NUM_SAMPLES, time[GetTimeIndex(i)], channel[i]);
 
-        // -------------- If exist, draw local polinomial fit
-        unsigned int count = 0;
-        vector<int> frac_colors = {2, 6, 8, 5, 40, 46, 4, 9, 12};
-        while(frac_colors.size() < config->constant_fraction.size() + config->constant_threshold.size()) {
-          frac_colors.push_back(2);
-        }
+      //      t_WS.push_back(tt);
+      //      c_WS.push_back(cc);
+      //    }
+      //  }
+      //  TGraph* inv_pulse_WS = new TGraph(t_WS.size(), &(c_WS[0]), &(t_WS[0]));
+      //  inv_pulse_WS->SetMarkerStyle(7);
+      //  inv_pulse_WS->SetMarkerColor(2);
+      //  // inv_pulse_WS->Draw("P");
 
-        for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
-          float f = config->constant_fraction[kk];
-          line_lvs->SetLineColor(frac_colors[kk]);
-          line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_begin], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
-          for(auto n : config->channels[i].PL_deg) {
-            vector<float> polyval;
-            for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
-              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
-            }
+      //  cout<<"here"<<endl;
+      //  TGraph* gr_inv_pre_post = new TGraph(2);
+      //  gr_inv_pre_post->SetPoint(0, channel[i][j_10_pre], time[GetTimeIndex(i)][j_10_pre]);
+      //  gr_inv_pre_post->SetPoint(1, channel[i][j_90_pre], time[GetTimeIndex(i)][j_90_pre]);
+      //  gr_inv_pre_post->SetMarkerColor(4);
+      //  gr_inv_pre_post->Draw("P*");
 
-            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
-            g_poly->SetLineColor(frac_colors[kk]);
-            g_poly->SetLineWidth(2);
-            g_poly->SetLineStyle(7);
-            g_poly->Draw("C");
+      //  // -------------- If exist, draw local polinomial fit
+      //  unsigned int count = 0;
+      //  vector<int> frac_colors = {2, 6, 8, 5, 40, 46, 4, 9, 12};
+      //  while(frac_colors.size() < config->constant_fraction.size() + config->constant_threshold.size()) {
+      //    frac_colors.push_back(2);
+      //  }
 
-            count++;
-          }
-        }
+      //  for( unsigned int kk = 0; kk < config->constant_fraction.size(); kk++) {
+      //    float f = config->constant_fraction[kk];
+      //    line_lvs->SetLineColor(frac_colors[kk]);
+      //    line_lvs->DrawLine(amp*f, time[GetTimeIndex(i)][j_begin], amp*f, time[GetTimeIndex(i)][j_90_pre + 3]);
+      //    for(auto n : config->channels[i].PL_deg) {
+      //      vector<float> polyval;
+      //      for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
+      //        polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+      //      }
 
-        for( unsigned int kk = 0; kk < config->constant_threshold.size(); kk++) {
-          float thr = config->constant_threshold[kk];
-          if (thr < amp ) continue;
-          line_lvs->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
-          line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_begin], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
-          for(auto n : config->channels[i].PL_deg) {
-            vector<float> polyval;
-            for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
-              polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
-            }
+      //      TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+      //      g_poly->SetLineColor(frac_colors[kk]);
+      //      g_poly->SetLineWidth(2);
+      //      g_poly->SetLineStyle(7);
+      //      g_poly->Draw("C");
 
-            TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
-            g_poly->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
-            g_poly->SetLineWidth(2);
-            g_poly->SetLineStyle(7);
-            g_poly->Draw("C");
+      //      count++;
+      //    }
+      //  }
 
-            count++;
-          }
-        }
+      //cout<<"here"<<endl;
+      //  for( unsigned int kk = 0; kk < config->constant_threshold.size(); kk++) {
+      //    float thr = config->constant_threshold[kk];
+      //    if (thr < amp ) continue;
+      //    line_lvs->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+      //    line_lvs->DrawLine(thr, time[GetTimeIndex(i)][j_begin], thr, time[GetTimeIndex(i)][j_90_pre + 3]);
+      //    for(auto n : config->channels[i].PL_deg) {
+      //      vector<float> polyval;
+      //      for(unsigned int j = poly_bounds[count].first; j <= poly_bounds[count].second; j++) {
+      //        polyval.push_back(PolyEval(channel[i][j], coeff_poly_fit[count], n));
+      //      }
+
+      //      TGraph* g_poly = new TGraph(polyval.size(), &(channel[i][poly_bounds[count].first]), &(polyval[0]) );
+      //      g_poly->SetLineColor(frac_colors[kk + config->constant_fraction.size()]);
+      //      g_poly->SetLineWidth(2);
+      //      g_poly->SetLineStyle(7);
+      //      g_poly->Draw("C");
+
+      //      count++;
+      //    }
+      //  }
 
       }
 
+      cout<<"here"<<endl;
       c->SetGrid();
       c->SaveAs("./pulses_imgs/"+name+img_format);
       delete c;
@@ -814,13 +821,11 @@ Loop Over All Events and Check Corruption
 */
 void DatAnalyzer::RunEventsLoop() {
     InitLoop();
-
     unsigned int evt_progress_print_rate = verbose ? 100 : 1000;
     evt_progress_print_rate = 1;
-
     std::cout << "Events loop started" << std::endl;
     unsigned int N_written_evts = 0;
-    if ( bin_file != NULL )
+    if ( input_file_path.EndsWith(".dat") && bin_file != NULL )
     {
       auto last_displaced_time = std::time(0);
       for( i_evt = 0; !feof(bin_file) && (N_evts==0 || i_evt<N_evts); i_evt++){
@@ -829,7 +834,7 @@ void DatAnalyzer::RunEventsLoop() {
           cout << "Processing Event " << i_evt << "\n";
         }
       	// if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
-        int corruption = GetChannelsMeasurement();
+	int corruption = GetChannelsMeasurement();
         if (corruption == 1) {
           cout << "\tAnomaly detected at event " << i_evt << endl;
         }
@@ -845,14 +850,14 @@ void DatAnalyzer::RunEventsLoop() {
         }
       }
     }
-    else if ( tree_in != NULL )
+    else if ( input_file_path.EndsWith(".root") && tree_in != NULL )
     {
       int n_evt_tree = tree_in->GetEntries();
       //std::cout << "NNNN: " << n_evt_tree << std::endl;
-      for(int i_aux = start_evt; i_aux < n_evt_tree && (N_evts==0 || i_aux<N_evts); i_aux++){
-        if (i_aux % 100 == 0) cout << "Processing Event " << i_aux << "\n";
+      for( i_evt = start_evt; i_evt < n_evt_tree && (N_evts==0 || i_evt<N_evts); i_evt++){
+        if (i_evt % 100 == 0) cout << "Processing Event " << i_evt << "\n";
 
-        GetChannelsMeasurement( i_aux );
+       GetChannelsMeasurement( i_evt );
         Analyze();
 
         N_written_evts++;
@@ -1004,11 +1009,11 @@ void DatAnalyzer::GetCommandLineArgs(int argc, char **argv) {
 void DatAnalyzer::InitLoop() {
     std::cout << "Initializing input file reader and output tree" << std::endl;
     file = new TFile(output_file_path.Data(), "RECREATE");
-    ifstream out_file(output_file_path.Data());
-    if (!out_file){
-      cerr << "[ERROR]: Cannot create output file: " << output_file_path.Data() << endl;
-      exit(0);
-    }
+    //ifstream out_file(output_file_path.Data());
+    //if (!out_file){
+    //  cerr << "[ERROR]: Cannot create output file: " << output_file_path.Data() << endl;
+    //  exit(0);
+    //}
     tree = new TTree("pulse", "Digitized waveforms");
     tree->Branch("i_evt", &i_evt, "i_evt/i");
 
@@ -1161,10 +1166,11 @@ void DatAnalyzer::InitLoop() {
 
     for(unsigned int i = 0; i < NUM_CHANNELS; i++) ResetVar(i);
     // Initialize the input file stream
-    if ( input_file_path.EndsWith(".dat") )
-    {
-      bin_file = fopen( input_file_path.Data(), "r" );
-    }
+    //if ( input_file_path.EndsWith(".dat") )
+    //{
+    //  bin_file = fopen( input_file_path.Data(), "r" );
+    //}
+    bin_file = fopen( input_file_path.Data(), "r" );
 };
 
 void DatAnalyzer::ResetVar(unsigned int n_ch) {
